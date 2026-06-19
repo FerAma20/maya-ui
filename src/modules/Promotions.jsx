@@ -1,5 +1,6 @@
 // ERP MAYA — Promotions / Motor de Promociones
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon.jsx';
 
 const Q   = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -147,6 +148,7 @@ const NEW_DEFAULTS = {
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function Promotions({ pushToast }) {
+  const { t } = useTranslation();
   const [tab,      setTab]      = useState('activas');
   const [selPromo, setSelPromo] = useState(null);
   const [showNew,  setShowNew]  = useState(false);
@@ -201,15 +203,15 @@ export default function Promotions({ pushToast }) {
       {/* Header */}
       <div className="page-head">
         <div>
-          <h1 className="page-title">Promociones</h1>
+          <h1 className="page-title">{t('promotions.title', 'Promociones')}</h1>
           <div className="page-subtitle">
-            Motor de reglas · Descuentos · 2×1 · Combos · Por tipo de cliente · Vigencia automática
+            {t('promotions.subtitle', 'Motor de reglas · Descuentos · 2×1 · Combos · Por tipo de cliente · Vigencia automática')}
           </div>
         </div>
         <div className="page-head-actions">
-          <button className="btn"><Icon name="download" size={12}/>Exportar</button>
+          <button className="btn"><Icon name="download" size={12}/>{t('common.export', 'Exportar')}</button>
           <button className="btn accent" onClick={() => { setShowNew(true); setStep(1); }}>
-            <Icon name="plus" size={12}/>Nueva promoción
+            <Icon name="plus" size={12}/>{t('promotions.newPromo', 'Nueva promoción')}
           </button>
         </div>
       </div>
@@ -217,37 +219,37 @@ export default function Promotions({ pushToast }) {
       {/* KPIs */}
       <div className="stat-grid" style={{gridTemplateColumns:'repeat(4,1fr)', marginBottom:16}}>
         <div className="stat">
-          <div className="label"><Icon name="tag" size={11}/>Promociones activas</div>
+          <div className="label"><Icon name="tag" size={11}/>{t('promotions.activePromos', 'Promociones activas')}</div>
           <div className="val mono" style={{fontSize:26, color:'var(--success)'}}>{summary.active}</div>
-          <div className="delta" style={{color:'var(--muted)'}}>{scheduledPromos.length} programadas</div>
+          <div className="delta" style={{color:'var(--muted)'}}>{scheduledPromos.length} {t('promotions.scheduled', 'programadas')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="receipt" size={11}/>Usos totales (mes)</div>
+          <div className="label"><Icon name="receipt" size={11}/>{t('promotions.totalUsesMonth', 'Usos totales (mes)')}</div>
           <div className="val mono" style={{fontSize:26}}>{summary.totalUses.toLocaleString('es-GT')}</div>
-          <div className="delta up"><Icon name="arrowUp" size={11}/>12% vs mes anterior</div>
+          <div className="delta up"><Icon name="arrowUp" size={11}/>12% {t('promotions.vsPrevMonth', 'vs mes anterior')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="cash" size={11}/>Ahorro total clientes</div>
+          <div className="label"><Icon name="cash" size={11}/>{t('promotions.totalClientSavings', 'Ahorro total clientes')}</div>
           <div className="val mono" style={{fontSize:26}}>{Q(summary.totalSavings)}</div>
-          <div className="delta" style={{color:'var(--muted)'}}>Descuentos aplicados</div>
+          <div className="delta" style={{color:'var(--muted)'}}>{t('promotions.discountsApplied', 'Descuentos aplicados')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="chart" size={11}/>Ahorro promedio/uso</div>
+          <div className="label"><Icon name="chart" size={11}/>{t('promotions.avgSavingPerUse', 'Ahorro promedio/uso')}</div>
           <div className="val mono" style={{fontSize:26}}>{Q(summary.avgSaving)}</div>
-          <div className="delta" style={{color:'var(--muted)'}}>Por ticket con promo</div>
+          <div className="delta" style={{color:'var(--muted)'}}>{t('promotions.perPromoTicket', 'Por ticket con promo')}</div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="tabs">
         {[
-          { id:'activas',     label:`Activas y pausadas (${activePromos.length + pausedPromos.length})` },
-          { id:'programadas', label:`Programadas (${scheduledPromos.length})` },
-          { id:'historial',   label:`Historial (${expiredPromos.length})` },
-          { id:'efectividad', label:'Efectividad' },
-        ].map(t => (
-          <button key={t.id} className={`tab ${tab===t.id?'active':''}`}
-            onClick={() => setTab(t.id)}>{t.label}
+          { id:'activas',     label:`${t('promotions.activeAndPaused', 'Activas y pausadas')} (${activePromos.length + pausedPromos.length})` },
+          { id:'programadas', label:`${t('promotions.scheduledTab', 'Programadas')} (${scheduledPromos.length})` },
+          { id:'historial',   label:`${t('promotions.history', 'Historial')} (${expiredPromos.length})` },
+          { id:'efectividad', label:t('promotions.effectiveness', 'Efectividad') },
+        ].map(tab_item => (
+          <button key={tab_item.id} className={`tab ${tab===tab_item.id?'active':''}`}
+            onClick={() => setTab(tab_item.id)}>{tab_item.label}
           </button>
         ))}
       </div>
@@ -256,10 +258,10 @@ export default function Promotions({ pushToast }) {
       <div className="toolbar">
         <div className="search-wrap" style={{flex:1, maxWidth:320}}>
           <Icon name="search" size={13} className="icon"/>
-          <input className="search-input" placeholder="Buscar promoción…"
+          <input className="search-input" placeholder={t('promotions.searchPlaceholder', 'Buscar promoción…')}
             value={search} onChange={e => setSearch(e.target.value)}/>
         </div>
-        <span className="muted" style={{fontSize:11, marginLeft:'auto'}}>{filtered.length} registros</span>
+        <span className="muted" style={{fontSize:11, marginLeft:'auto'}}>{filtered.length} {t('promotions.records', 'registros')}</span>
       </div>
 
       {/* ── TAB: LISTA ── */}
@@ -269,14 +271,14 @@ export default function Promotions({ pushToast }) {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Aplica a</th>
-                <th>Condiciones</th>
-                <th>Vigencia</th>
-                <th className="num">Usos</th>
-                <th className="num">Ahorro generado</th>
-                <th>Estado</th>
+                <th>{t('common.name', 'Nombre')}</th>
+                <th>{t('common.type', 'Tipo')}</th>
+                <th>{t('promotions.appliesTo', 'Aplica a')}</th>
+                <th>{t('promotions.conditions', 'Condiciones')}</th>
+                <th>{t('promotions.validity', 'Vigencia')}</th>
+                <th className="num">{t('promotions.uses', 'Usos')}</th>
+                <th className="num">{t('promotions.savingsGenerated', 'Ahorro generado')}</th>
+                <th>{t('common.status', 'Estado')}</th>
                 <th/>
               </tr>
             </thead>
@@ -290,13 +292,13 @@ export default function Promotions({ pushToast }) {
                     <div style={{fontSize:11.5}}>
                       {p.category && <span className="pill" style={{marginRight:4}}>{p.category}</span>}
                       {p.product && <span style={{color:'var(--muted)'}}>{p.product}</span>}
-                      {!p.category && !p.product && <span className="muted">Todo el carrito</span>}
+                      {!p.category && !p.product && <span className="muted">{t('promotions.entireCart', 'Todo el carrito')}</span>}
                     </div>
                   </td>
                   <td style={{fontSize:11, color:'var(--muted)'}}>
-                    <div>{p.clientType !== 'Todos' ? p.clientType : 'Todos los clientes'}</div>
+                    <div>{p.clientType !== 'Todos' ? p.clientType : t('promotions.allClients', 'Todos los clientes')}</div>
                     <div>{p.branches}</div>
-                    {p.minCompra > 0 && <div>Min. {Q(p.minCompra)}</div>}
+                    {p.minCompra > 0 && <div>{t('promotions.min', 'Min.')} {Q(p.minCompra)}</div>}
                     {p.horaInicio && <div>{p.horaInicio}–{p.horaFin}</div>}
                   </td>
                   <td className="mono" style={{fontSize:11}}>
@@ -314,7 +316,7 @@ export default function Promotions({ pushToast }) {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={10} className="empty">Sin promociones en esta categoría</td></tr>
+                <tr><td colSpan={10} className="empty">{t('promotions.noPromosInCategory', 'Sin promociones en esta categoría')}</td></tr>
               )}
             </tbody>
           </table>
@@ -328,18 +330,18 @@ export default function Promotions({ pushToast }) {
             {/* Ranking */}
             <div className="card">
               <div className="card-head">
-                <h3>Ranking por ahorro generado</h3>
-                <span className="meta">Mes actual</span>
+                <h3>{t('promotions.rankingBySavings', 'Ranking por ahorro generado')}</h3>
+                <span className="meta">{t('promotions.currentMonth', 'Mes actual')}</span>
               </div>
               <div className="card-body flush">
                 <table className="tbl">
                   <thead>
                     <tr>
-                      <th>#</th><th>Promoción</th><th>Tipo</th>
-                      <th className="num">Usos</th>
-                      <th className="num">Ahorro total</th>
-                      <th className="num">Ahorro/uso</th>
-                      <th>Efectividad</th>
+                      <th>#</th><th>{t('promotions.promotionCol', 'Promoción')}</th><th>{t('common.type', 'Tipo')}</th>
+                      <th className="num">{t('promotions.uses', 'Usos')}</th>
+                      <th className="num">{t('promotions.totalSavings', 'Ahorro total')}</th>
+                      <th className="num">{t('promotions.savingsPerUse', 'Ahorro/uso')}</th>
+                      <th>{t('promotions.effectivenessCol', 'Efectividad')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -371,10 +373,10 @@ export default function Promotions({ pushToast }) {
 
             {/* Por tipo */}
             <div className="card">
-              <div className="card-head"><h3>Usos por tipo de promo</h3></div>
+              <div className="card-head"><h3>{t('promotions.usesByPromoType', 'Usos por tipo de promo')}</h3></div>
               <div className="card-body">
-                {PROMO_TYPES.map(t => {
-                  const ps = PROMOS.filter(p => p.type === t.id && p.uses > 0);
+                {PROMO_TYPES.map(t_item => {
+                  const ps = PROMOS.filter(p => p.type === t_item.id && p.uses > 0);
                   if (!ps.length) return null;
                   const totalUses = ps.reduce((s,p)=>s+p.uses,0);
                   const totalSav  = ps.reduce((s,p)=>s+p.savings,0);
@@ -382,13 +384,13 @@ export default function Promotions({ pushToast }) {
                     PROMOS.filter(p=>p.type===tt.id).reduce((s,p)=>s+p.uses,0)));
                   const barW = Math.round((totalUses/Math.max(maxU,1))*100);
                   return (
-                    <div key={t.id} style={{marginBottom:14}}>
+                    <div key={t_item.id} style={{marginBottom:14}}>
                       <div className="row" style={{justifyContent:'space-between', marginBottom:4, fontSize:12}}>
                         <span style={{fontWeight:500}}>
-                          <Icon name={t.icon} size={11} style={{marginRight:5, color:'var(--muted)'}}/>
-                          {t.label}
+                          <Icon name={t_item.icon} size={11} style={{marginRight:5, color:'var(--muted)'}}/>
+                          {t_item.label}
                         </span>
-                        <span className="mono">{totalUses} usos · {Q(totalSav)}</span>
+                        <span className="mono">{totalUses} {t('promotions.uses', 'usos')} · {Q(totalSav)}</span>
                       </div>
                       <div className="bar"><div style={{width:`${barW}%`}}/></div>
                     </div>
@@ -421,28 +423,28 @@ export default function Promotions({ pushToast }) {
               <p style={{fontSize:13, color:'var(--text-2)', margin:'0 0 20px'}}>{selPromo.desc}</p>
 
               {/* Valor de la promoción */}
-              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Valor de la promoción</div>
+              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('promotions.promoValue', 'Valor de la promoción')}</div>
               <div className="card" style={{marginBottom:20}}>
                 <div className="card-body" style={{padding:'12px 14px'}}>
-                  {selPromo.type === 'pct_desc'   && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{pct(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>de descuento</span></div>}
-                  {selPromo.type === 'monto_fijo'  && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{Q(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>de descuento fijo</span></div>}
-                  {selPromo.type === 'nxm'         && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{selPromo.nxm_n}×{selPromo.nxm_m} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>compra {selPromo.nxm_n}, lleva {selPromo.nxm_m+selPromo.nxm_n}</span></div>}
-                  {selPromo.type === 'precio_esp'  && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{Q(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>precio especial</span></div>}
-                  {selPromo.type === 'combo'       && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{pct(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>en combo</span></div>}
-                  {selPromo.type === 'min_compra'  && <div><div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{Q(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>de descuento</span></div><div style={{fontSize:12, color:'var(--muted)', marginTop:4}}>al superar {Q(selPromo.minCompra)} en el ticket</div></div>}
+                  {selPromo.type === 'pct_desc'   && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{pct(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>{t('promotions.discount', 'de descuento')}</span></div>}
+                  {selPromo.type === 'monto_fijo'  && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{Q(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>{t('promotions.fixedDiscount', 'de descuento fijo')}</span></div>}
+                  {selPromo.type === 'nxm'         && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{selPromo.nxm_n}×{selPromo.nxm_m} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>{t('promotions.nxmDesc', 'compra')} {selPromo.nxm_n}, {t('promotions.nxmTake', 'lleva')} {selPromo.nxm_m+selPromo.nxm_n}</span></div>}
+                  {selPromo.type === 'precio_esp'  && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{Q(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>{t('promotions.specialPrice', 'precio especial')}</span></div>}
+                  {selPromo.type === 'combo'       && <div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{pct(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>{t('promotions.inCombo', 'en combo')}</span></div>}
+                  {selPromo.type === 'min_compra'  && <div><div style={{fontSize:28, fontWeight:700, color:'var(--accent)'}}>{Q(selPromo.value)} <span style={{fontSize:14, fontWeight:400, color:'var(--muted)'}}>{t('promotions.discount', 'de descuento')}</span></div><div style={{fontSize:12, color:'var(--muted)', marginTop:4}}>{t('promotions.whenExceeding', 'al superar')} {Q(selPromo.minCompra)} {t('promotions.inTicket', 'en el ticket')}</div></div>}
                 </div>
               </div>
 
               {/* Condiciones */}
-              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Condiciones</div>
+              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('promotions.conditions', 'Condiciones')}</div>
               <div className="detail-grid" style={{marginBottom:20}}>
                 {[
-                  ['Aplica a',       selPromo.category || (selPromo.product ? selPromo.product : 'Todo el carrito')],
-                  ['Tipo de cliente',selPromo.clientType],
-                  ['Sucursales',     selPromo.branches],
-                  ['Días válidos',   selPromo.dias.map(d => DIAS_SEMANA[d]).join(', ')],
-                  ['Horario',        selPromo.horaInicio ? `${selPromo.horaInicio} – ${selPromo.horaFin}` : 'Todo el día'],
-                  ['Vigencia',       `${selPromo.dateStart} → ${selPromo.dateEnd}`],
+                  [t('promotions.appliesTo', 'Aplica a'),       selPromo.category || (selPromo.product ? selPromo.product : t('promotions.entireCart', 'Todo el carrito'))],
+                  [t('promotions.clientType', 'Tipo de cliente'),selPromo.clientType],
+                  [t('common.branch', 'Sucursales'),     selPromo.branches],
+                  [t('promotions.validDays', 'Días válidos'),   selPromo.dias.map(d => DIAS_SEMANA[d]).join(', ')],
+                  [t('promotions.schedule', 'Horario'),        selPromo.horaInicio ? `${selPromo.horaInicio} – ${selPromo.horaFin}` : t('promotions.allDay', 'Todo el día')],
+                  [t('promotions.validity', 'Vigencia'),       `${selPromo.dateStart} → ${selPromo.dateEnd}`],
                 ].map(([l,v]) => (
                   <div className="detail-row" key={l}>
                     <span className="detail-label">{l}</span>
@@ -454,14 +456,14 @@ export default function Promotions({ pushToast }) {
               {/* Métricas */}
               {selPromo.uses > 0 && (
                 <>
-                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Rendimiento</div>
+                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('promotions.performance', 'Rendimiento')}</div>
                   <div className="stat-grid" style={{gridTemplateColumns:'1fr 1fr', gap:8}}>
                     <div className="stat" style={{padding:'10px 12px'}}>
-                      <div className="label" style={{fontSize:10}}>Usos totales</div>
+                      <div className="label" style={{fontSize:10}}>{t('promotions.totalUses', 'Usos totales')}</div>
                       <div className="val mono" style={{fontSize:20}}>{selPromo.uses}</div>
                     </div>
                     <div className="stat" style={{padding:'10px 12px'}}>
-                      <div className="label" style={{fontSize:10}}>Ahorro generado</div>
+                      <div className="label" style={{fontSize:10}}>{t('promotions.savingsGenerated', 'Ahorro generado')}</div>
                       <div className="val mono" style={{fontSize:20, color:'var(--success)'}}>{Q(selPromo.savings)}</div>
                     </div>
                   </div>
@@ -469,14 +471,14 @@ export default function Promotions({ pushToast }) {
               )}
             </div>
             <div className="drawer-foot">
-              <button className="btn ghost" onClick={() => setSelPromo(null)}>Cerrar</button>
+              <button className="btn ghost" onClick={() => setSelPromo(null)}>{t('common.close', 'Cerrar')}</button>
               {selPromo.status !== 'expired' && (
                 <button className="btn" onClick={() => handleToggle(selPromo)}>
                   <Icon name={selPromo.status==='active'?'alert':'check'} size={12}/>
-                  {selPromo.status === 'active' ? 'Pausar' : 'Activar'}
+                  {selPromo.status === 'active' ? t('promotions.pause', 'Pausar') : t('promotions.activate', 'Activar')}
                 </button>
               )}
-              <button className="btn accent"><Icon name="edit" size={12}/>Editar</button>
+              <button className="btn accent"><Icon name="edit" size={12}/>{t('common.edit', 'Editar')}</button>
             </div>
           </div>
         </>
@@ -487,7 +489,7 @@ export default function Promotions({ pushToast }) {
         <div className="modal-overlay" onClick={() => { setShowNew(false); setStep(1); }}>
           <div className="modal" style={{width:580}} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>Nueva promoción</h3>
+              <h3>{t('promotions.newPromo', 'Nueva promoción')}</h3>
               <div className="row gap-6">
                 {[1,2,3].map(s => (
                   <span key={s} style={{
@@ -507,28 +509,28 @@ export default function Promotions({ pushToast }) {
               {/* Paso 1: Tipo y valor */}
               {step === 1 && (
                 <>
-                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12}}>Paso 1 — Tipo y valor de la promoción</div>
+                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12}}>{t('promotions.step1Title', 'Paso 1 — Tipo y valor de la promoción')}</div>
                   <div className="form-grid">
                     <div className="field span-2">
-                      <label className="field-label">Nombre de la promoción</label>
-                      <input className="field-input" placeholder="Ej. Descuento fin de semana en abarrotes"
+                      <label className="field-label">{t('promotions.promoName', 'Nombre de la promoción')}</label>
+                      <input className="field-input" placeholder={t('promotions.promoNamePlaceholder', 'Ej. Descuento fin de semana en abarrotes')}
                         value={form.name} onChange={e => setF('name', e.target.value)}/>
                     </div>
                   </div>
                   <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, margin:'16px 0'}}>
-                    {PROMO_TYPES.map(t => (
-                      <button key={t.id} type="button"
-                        onClick={() => setF('type', t.id)}
+                    {PROMO_TYPES.map(t_item => (
+                      <button key={t_item.id} type="button"
+                        onClick={() => setF('type', t_item.id)}
                         style={{
-                          padding:'12px', border: form.type===t.id ? '2px solid var(--accent)' : '1px solid var(--border)',
-                          background: form.type===t.id ? 'var(--accent-soft)' : 'var(--surface)',
+                          padding:'12px', border: form.type===t_item.id ? '2px solid var(--accent)' : '1px solid var(--border)',
+                          background: form.type===t_item.id ? 'var(--accent-soft)' : 'var(--surface)',
                           borderRadius:'var(--r-md)', cursor:'pointer', textAlign:'left',
-                          color: form.type===t.id ? 'var(--accent-ink)' : 'var(--text)',
+                          color: form.type===t_item.id ? 'var(--accent-ink)' : 'var(--text)',
                         }}>
                         <div style={{display:'flex', alignItems:'center', gap:7, fontWeight:600, fontSize:12, marginBottom:3}}>
-                          <Icon name={t.icon} size={13}/>{t.label}
+                          <Icon name={t_item.icon} size={13}/>{t_item.label}
                         </div>
-                        <div style={{fontSize:11, color:'var(--muted)'}}>{t.desc}</div>
+                        <div style={{fontSize:11, color:'var(--muted)'}}>{t_item.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -537,14 +539,14 @@ export default function Promotions({ pushToast }) {
                   <div className="form-grid">
                     {form.type === 'pct_desc' && (
                       <div className="field">
-                        <label className="field-label">Porcentaje de descuento (%)</label>
+                        <label className="field-label">{t('promotions.discountPct', 'Porcentaje de descuento (%)')}</label>
                         <input className="field-input mono" type="number" placeholder="Ej. 10"
                           value={form.value} onChange={e => setF('value', e.target.value)}/>
                       </div>
                     )}
                     {form.type === 'monto_fijo' && (
                       <div className="field">
-                        <label className="field-label">Monto de descuento (Q)</label>
+                        <label className="field-label">{t('promotions.discountAmount', 'Monto de descuento (Q)')}</label>
                         <input className="field-input mono" type="number" placeholder="Ej. 25.00"
                           value={form.value} onChange={e => setF('value', e.target.value)}/>
                       </div>
@@ -552,12 +554,12 @@ export default function Promotions({ pushToast }) {
                     {form.type === 'nxm' && (
                       <>
                         <div className="field">
-                          <label className="field-label">Compra N unidades</label>
+                          <label className="field-label">{t('promotions.buyNUnits', 'Compra N unidades')}</label>
                           <input className="field-input mono" type="number" placeholder="2"
                             value={form.nxm_n} onChange={e => setF('nxm_n', e.target.value)}/>
                         </div>
                         <div className="field">
-                          <label className="field-label">Lleva M unidades</label>
+                          <label className="field-label">{t('promotions.getMUnits', 'Lleva M unidades')}</label>
                           <input className="field-input mono" type="number" placeholder="1"
                             value={form.nxm_m} onChange={e => setF('nxm_m', e.target.value)}/>
                         </div>
@@ -565,14 +567,14 @@ export default function Promotions({ pushToast }) {
                     )}
                     {form.type === 'precio_esp' && (
                       <div className="field">
-                        <label className="field-label">Precio especial (Q)</label>
+                        <label className="field-label">{t('promotions.specialPriceLabel', 'Precio especial (Q)')}</label>
                         <input className="field-input mono" type="number" placeholder="Ej. 32.00"
                           value={form.value} onChange={e => setF('value', e.target.value)}/>
                       </div>
                     )}
                     {form.type === 'combo' && (
                       <div className="field">
-                        <label className="field-label">% de descuento en combo</label>
+                        <label className="field-label">{t('promotions.comboDiscountPct', '% de descuento en combo')}</label>
                         <input className="field-input mono" type="number" placeholder="Ej. 15"
                           value={form.value} onChange={e => setF('value', e.target.value)}/>
                       </div>
@@ -580,12 +582,12 @@ export default function Promotions({ pushToast }) {
                     {form.type === 'min_compra' && (
                       <>
                         <div className="field">
-                          <label className="field-label">Monto mínimo del ticket (Q)</label>
+                          <label className="field-label">{t('promotions.minTicketAmount', 'Monto mínimo del ticket (Q)')}</label>
                           <input className="field-input mono" type="number" placeholder="500"
                             value={form.minCompra} onChange={e => setF('minCompra', e.target.value)}/>
                         </div>
                         <div className="field">
-                          <label className="field-label">Descuento fijo (Q)</label>
+                          <label className="field-label">{t('promotions.fixedDiscountLabel', 'Descuento fijo (Q)')}</label>
                           <input className="field-input mono" type="number" placeholder="50"
                             value={form.value} onChange={e => setF('value', e.target.value)}/>
                         </div>
@@ -598,35 +600,35 @@ export default function Promotions({ pushToast }) {
               {/* Paso 2: A qué aplica */}
               {step === 2 && (
                 <>
-                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12}}>Paso 2 — ¿A qué aplica?</div>
+                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12}}>{t('promotions.step2Title', 'Paso 2 — ¿A qué aplica?')}</div>
                   <div className="form-grid">
                     <div className="field">
-                      <label className="field-label">Categoría de producto</label>
+                      <label className="field-label">{t('promotions.productCategory', 'Categoría de producto')}</label>
                       <select className="field-input" value={form.category} onChange={e => setF('category', e.target.value)}>
-                        <option value="">Todas las categorías</option>
+                        <option value="">{t('promotions.allCategories', 'Todas las categorías')}</option>
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                     <div className="field">
-                      <label className="field-label">Tipo de cliente</label>
+                      <label className="field-label">{t('promotions.clientType', 'Tipo de cliente')}</label>
                       <select className="field-input" value={form.clientType} onChange={e => setF('clientType', e.target.value)}>
                         {CLIENT_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                     <div className="field">
-                      <label className="field-label">Sucursales</label>
+                      <label className="field-label">{t('common.branch', 'Sucursales')}</label>
                       <select className="field-input" value={form.branches} onChange={e => setF('branches', e.target.value)}>
                         {BRANCHES_OPT.map(b => <option key={b} value={b}>{b}</option>)}
                       </select>
                     </div>
                     <div className="field">
-                      <label className="field-label">Producto específico (opcional)</label>
+                      <label className="field-label">{t('promotions.specificProduct', 'Producto específico (opcional)')}</label>
                       <input className="field-input" placeholder="Ej. Coca-Cola 600ml"
                         value={form.product} onChange={e => setF('product', e.target.value)}/>
                     </div>
                     <div className="field span-2">
-                      <label className="field-label">Descripción interna</label>
-                      <input className="field-input" placeholder="Descripción para el equipo…"
+                      <label className="field-label">{t('promotions.internalDesc', 'Descripción interna')}</label>
+                      <input className="field-input" placeholder={t('promotions.internalDescPlaceholder', 'Descripción para el equipo…')}
                         value={form.desc} onChange={e => setF('desc', e.target.value)}/>
                     </div>
                   </div>
@@ -636,32 +638,32 @@ export default function Promotions({ pushToast }) {
               {/* Paso 3: Vigencia y horario */}
               {step === 3 && (
                 <>
-                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12}}>Paso 3 — Vigencia y horario</div>
+                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:12}}>{t('promotions.step3Title', 'Paso 3 — Vigencia y horario')}</div>
                   <div className="form-grid">
                     <div className="field">
-                      <label className="field-label">Fecha inicio</label>
+                      <label className="field-label">{t('promotions.startDate', 'Fecha inicio')}</label>
                       <input className="field-input" type="date" value={form.dateStart}
                         onChange={e => setF('dateStart', e.target.value)}/>
                     </div>
                     <div className="field">
-                      <label className="field-label">Fecha fin</label>
+                      <label className="field-label">{t('promotions.endDate', 'Fecha fin')}</label>
                       <input className="field-input" type="date" value={form.dateEnd}
                         onChange={e => setF('dateEnd', e.target.value)}/>
                     </div>
                     <div className="field">
-                      <label className="field-label">Hora inicio (opcional)</label>
+                      <label className="field-label">{t('promotions.startTime', 'Hora inicio (opcional)')}</label>
                       <input className="field-input mono" type="time" value={form.horaInicio}
                         onChange={e => setF('horaInicio', e.target.value)}/>
                     </div>
                     <div className="field">
-                      <label className="field-label">Hora fin (opcional)</label>
+                      <label className="field-label">{t('promotions.endTime', 'Hora fin (opcional)')}</label>
                       <input className="field-input mono" type="time" value={form.horaFin}
                         onChange={e => setF('horaFin', e.target.value)}/>
                     </div>
                   </div>
 
                   <div style={{marginTop:16}}>
-                    <div className="field-label" style={{marginBottom:8}}>Días de la semana</div>
+                    <div className="field-label" style={{marginBottom:8}}>{t('promotions.daysOfWeek', 'Días de la semana')}</div>
                     <div style={{display:'flex', gap:6}}>
                       {DIAS_SEMANA.map((d,i) => (
                         <button key={i} type="button"
@@ -679,8 +681,8 @@ export default function Promotions({ pushToast }) {
 
                   {/* Resumen */}
                   <div style={{marginTop:20, padding:'14px', background:'var(--surface-2)', borderRadius:'var(--r-md)', border:'1px solid var(--border)'}}>
-                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8}}>Resumen de la promoción</div>
-                    <div style={{fontSize:13, fontWeight:600, marginBottom:6}}>{form.name || '(Sin nombre)'}</div>
+                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8}}>{t('promotions.promoSummary', 'Resumen de la promoción')}</div>
+                    <div style={{fontSize:13, fontWeight:600, marginBottom:6}}>{form.name || t('promotions.noName', '(Sin nombre)')}</div>
                     <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
                       <PromoTypeBadge type={form.type}/>
                       {form.category && <span className="pill">{form.category}</span>}
@@ -694,19 +696,19 @@ export default function Promotions({ pushToast }) {
             </div>
 
             <div className="modal-foot">
-              <button className="btn ghost" onClick={() => { setShowNew(false); setStep(1); }}>Cancelar</button>
+              <button className="btn ghost" onClick={() => { setShowNew(false); setStep(1); }}>{t('common.cancel', 'Cancelar')}</button>
               {step > 1 && (
                 <button className="btn" onClick={() => setStep(s => s - 1)}>
-                  <Icon name="chevronLeft" size={12}/>Anterior
+                  <Icon name="chevronLeft" size={12}/>{t('promotions.previous', 'Anterior')}
                 </button>
               )}
               {step < 3 ? (
                 <button className="btn accent" onClick={() => setStep(s => s + 1)}>
-                  Siguiente<Icon name="chevronRight" size={12}/>
+                  {t('promotions.next', 'Siguiente')}<Icon name="chevronRight" size={12}/>
                 </button>
               ) : (
                 <button className="btn accent" onClick={handleSave}>
-                  <Icon name="check" size={12}/>Crear promoción
+                  <Icon name="check" size={12}/>{t('promotions.createPromo', 'Crear promoción')}
                 </button>
               )}
             </div>

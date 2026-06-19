@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { USERS } from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 const Q = v => `Q ${v.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -71,6 +72,7 @@ const SEVERITY_LABEL = { info: 'Info', success: 'OK', warning: 'Aviso', danger: 
 const TODAY_DATE = '2026-05-24';
 
 export default function Audit() {
+  const { t } = useTranslation();
   const [search,        setSearch]        = useState('');
   const [filterModule,  setFilterModule]  = useState('all');
   const [filterUser,    setFilterUser]    = useState('all');
@@ -108,32 +110,32 @@ export default function Audit() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Auditoría</h1>
-          <div className="page-subtitle">Log de actividad del sistema · trazabilidad de acciones</div>
+          <h1 className="page-title">{t('audit.title', 'Auditoría')}</h1>
+          <div className="page-subtitle">{t('audit.subtitle', 'Log de actividad del sistema · trazabilidad de acciones')}</div>
         </div>
       </div>
 
       {/* Stats */}
       <div className="stat-grid">
         <div className="stat">
-          <div className="label"><Icon name="clock" size={11} />Acciones hoy</div>
+          <div className="label"><Icon name="clock" size={11} />{t('audit.actionsToday', 'Acciones hoy')}</div>
           <div className="val mono">{todayCount}</div>
-          <div className="delta muted">{weekCount} esta semana</div>
+          <div className="delta muted">{weekCount} {t('audit.thisWeek', 'esta semana')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="users" size={11} />Usuarios activos</div>
+          <div className="label"><Icon name="users" size={11} />{t('audit.activeUsers', 'Usuarios activos')}</div>
           <div className="val mono">{activeUsers}</div>
-          <div className="delta muted">Sesiones únicas hoy</div>
+          <div className="delta muted">{t('audit.uniqueSessions', 'Sesiones únicas hoy')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="alert" size={11} />Alertas / críticos</div>
+          <div className="label"><Icon name="alert" size={11} />{t('audit.alertsCritical', 'Alertas / críticos')}</div>
           <div className="val mono" style={{ color: alertCount > 0 ? 'var(--danger)' : undefined }}>{alertCount}</div>
-          <div className="delta muted">Acciones críticas esta semana</div>
+          <div className="delta muted">{t('audit.criticalActionsWeek', 'Acciones críticas esta semana')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="dashboard" size={11} />Módulo más activo</div>
+          <div className="label"><Icon name="dashboard" size={11} />{t('audit.mostActiveModule', 'Módulo más activo')}</div>
           <div className="val" style={{ fontSize: 20 }}>{MODULE_LABEL[moduleFreq] || '—'}</div>
-          <div className="delta muted">Mayor actividad hoy</div>
+          <div className="delta muted">{t('audit.mostActivityToday', 'Mayor actividad hoy')}</div>
         </div>
       </div>
 
@@ -143,29 +145,29 @@ export default function Audit() {
           <Icon name="search" className="icon" size={13} />
           <input
             className="search-input"
-            placeholder="Buscar usuario, acción, entidad…"
+            placeholder={t('audit.searchPlaceholder', 'Buscar usuario, acción, entidad…')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <select className="input" value={filterModule} onChange={e => setFilterModule(e.target.value)}>
-          <option value="all">Todos los módulos</option>
+          <option value="all">{t('audit.allModules', 'Todos los módulos')}</option>
           {uniqueModules.map(m => (
             <option key={m} value={m}>{MODULE_LABEL[m] || m}</option>
           ))}
         </select>
         <select className="input" value={filterUser} onChange={e => setFilterUser(e.target.value)}>
-          <option value="all">Todos los usuarios</option>
+          <option value="all">{t('audit.allUsers', 'Todos los usuarios')}</option>
           {uniqueUsers.map(u => (
             <option key={u.id} value={u.id}>{u.name}</option>
           ))}
         </select>
         <select className="input" value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)}>
-          <option value="all">Toda la severidad</option>
+          <option value="all">{t('audit.allSeverity', 'Toda la severidad')}</option>
           <option value="success">OK</option>
           <option value="info">Info</option>
-          <option value="warning">Aviso</option>
-          <option value="danger">Crítico</option>
+          <option value="warning">{t('audit.warning', 'Aviso')}</option>
+          <option value="danger">{t('audit.critical', 'Crítico')}</option>
         </select>
       </div>
 
@@ -174,18 +176,18 @@ export default function Audit() {
         <div className="tbl-wrap"><table className="tbl">
           <thead>
             <tr>
-              <th style={{ width: 140 }}>Fecha y hora</th>
-              <th>Usuario</th>
-              <th>Módulo</th>
-              <th>Acción</th>
-              <th>Descripción</th>
-              <th>Sucursal</th>
-              <th style={{ width: 70 }}>Severidad</th>
+              <th style={{ width: 140 }}>{t('audit.dateTime', 'Fecha y hora')}</th>
+              <th>{t('common.user', 'Usuario')}</th>
+              <th>{t('audit.module', 'Módulo')}</th>
+              <th>{t('audit.action', 'Acción')}</th>
+              <th>{t('common.description', 'Descripción')}</th>
+              <th>{t('common.branch', 'Sucursal')}</th>
+              <th style={{ width: 70 }}>{t('audit.severity', 'Severidad')}</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={7} className="empty">Sin registros con los filtros aplicados</td></tr>
+              <tr><td colSpan={7} className="empty">{t('audit.noRecords', 'Sin registros con los filtros aplicados')}</td></tr>
             ) : filtered.map(entry => (
               <tr
                 key={entry.id}
@@ -231,17 +233,17 @@ export default function Audit() {
                 <div className="drawer-title">{ACTION_LABEL[selected.action] || selected.action}</div>
                 <div className="muted" style={{ fontSize: 12 }}>{selected.ts}</div>
               </div>
-              <button className="icon-btn" onClick={() => setSelected(null)}><Icon name="close" /></button>
+              <button className="icon-btn" aria-label={t('common.close', 'Cerrar')} onClick={() => setSelected(null)}><Icon name="close" /></button>
             </div>
             <div className="drawer-body detail-grid">
-              <Row label="Usuario"    value={`${selected.user} · ${selected.role}`} />
-              <Row label="Módulo"     value={MODULE_LABEL[selected.module] || selected.module} />
-              <Row label="Acción"     value={ACTION_LABEL[selected.action] || selected.action} />
-              <Row label="Descripción" value={selected.description} />
-              {selected.entity && <Row label="Entidad afectada" value={selected.entity} mono />}
-              <Row label="Sucursal"   value={selected.branch} />
-              <Row label="IP"         value={selected.ip} mono />
-              <Row label="Fecha/hora" value={selected.ts} mono />
+              <DetailRow label={t('common.user', 'Usuario')}    value={`${selected.user} · ${selected.role}`} />
+              <DetailRow label={t('audit.module', 'Módulo')}     value={MODULE_LABEL[selected.module] || selected.module} />
+              <DetailRow label={t('audit.action', 'Acción')}     value={ACTION_LABEL[selected.action] || selected.action} />
+              <DetailRow label={t('common.description', 'Descripción')} value={selected.description} />
+              {selected.entity && <DetailRow label={t('audit.affectedEntity', 'Entidad afectada')} value={selected.entity} mono />}
+              <DetailRow label={t('common.branch', 'Sucursal')}   value={selected.branch} />
+              <DetailRow label="IP"         value={selected.ip} mono />
+              <DetailRow label={t('audit.dateTime', 'Fecha/hora')} value={selected.ts} mono />
               <div style={{ paddingTop: 4 }}>
                 <span className={`pill ${SEVERITY_CLASS[selected.severity]}`}>
                   {SEVERITY_LABEL[selected.severity]}
@@ -255,7 +257,7 @@ export default function Audit() {
   );
 }
 
-function Row({ label, value, mono }) {
+function DetailRow({ label, value, mono }) {
   return (
     <div className="detail-row">
       <span className="detail-label">{label}</span>

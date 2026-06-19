@@ -1,5 +1,6 @@
 // ERP MAYA — Panel lateral de notificaciones
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from './Icon.jsx';
 import { NOTIFICATIONS as INIT_NOTIFS } from '../data/mock.js';
 
@@ -17,7 +18,8 @@ export function useNotifications() {
   return { notifications, unreadCount, markRead, markAllRead };
 }
 
-export function NotificationsPanel({ notifications, unreadCount, onMarkRead, onMarkAllRead, onNavigate }) {
+export function NotificationsPanel({ notifications, unreadCount, onMarkRead, onMarkAllRead }) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('all');
   const ref = useRef(null);
@@ -96,7 +98,7 @@ export function NotificationsPanel({ notifications, unreadCount, onMarkRead, onM
             ) : filtered.map(n => (
               <div
                 key={n.id}
-                onClick={() => { onMarkRead(n.id); onNavigate(n.route); setOpen(false); }}
+                onClick={() => { onMarkRead(n.id); navigate('/' + n.route); setOpen(false); }}
                 style={{
                   padding: '12px 16px',
                   borderBottom: '1px solid var(--border)',

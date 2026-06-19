@@ -1,0 +1,655 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "create": "Crear",
+    "new": "Nuevo",
+    "newFem": "Nueva",
+    "search": "Buscar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "accept": "Aceptar",
+    "back": "Regresar",
+    "download": "Descargar",
+    "print": "Imprimir",
+    "export": "Exportar",
+    "import": "Importar",
+    "filter": "Filtrar",
+    "apply": "Aplicar",
+    "loading": "Cargando...",
+    "noResults": "Sin resultados",
+    "results_one": "{{count}} resultado",
+    "results_other": "{{count}} resultados",
+    "all": "Todos",
+    "allFem": "Todas",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "cancelled": "Cancelado",
+    "draft": "Borrador",
+    "approved": "Aprobado",
+    "rejected": "Rechazado",
+    "yes": "Sí",
+    "no": "No",
+    "required": "Requerido",
+    "optional": "Opcional",
+    "view": "Ver",
+    "viewDetail": "Ver detalle",
+    "saveDraft": "Guardar borrador",
+    "sendEmail": "Enviar por correo",
+    "showing": "Mostrando {{count}} de {{total}}",
+    "actions": "Acciones",
+    "date": "Fecha",
+    "dateTime": "Fecha & hora",
+    "name": "Nombre",
+    "amount": "Monto",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "status": "Estado",
+    "description": "Descripción",
+    "quantity": "Cantidad",
+    "price": "Precio",
+    "cost": "Costo",
+    "margin": "Margen",
+    "code": "Código",
+    "reference": "Referencia",
+    "notes": "Notas",
+    "observations": "Observaciones",
+    "branch": "Sucursal",
+    "supplier": "Proveedor",
+    "client": "Cliente",
+    "product": "Producto",
+    "category": "Categoría",
+    "tax": "Impuesto",
+    "discount": "Descuento",
+    "iva": "IVA",
+    "user": "Usuario",
+    "type": "Tipo",
+    "phone": "Teléfono",
+    "email": "Correo electrónico",
+    "address": "Dirección",
+    "logout": "Cerrar sesión",
+    "language": "Idioma",
+    "theme": "Tema",
+    "page": "Página",
+    "of": "de",
+    "rows": "filas"
+  },
+
+  "nav": {
+    "sections": {
+      "OPERACIÓN": "OPERACIÓN",
+      "INVENTARIO": "INVENTARIO",
+      "ANÁLISIS": "ANÁLISIS",
+      "CRM": "CRM",
+      "CONTABILIDAD": "CONTABILIDAD",
+      "ADMINISTRACIÓN": "ADMINISTRACIÓN"
+    },
+    "dashboard": "Dashboard",
+    "pos": "Punto de venta",
+    "billing": "Facturación",
+    "fel": "FEL · SAT",
+    "returns": "Devoluciones",
+    "cash": "Caja & Cortes",
+    "inventory": "Productos & stock",
+    "variants": "Variantes",
+    "stockcount": "Conteo físico",
+    "uom": "Unidades de Medida",
+    "purchases": "Compras y OCs",
+    "transfers": "Transferencias",
+    "reports": "Reportería",
+    "quotes": "Cotizaciones",
+    "promotions": "Promociones",
+    "clients": "Clientes",
+    "loyalty": "Fidelización",
+    "cxc": "Cuentas por Cobrar",
+    "cxp": "Cuentas por Pagar",
+    "accounting": "Contabilidad",
+    "costcenters": "Centros de Costo",
+    "presupuestos": "Presupuestos",
+    "ledger": "Mayor General",
+    "financials": "Estados Financieros",
+    "banks": "Bancos & Cuentas",
+    "bankrec": "Conciliación Bancaria",
+    "maintenance": "Mantenimientos",
+    "users": "Usuarios & roles",
+    "payroll": "Planilla",
+    "fixedassets": "Activos Fijos",
+    "audit": "Auditoría",
+    "config": "Configuración"
+  },
+
+  "shell": {
+    "searchPlaceholder": "Buscar productos, tickets, clientes…",
+    "satOnline": "SAT-FEL en línea",
+    "create": "Crear",
+    "underConstruction": "Módulo en construcción",
+    "accessDenied": "Sin acceso",
+    "accessDeniedDesc": "Tu rol no tiene permiso para ver este módulo."
+  },
+
+  "search": {
+    "placeholder": "Buscar módulos, productos, clientes…",
+    "groups": {
+      "quickActions": "Acciones rápidas",
+      "modules": "Módulos",
+      "actions": "Acciones",
+      "products": "Productos",
+      "clients": "Clientes"
+    },
+    "tags": {
+      "quickAction": "Acción rápida",
+      "module": "Módulo",
+      "product": "Producto",
+      "client": "Cliente"
+    },
+    "noResults": "Sin resultados para",
+    "noResultsHint": "Intenta con otro término o navega por el sidebar",
+    "hints": {
+      "navigate": "navegar",
+      "open": "abrir",
+      "close": "cerrar"
+    },
+    "qa": {
+      "newSale": "Nueva venta",
+      "newSaleDesc": "Abrir Punto de Venta",
+      "newInvoice": "Nueva factura",
+      "newInvoiceDesc": "Ir a Facturación",
+      "newClient": "Nuevo cliente",
+      "newClientDesc": "Ir a Clientes",
+      "newPurchase": "Nueva compra",
+      "newPurchaseDesc": "Ir a Compras y OCs",
+      "viewInventory": "Ver inventario",
+      "viewInventoryDesc": "Ir a Inventario",
+      "newQuote": "Nueva cotización",
+      "newQuoteDesc": "Ir a Cotizaciones"
+    },
+    "stockLow": "Stock bajo"
+  },
+
+  "login": {
+    "title": "Iniciar sesión",
+    "description": "Ingresa el código de tu empresa, correo y contraseña.",
+    "companyCode": "Código de empresa",
+    "companyCodePlaceholder": "Ej. FERRETERIA-01",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "usuario@empresa.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "submit": "Ingresar al sistema",
+    "submitting": "Verificando…",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "demoAccess": "Accesos demo",
+    "errors": {
+      "companyRequired": "Ingresa el código de tu empresa",
+      "companyNotFound": "Código de empresa no encontrado",
+      "emailRequired": "Ingresa tu correo electrónico",
+      "emailInvalid": "Correo electrónico inválido",
+      "passwordRequired": "Ingresa tu contraseña",
+      "passwordShort": "Mínimo 6 caracteres",
+      "passwordWrong": "Contraseña incorrecta"
+    },
+    "brand": {
+      "headline": "Sistema de gestión\npara retail guatemalteco",
+      "subheadline": "POS · Inventario · Contabilidad · SAT-FEL",
+      "features": {
+        "fel": "Facturación electrónica SAT-FEL",
+        "felDesc": "Emisión de DTE en tiempo real",
+        "multi": "Multi-sucursal en tiempo real",
+        "multiDesc": "Consolidado de todas tus tiendas",
+        "accounting": "Contabilidad integrada",
+        "accountingDesc": "Plan de cuentas Guatemala + IVA 12%",
+        "inventory": "Inventario inteligente",
+        "inventoryDesc": "PEPS, promedio, lotes, vencimientos"
+      },
+      "legal": "© 2026 ERP MAYA · Guatemala · Todos los derechos reservados"
+    }
+  },
+
+  "dashboard": {
+    "ranges": {
+      "7d": "7 días",
+      "14d": "14 días",
+      "30d": "30 días",
+      "90d": "90 días"
+    },
+    "kpis": {
+      "salesToday": "Ventas hoy",
+      "gross": "Utilidad bruta",
+      "margin": "Margen",
+      "transactions": "Transacciones",
+      "avgTicket": "Ticket promedio"
+    },
+    "alerts": {
+      "lowStock": "stock bajo",
+      "expiringSoon": "por vencer"
+    },
+    "charts": {
+      "salesByDay": "Ventas por día",
+      "salesByCategory": "Ventas por categoría",
+      "topProducts": "Productos más vendidos"
+    },
+    "sections": {
+      "branches": "Sucursales en vivo",
+      "inventoryAlerts": "Alertas de inventario",
+      "recentTransactions": "Últimas transacciones"
+    },
+    "headers": {
+      "product": "Producto",
+      "branch": "Sucursal",
+      "type": "Tipo",
+      "action": "Acción",
+      "ticket": "Ticket",
+      "time": "Hora",
+      "payment": "Pago"
+    }
+  },
+
+  "pos": {
+    "searchPlaceholder": "Buscar por nombre o código de barras…",
+    "scan": "Escanear",
+    "touchMode": "Táctil",
+    "desktopMode": "Escritorio",
+    "currentSale": "Venta actual",
+    "emptyCart": "Sin productos en el carrito",
+    "emptyCartHint": "Toca un producto o escanea",
+    "changeClient": "Cambiar",
+    "products": "Productos",
+    "cart": "Carrito",
+    "charge": "Cobrar",
+    "manualDiscount": "Descuento manual",
+    "ivaIncluded": "IVA incluido (12%)",
+    "paymentTitle": "Cobrar venta · {{amount}}",
+    "paymentMethod": "Método de pago",
+    "paymentMethods": {
+      "cash": "Efectivo",
+      "card": "Tarjeta",
+      "transfer": "Transferencia"
+    },
+    "amountReceived": "Monto recibido",
+    "change": "Cambio",
+    "confirmCharge": "Confirmar cobro · {{amount}}",
+    "waitingCard": "Esperando lectura del POS bancario…",
+    "insertCard": "Insertar / acercar tarjeta",
+    "authNumber": "No. autorización / boleta",
+    "bank": "Banco",
+    "insufficientCash": "Efectivo insuficiente",
+    "saleRegistered": "Venta registrada · {{id}}",
+    "clientTypes": {
+      "cf": "Consumidor final",
+      "retail": "Minorista",
+      "wholesale": "Mayorista",
+      "exempt": "Exento"
+    }
+  },
+
+  "billing": {
+    "title": "Facturación · Tickets de venta",
+    "exportIva": "Exportar libro IVA",
+    "printBatch": "Imprimir lote",
+    "searchPlaceholder": "No. de factura, NIT…",
+    "synced": "Sincronizado · hace 12s",
+    "showing": "Mostrando {{count}} de {{total}} documentos",
+    "kpis": {
+      "paid": "Pagadas",
+      "inTotal": "en total",
+      "refunded": "documentos"
+    },
+    "headers": {
+      "invoice": "No. Factura",
+      "dateTime": "Fecha & hora",
+      "branch": "Sucursal",
+      "cashier": "Cajero",
+      "clientNit": "Cliente · NIT",
+      "items": "Items",
+      "payment": "Pago",
+      "subtotal": "Subtotal",
+      "iva": "IVA",
+      "total": "Total",
+      "status": "Estado",
+      "fel": "FEL"
+    },
+    "satInfo": "Información SAT-FEL",
+    "uuid": "UUID",
+    "serie": "Serie",
+    "authNo": "No. autorización",
+    "certDate": "Fecha certif.",
+    "regime": "Régimen",
+    "certified": "Certificada",
+    "general": "General"
+  },
+
+  "inventory": {
+    "title": "Inventario",
+    "subtitle": "{{count}} SKUs activos · {{categories}} categorías · Valor cost.",
+    "newProduct": "Nuevo producto",
+    "tabs": {
+      "products": "Productos",
+      "movements": "Kárdex / Movimientos",
+      "lots": "Lotes & vencimientos",
+      "alerts": "Alertas"
+    },
+    "searchPlaceholder": "Buscar SKU, código de barras o nombre…",
+    "searchMovements": "Buscar producto, SKU o ref…",
+    "searchLots": "Buscar lote o producto…",
+    "headers": {
+      "sku": "SKU / Código",
+      "product": "Producto",
+      "category": "Categoría",
+      "cost": "Costo",
+      "price": "Precio",
+      "margin": "Margen",
+      "stock": "Stock",
+      "min": "Mín",
+      "lot": "Lote",
+      "expires": "Vence",
+      "date": "Fecha",
+      "type": "Tipo",
+      "quantity": "Cantidad",
+      "reference": "Referencia",
+      "user": "Usuario",
+      "days": "Días",
+      "status": "Estado",
+      "suggested": "Sugerido",
+      "supplier": "Proveedor",
+      "branch": "Sucursal"
+    },
+    "exportMovements": "Exportar",
+    "createPromoExpiring": "Crear promoción para vencimientos",
+    "lowStockWarning": "productos están por debajo del stock mínimo y requieren reorden.",
+    "lowStockCard": "Productos bajo stock mínimo",
+    "adjustment": {
+      "title": "Nuevo ajuste de inventario",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "reason": "Detalle de la razón del ajuste…"
+    },
+    "transfer": {
+      "title": "Nueva transferencia entre sucursales",
+      "carrier": "Transportista / chofer",
+      "carrierPlaceholder": "Nombre del responsable",
+      "create": "Crear transferencia"
+    },
+    "generalData": "Datos generales",
+    "editProduct": "Editar producto",
+    "newAdjustment": "Nuevo ajuste"
+  },
+
+  "clients": {
+    "title": "Clientes",
+    "subtitle": "{{count}} clientes registrados · CxC total",
+    "newClient": "Nuevo cliente",
+    "searchPlaceholder": "Buscar por nombre o NIT…",
+    "kpis": {
+      "total": "Total clientes",
+      "balance": "Saldo CxC total"
+    },
+    "form": {
+      "name": "Nombre / Razón social *",
+      "nit": "NIT",
+      "nitPlaceholder": "CF",
+      "type": "Tipo de cliente",
+      "types": {
+        "cf": "CF (Consumidor Final)",
+        "retail": "Minorista",
+        "wholesale": "Mayorista",
+        "exempt": "Exento de IVA"
+      },
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "email": "Correo electrónico",
+      "creditLimit": "Límite de crédito (Q)",
+      "paymentTerms": "Plazo de pago (días)",
+      "internalNotes": "Notas internas"
+    },
+    "payment": {
+      "title": "Registrar pago",
+      "pendingBalance": "Saldo pendiente",
+      "amount": "Monto del pago (Q) *",
+      "method": "Forma de pago",
+      "methods": {
+        "cash": "Efectivo",
+        "transfer": "Transferencia",
+        "check": "Cheque",
+        "card": "Tarjeta"
+      },
+      "reference": "Referencia / No. cheque",
+      "notes": "Notas",
+      "submit": "Registrar pago"
+    },
+    "drawer": {
+      "tabs": {
+        "info": "Información",
+        "cxc": "CxC / Pagos"
+      },
+      "availableCredit": "Crédito disponible",
+      "paymentTerms": "Plazo: {{days}} días",
+      "labels": {
+        "address": "Dirección",
+        "phone": "Teléfono",
+        "email": "Correo",
+        "type": "Tipo",
+        "pendingBalance": "Saldo pendiente",
+        "since": "Cliente desde"
+      },
+      "noPayments": "Sin pagos registrados",
+      "paymentHeaders": {
+        "date": "Fecha",
+        "method": "Forma de pago",
+        "reference": "Referencia",
+        "amount": "Monto"
+      }
+    }
+  },
+
+  "purchases": {
+    "title": "Compras y Órdenes de compra",
+    "newPO": "Nueva OC",
+    "searchPlaceholder": "No. de OC, proveedor…",
+    "tabs": {
+      "orders": "Órdenes de compra",
+      "receive": "Recepción",
+      "suppliers": "Proveedores"
+    },
+    "headers": {
+      "po": "No. OC",
+      "date": "Fecha",
+      "supplier": "Proveedor",
+      "items": "Items",
+      "total": "Total",
+      "status": "Estado",
+      "deliveryDate": "Entrega"
+    }
+  },
+
+  "reports": {
+    "title": "Reportería",
+    "tabs": {
+      "sales": "Ventas",
+      "inventory": "Inventario",
+      "clients": "Clientes",
+      "accounting": "Contabilidad"
+    },
+    "export": "Exportar",
+    "print": "Imprimir"
+  },
+
+  "cash": {
+    "title": "Caja & Cortes",
+    "open": "Abrir caja",
+    "close": "Cerrar caja",
+    "tabs": {
+      "current": "Turno actual",
+      "history": "Historial"
+    }
+  },
+
+  "returns": {
+    "title": "Devoluciones",
+    "newReturn": "Nueva devolución",
+    "searchPlaceholder": "No. devolución, ticket…",
+    "tabs": {
+      "list": "Devoluciones",
+      "creditNotes": "Notas de crédito"
+    }
+  },
+
+  "transfers": {
+    "title": "Transferencias entre sucursales",
+    "newTransfer": "Nueva transferencia",
+    "searchPlaceholder": "No. transferencia, sucursal…"
+  },
+
+  "stockcount": {
+    "title": "Conteo físico",
+    "newCount": "Nuevo conteo",
+    "tabs": {
+      "active": "En progreso",
+      "history": "Historial"
+    }
+  },
+
+  "variants": {
+    "title": "Variantes de producto",
+    "newGroup": "Nuevo grupo"
+  },
+
+  "uom": {
+    "title": "Unidades de Medida",
+    "newUnit": "Nueva unidad"
+  },
+
+  "quotes": {
+    "title": "Cotizaciones / Pre-ventas",
+    "newQuote": "Nueva cotización",
+    "searchPlaceholder": "No. cotización, cliente…"
+  },
+
+  "promotions": {
+    "title": "Promociones",
+    "newPromo": "Nueva promoción"
+  },
+
+  "loyalty": {
+    "title": "Programa de Fidelización",
+    "tabs": {
+      "members": "Miembros",
+      "rewards": "Recompensas"
+    }
+  },
+
+  "cxc": {
+    "title": "Cuentas por Cobrar",
+    "newInvoice": "Nueva factura",
+    "searchPlaceholder": "Cliente, documento…"
+  },
+
+  "cxp": {
+    "title": "Cuentas por Pagar",
+    "newInvoice": "Nueva factura",
+    "searchPlaceholder": "Proveedor, documento…"
+  },
+
+  "accounting": {
+    "title": "Contabilidad",
+    "tabs": {
+      "accounts": "Plan de cuentas",
+      "journal": "Partidas contables"
+    },
+    "newAccount": "Nueva cuenta",
+    "newEntry": "Nueva partida"
+  },
+
+  "costcenters": {
+    "title": "Centros de Costo",
+    "newCenter": "Nuevo centro"
+  },
+
+  "presupuestos": {
+    "title": "Presupuestos",
+    "newBudget": "Nuevo presupuesto"
+  },
+
+  "ledger": {
+    "title": "Mayor General",
+    "tabs": {
+      "trial": "Balance de Comprobación",
+      "ledger": "Mayor General"
+    }
+  },
+
+  "financials": {
+    "title": "Estados Financieros",
+    "tabs": {
+      "income": "Estado de Resultados",
+      "balance": "Balance General"
+    }
+  },
+
+  "banks": {
+    "title": "Bancos & Cuentas",
+    "newAccount": "Nueva cuenta"
+  },
+
+  "bankrec": {
+    "title": "Conciliación Bancaria"
+  },
+
+  "fel": {
+    "title": "FEL · SAT",
+    "tabs": {
+      "pending": "Pendientes",
+      "sent": "Enviados",
+      "errors": "Errores"
+    }
+  },
+
+  "maintenance": {
+    "title": "Mantenimientos",
+    "tabs": {
+      "branches": "Sucursales",
+      "suppliers": "Proveedores",
+      "categories": "Categorías",
+      "taxes": "Impuestos & SAT"
+    }
+  },
+
+  "users": {
+    "title": "Usuarios & roles",
+    "tabs": {
+      "users": "Usuarios",
+      "roles": "Roles & permisos"
+    },
+    "newUser": "Nuevo usuario",
+    "newRole": "Nuevo rol"
+  },
+
+  "payroll": {
+    "title": "Planilla",
+    "newEmployee": "Nuevo empleado"
+  },
+
+  "fixedassets": {
+    "title": "Activos Fijos",
+    "newAsset": "Nuevo activo"
+  },
+
+  "audit": {
+    "title": "Auditoría",
+    "searchPlaceholder": "Usuario, acción, módulo…"
+  },
+
+  "config": {
+    "title": "Configuración",
+    "tabs": {
+      "general": "General",
+      "notifications": "Notificaciones",
+      "integrations": "Integraciones"
+    }
+  }
+}

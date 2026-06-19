@@ -1,5 +1,6 @@
 // ERP MAYA — Presupuestos
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon.jsx';
 
 const Q   = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -102,6 +103,7 @@ function dptStats(d) {
 
 // ── Componente principal ───────────────────────────────────────────────────
 export default function Presupuestos({ pushToast }) {
+  const { t } = useTranslation();
   const [tab, setTab]           = useState('resumen');
   const [deptFiltro, setDeptFiltro] = useState('ingresos');
   const [vista, setVista]       = useState('ppto');
@@ -133,28 +135,28 @@ export default function Presupuestos({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="page-title">Presupuestos {AÑO_ACT}</div>
-          <div className="muted" style={{fontSize:12}}>Año fiscal ene–dic · Ejecutado hasta {MESES[MES_ACT]}</div>
+          <div className="page-title">{t('presupuestos.title', 'Presupuestos')} {AÑO_ACT}</div>
+          <div className="muted" style={{fontSize:12}}>{t('presupuestos.fiscalYear', 'Año fiscal ene–dic · Ejecutado hasta')} {MESES[MES_ACT]}</div>
         </div>
         <div className="row gap-8">
           <button className="btn" onClick={() => pushToast?.('Exportando a Excel…', '')}>
-            <Icon name="download" size={13}/>Exportar
+            <Icon name="download" size={13}/>{t('common.export', 'Exportar')}
           </button>
           <button className="btn accent" onClick={() => setShowModal(true)}>
-            <Icon name="plus" size={13}/>Nueva línea
+            <Icon name="plus" size={13}/>{t('presupuestos.newLine', 'Nueva línea')}
           </button>
         </div>
       </div>
 
       <div className="tabs" style={{marginBottom:20}}>
         {[
-          { id:'resumen',     label:'Resumen ejecutivo' },
-          { id:'detalle',     label:'Detalle por departamento' },
-          { id:'comparativo', label:'Comparativo mensual' },
-          { id:'periodos',    label:'Períodos' },
-        ].map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.label}
+          { id:'resumen',     label: t('presupuestos.tabSummary', 'Resumen ejecutivo') },
+          { id:'detalle',     label: t('presupuestos.tabDetail', 'Detalle por departamento') },
+          { id:'comparativo', label: t('presupuestos.tabComparison', 'Comparativo mensual') },
+          { id:'periodos',    label: t('presupuestos.tabPeriods', 'Períodos') },
+        ].map(tab_ => (
+          <button key={tab_.id} className={`tab ${tab === tab_.id ? 'active' : ''}`} onClick={() => setTab(tab_.id)}>
+            {tab_.label}
           </button>
         ))}
       </div>
@@ -164,49 +166,49 @@ export default function Presupuestos({ pushToast }) {
         <div>
           <div className="stat-grid" style={{marginBottom:20}}>
             <div className="stat">
-              <div className="label">Ingresos YTD (ene–{MESES[MES_ACT]})</div>
+              <div className="label">{t('presupuestos.revenueYTD', 'Ingresos YTD')} (ene–{MESES[MES_ACT]})</div>
               <div className="val mono">{Qs(ingSt.realYTD)}</div>
               <div className={`delta ${ingSt.realYTD >= ingSt.pptoYTD ? 'up' : 'dn'}`}>
                 {((ingSt.realYTD/ingSt.pptoYTD-1)*100).toFixed(1)}% vs ppto · {Qs(ingSt.pptoYTD)}
               </div>
             </div>
             <div className="stat">
-              <div className="label">Gastos totales YTD</div>
+              <div className="label">{t('presupuestos.totalExpensesYTD', 'Gastos totales YTD')}</div>
               <div className="val mono">{Qs(gastRealYTD)}</div>
               <div className={`delta ${gastRealYTD <= gastPptoYTD ? 'up' : 'dn'}`}>
                 {((gastRealYTD/gastPptoYTD-1)*100).toFixed(1)}% vs ppto · {Qs(gastPptoYTD)}
               </div>
             </div>
             <div className="stat">
-              <div className="label">Utilidad operativa YTD</div>
+              <div className="label">{t('presupuestos.operatingProfitYTD', 'Utilidad operativa YTD')}</div>
               <div className="val mono">{Qs(utilRealYTD)}</div>
               <div className={`delta ${utilRealYTD >= utilPptoYTD ? 'up' : 'dn'}`}>
                 {sgn(utilRealYTD - utilPptoYTD)} vs ppto
               </div>
             </div>
             <div className="stat">
-              <div className="label">% Ejecución ingresos</div>
+              <div className="label">{t('presupuestos.revenueExecution', '% Ejecución ingresos')}</div>
               <div className="val">{pctEjecGlob.toFixed(1)}%</div>
               <div className={`delta ${pctEjecGlob >= (MES_ACT+1)/12*100 ? 'up' : 'dn'}`}>
-                Objetivo {(((MES_ACT+1)/12)*100).toFixed(0)}% · {MES_ACT+1} de 12 meses
+                {t('presupuestos.target', 'Objetivo')} {(((MES_ACT+1)/12)*100).toFixed(0)}% · {MES_ACT+1} {t('presupuestos.of12months', 'de 12 meses')}
               </div>
             </div>
           </div>
 
           <div className="card" style={{padding:0, overflow:'hidden'}}>
             <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-              <span style={{fontWeight:600, fontSize:13}}>Por departamento — YTD ene–{MESES[MES_ACT]}</span>
+              <span style={{fontWeight:600, fontSize:13}}>{t('presupuestos.byDeptYTD', 'Por departamento — YTD')} ene–{MESES[MES_ACT]}</span>
               <span className="pill" style={{fontSize:10}}>{AÑO_ACT}</span>
             </div>
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Departamento</th>
-                  <th className="num">Presupuesto YTD</th>
-                  <th className="num">Real YTD</th>
-                  <th className="num">Variación</th>
-                  <th className="num">% Ejec.</th>
-                  <th style={{width:130}}>Progreso</th>
+                  <th>{t('presupuestos.department', 'Departamento')}</th>
+                  <th className="num">{t('presupuestos.budgetYTD', 'Presupuesto YTD')}</th>
+                  <th className="num">{t('presupuestos.realYTD', 'Real YTD')}</th>
+                  <th className="num">{t('presupuestos.variation', 'Variación')}</th>
+                  <th className="num">{t('presupuestos.execution', '% Ejec.')}</th>
+                  <th style={{width:130}}>{t('presupuestos.progress', 'Progreso')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -218,7 +220,7 @@ export default function Presupuestos({ pushToast }) {
                     <tr key={d.id} className="clickable" onClick={() => setDrawer(d)}>
                       <td>
                         <div style={{fontWeight:500}}>{d.nombre}</div>
-                        <div style={{fontSize:10.5, color:'var(--muted)'}}>{d.lineas.length} líneas</div>
+                        <div style={{fontSize:10.5, color:'var(--muted)'}}>{d.lineas.length} {t('presupuestos.lines', 'líneas')}</div>
                       </td>
                       <td className="num">{Qs(st.pptoYTD)}</td>
                       <td className="num">{Qs(st.realYTD)}</td>
@@ -239,7 +241,7 @@ export default function Presupuestos({ pushToast }) {
               </tbody>
               <tfoot>
                 <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}>
-                  <td>Utilidad operativa</td>
+                  <td>{t('presupuestos.operatingProfit', 'Utilidad operativa')}</td>
                   <td className="num">{Qs(utilPptoYTD)}</td>
                   <td className="num">{Qs(utilRealYTD)}</td>
                   <td className="num" style={{color: utilRealYTD >= utilPptoYTD ? 'var(--success)' : 'var(--danger)'}}>
@@ -267,7 +269,11 @@ export default function Presupuestos({ pushToast }) {
               ))}
             </div>
             <div style={{display:'flex', gap:4}}>
-              {[{v:'ppto',l:'Presupuesto'},{v:'real',l:'Real'},{v:'var',l:'Variación'}].map(o => (
+              {[
+                {v:'ppto', l: t('presupuestos.viewBudget', 'Presupuesto')},
+                {v:'real', l: t('presupuestos.viewReal', 'Real')},
+                {v:'var',  l: t('presupuestos.viewVariation', 'Variación')},
+              ].map(o => (
                 <button key={o.v} className={`btn ${vista===o.v ? 'accent':''}`} style={{fontSize:11}}
                   onClick={() => setVista(o.v)}>{o.l}</button>
               ))}
@@ -276,19 +282,19 @@ export default function Presupuestos({ pushToast }) {
 
           <div className="card" style={{padding:0, overflowX:'auto'}}>
             <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', fontWeight:600, fontSize:13}}>
-              {dptSelec.nombre} — {vista==='ppto'?'Presupuesto':vista==='real'?'Real ejecutado':'Variación (real − ppto)'}
+              {dptSelec.nombre} — {vista==='ppto' ? t('presupuestos.viewBudget', 'Presupuesto') : vista==='real' ? t('presupuestos.realExecuted', 'Real ejecutado') : t('presupuestos.variationFormula', 'Variación (real − ppto)')}
             </div>
             <table className="tbl" style={{minWidth:900}}>
               <thead>
                 <tr>
-                  <th style={{minWidth:220}}>Línea presupuestaria</th>
+                  <th style={{minWidth:220}}>{t('presupuestos.budgetLine', 'Línea presupuestaria')}</th>
                   {MESES.map((mes, m) => (
                     <th key={m} className="num" style={{fontSize:10.5, padding:'8px 6px',
                       color: m > MES_ACT ? 'var(--muted)' : m === MES_ACT ? 'var(--accent)' : 'inherit'}}>
                       {mes}{m === MES_ACT ? ' ▲' : ''}
                     </th>
                   ))}
-                  <th className="num" style={{fontSize:10.5}}>Total</th>
+                  <th className="num" style={{fontSize:10.5}}>{t('common.total', 'Total')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -336,7 +342,7 @@ export default function Presupuestos({ pushToast }) {
               </tbody>
               <tfoot>
                 <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}>
-                  <td>Total {dptSelec.nombre}</td>
+                  <td>{t('presupuestos.total', 'Total')} {dptSelec.nombre}</td>
                   {MESES.map((_, m) => {
                     const future = m > MES_ACT;
                     let val, color;
@@ -378,22 +384,22 @@ export default function Presupuestos({ pushToast }) {
       {tab === 'comparativo' && (
         <div className="card" style={{padding:0, overflowX:'auto'}}>
           <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', fontWeight:600, fontSize:13}}>
-            Ingresos · Gastos · Utilidad — mes a mes {AÑO_ACT}
+            {t('presupuestos.comparisonTitle', 'Ingresos · Gastos · Utilidad — mes a mes')} {AÑO_ACT}
           </div>
           <table className="tbl" style={{minWidth:960}}>
             <thead>
               <tr>
-                <th style={{width:54}}>Mes</th>
-                <th className="num">Ing. Ppto</th>
-                <th className="num">Ing. Real</th>
-                <th className="num">Var. ing.</th>
-                <th className="num">Gasto Ppto</th>
-                <th className="num">Gasto Real</th>
-                <th className="num">Var. gasto</th>
-                <th className="num">Util. Ppto</th>
-                <th className="num">Util. Real</th>
-                <th className="num">Var. util.</th>
-                <th style={{width:90}}>Ejec.</th>
+                <th style={{width:54}}>{t('presupuestos.month', 'Mes')}</th>
+                <th className="num">{t('presupuestos.revBudget', 'Ing. Ppto')}</th>
+                <th className="num">{t('presupuestos.revReal', 'Ing. Real')}</th>
+                <th className="num">{t('presupuestos.revVar', 'Var. ing.')}</th>
+                <th className="num">{t('presupuestos.expBudget', 'Gasto Ppto')}</th>
+                <th className="num">{t('presupuestos.expReal', 'Gasto Real')}</th>
+                <th className="num">{t('presupuestos.expVar', 'Var. gasto')}</th>
+                <th className="num">{t('presupuestos.profitBudget', 'Util. Ppto')}</th>
+                <th className="num">{t('presupuestos.profitReal', 'Util. Real')}</th>
+                <th className="num">{t('presupuestos.profitVar', 'Var. util.')}</th>
+                <th style={{width:90}}>{t('presupuestos.exec', 'Ejec.')}</th>
               </tr>
             </thead>
             <tbody>
@@ -434,7 +440,7 @@ export default function Presupuestos({ pushToast }) {
                           </div>
                           <div className="code" style={{fontSize:9}}>{pctIng.toFixed(0)}%</div>
                         </>
-                      ) : <span className="muted" style={{fontSize:10}}>pdte.</span>}
+                      ) : <span className="muted" style={{fontSize:10}}>{t('presupuestos.pending', 'pdte.')}</span>}
                     </td>
                   </tr>
                 );
@@ -442,7 +448,7 @@ export default function Presupuestos({ pushToast }) {
             </tbody>
             <tfoot>
               <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}>
-                <td>Total</td>
+                <td>{t('common.total', 'Total')}</td>
                 <td className="num">{Qs(monthly.reduce((s,r)=>s+r.ingPpto,0))}</td>
                 <td className="num">{Qs(monthly.filter(r=>r.ingReal!=null).reduce((s,r)=>s+r.ingReal,0))}</td>
                 <td/>
@@ -462,19 +468,19 @@ export default function Presupuestos({ pushToast }) {
       {tab === 'periodos' && (
         <div className="card" style={{padding:0, overflow:'hidden'}}>
           <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-            <span style={{fontWeight:600, fontSize:13}}>Períodos presupuestarios</span>
+            <span style={{fontWeight:600, fontSize:13}}>{t('presupuestos.budgetPeriods', 'Períodos presupuestarios')}</span>
             <button className="btn accent" style={{fontSize:12}} onClick={() => pushToast?.('Nuevo período creado', 'success')}>
-              <Icon name="plus" size={12}/>Nuevo período
+              <Icon name="plus" size={12}/>{t('presupuestos.newPeriod', 'Nuevo período')}
             </button>
           </div>
           <table className="tbl">
             <thead>
               <tr>
-                <th>Año fiscal</th>
-                <th>Estado</th>
-                <th className="num">Total presupuestado</th>
-                <th className="num">% Ejecución</th>
-                <th style={{width:120}}>Progreso</th>
+                <th>{t('presupuestos.fiscalYearCol', 'Año fiscal')}</th>
+                <th>{t('common.status', 'Estado')}</th>
+                <th className="num">{t('presupuestos.totalBudgeted', 'Total presupuestado')}</th>
+                <th className="num">{t('presupuestos.executionPct', '% Ejecución')}</th>
+                <th style={{width:120}}>{t('presupuestos.progress', 'Progreso')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -484,7 +490,7 @@ export default function Presupuestos({ pushToast }) {
                   <td style={{fontWeight:600}}>{p.año}</td>
                   <td>
                     <span className={`pill ${p.estado==='vigente'?'success':''}`} style={{fontSize:10}}>
-                      {p.estado==='vigente' ? '● Vigente' : '✓ Cerrado'}
+                      {p.estado==='vigente' ? t('presupuestos.active', '● Vigente') : t('presupuestos.closed', '✓ Cerrado')}
                     </span>
                   </td>
                   <td className="num">{Qs(p.pptoTotal)}</td>
@@ -499,7 +505,7 @@ export default function Presupuestos({ pushToast }) {
                   </td>
                   <td>
                     <button className="btn sm ghost" onClick={() => pushToast?.(`Período ${p.año}`, '')}>
-                      Ver detalle
+                      {t('common.viewDetail', 'Ver detalle')}
                     </button>
                   </td>
                 </tr>
@@ -516,7 +522,7 @@ export default function Presupuestos({ pushToast }) {
             <div className="drawer-head">
               <div>
                 <div style={{fontWeight:700, fontSize:15}}>{drawer.nombre}</div>
-                <div className="muted" style={{fontSize:11}}>{drawer.lineas.length} líneas · ene–{MESES[MES_ACT]}</div>
+                <div className="muted" style={{fontSize:11}}>{drawer.lineas.length} {t('presupuestos.lines', 'líneas')} · ene–{MESES[MES_ACT]}</div>
               </div>
               <button className="icon-btn" onClick={() => setDrawer(null)}><Icon name="x"/></button>
             </div>
@@ -529,17 +535,17 @@ export default function Presupuestos({ pushToast }) {
                   <>
                     <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16}}>
                       <div className="card" style={{padding:12}}>
-                        <div style={{fontSize:10, color:'var(--muted)', marginBottom:4}}>Presupuesto YTD</div>
+                        <div style={{fontSize:10, color:'var(--muted)', marginBottom:4}}>{t('presupuestos.budgetYTD', 'Presupuesto YTD')}</div>
                         <div style={{fontFamily:'var(--font-mono)', fontWeight:700, fontSize:15}}>{Qs(st.pptoYTD)}</div>
                       </div>
                       <div className="card" style={{padding:12, background: good?'var(--success-soft)':'var(--surface-2)'}}>
-                        <div style={{fontSize:10, color:'var(--muted)', marginBottom:4}}>Real YTD</div>
+                        <div style={{fontSize:10, color:'var(--muted)', marginBottom:4}}>{t('presupuestos.realYTD', 'Real YTD')}</div>
                         <div style={{fontFamily:'var(--font-mono)', fontWeight:700, fontSize:15, color: good?'var(--success)':'var(--danger)'}}>{Qs(st.realYTD)}</div>
                       </div>
                     </div>
                     <div style={{marginBottom:18}}>
                       <div style={{display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:5}}>
-                        <span>Ejecución <strong>{st.pctEjec.toFixed(1)}%</strong></span>
+                        <span>{t('presupuestos.execution', 'Ejecución')} <strong>{st.pctEjec.toFixed(1)}%</strong></span>
                         <span style={{color: good?'var(--success)':'var(--danger)', fontWeight:600}}>
                           {sgn(st.varMonto)} vs ppto
                         </span>
@@ -550,15 +556,15 @@ export default function Presupuestos({ pushToast }) {
                     </div>
 
                     <div style={{fontSize:11, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8, fontFamily:'var(--font-mono)'}}>
-                      Líneas
+                      {t('presupuestos.lines', 'Líneas')}
                     </div>
                     <table className="tbl">
                       <thead>
                         <tr>
-                          <th>Cuenta</th>
-                          <th className="num">Ppto YTD</th>
-                          <th className="num">Real YTD</th>
-                          <th className="num">Var.</th>
+                          <th>{t('accounting.account', 'Cuenta')}</th>
+                          <th className="num">{t('presupuestos.budgetYTD', 'Ppto YTD')}</th>
+                          <th className="num">{t('presupuestos.realYTD', 'Real YTD')}</th>
+                          <th className="num">{t('presupuestos.variationShort', 'Var.')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -596,33 +602,33 @@ export default function Presupuestos({ pushToast }) {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" style={{width:460}} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>Nueva línea presupuestaria</h3>
+              <h3>{t('presupuestos.newBudgetLine', 'Nueva línea presupuestaria')}</h3>
               <button className="icon-btn" onClick={() => setShowModal(false)}><Icon name="x"/></button>
             </div>
             <div className="modal-body">
               <div className="field">
-                <label>Departamento</label>
+                <label>{t('presupuestos.department', 'Departamento')}</label>
                 <select>{DPTOS.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}</select>
               </div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
                 <div className="field">
-                  <label>Código de cuenta</label>
+                  <label>{t('presupuestos.accountCode', 'Código de cuenta')}</label>
                   <input type="text" placeholder="Ej. 6-030" className="mono"/>
                 </div>
                 <div className="field">
-                  <label>Nombre</label>
-                  <input type="text" placeholder="Descripción"/>
+                  <label>{t('common.name', 'Nombre')}</label>
+                  <input type="text" placeholder={t('common.description', 'Descripción')}/>
                 </div>
               </div>
               <div className="field">
-                <label>Monto mensual (Q) — igual para los 12 meses</label>
+                <label>{t('presupuestos.monthlyAmount', 'Monto mensual (Q) — igual para los 12 meses')}</label>
                 <input type="number" placeholder="0.00" style={{fontFamily:'var(--font-mono)'}}/>
               </div>
             </div>
             <div className="modal-foot">
-              <button className="btn" onClick={() => setShowModal(false)}>Cancelar</button>
+              <button className="btn" onClick={() => setShowModal(false)}>{t('common.cancel', 'Cancelar')}</button>
               <button className="btn accent" onClick={() => { pushToast?.('Línea agregada', 'success'); setShowModal(false); }}>
-                <Icon name="check" size={13}/>Guardar
+                <Icon name="check" size={13}/>{t('common.save', 'Guardar')}
               </button>
             </div>
           </div>
@@ -631,4 +637,3 @@ export default function Presupuestos({ pushToast }) {
     </div>
   );
 }
-

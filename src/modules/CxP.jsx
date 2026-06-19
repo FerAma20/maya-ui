@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { SUPPLIERS } from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 const Q = v => `Q ${v.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const TODAY = new Date('2026-05-24');
@@ -58,6 +59,7 @@ const STATUS_CLASS = { open: 'info', partial: 'warning', paid: 'success' };
 const PAY_METHODS  = ['efectivo', 'transferencia', 'cheque', 'tarjeta'];
 
 export default function CxP({ pushToast }) {
+  const { t } = useTranslation();
   const [tab, setTab]               = useState('aging');
   const [search, setSearch]         = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -143,7 +145,7 @@ export default function CxP({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Cuentas por Pagar</h1>
+          <h1 className="page-title">{t('cxp.title', 'Cuentas por Pagar')}</h1>
           <div className="page-subtitle">Obligaciones con proveedores · antigüedad · pagos</div>
         </div>
       </div>
@@ -197,13 +199,13 @@ export default function CxP({ pushToast }) {
             <div className="tbl-wrap"><table className="tbl">
               <thead>
                 <tr>
-                  <th>Proveedor</th>
+                  <th>{t('common.supplier', 'Proveedor')}</th>
                   <th style={{ textAlign: 'right' }}>Por vencer</th>
                   <th style={{ textAlign: 'right' }}>1–30 días</th>
                   <th style={{ textAlign: 'right' }}>31–60 días</th>
                   <th style={{ textAlign: 'right' }}>61–90 días</th>
                   <th style={{ textAlign: 'right' }}>+90 días</th>
-                  <th style={{ textAlign: 'right' }}>Total</th>
+                  <th style={{ textAlign: 'right' }}>{t('common.total', 'Total')}</th>
                   <th>Plazo</th>
                 </tr>
               </thead>
@@ -250,13 +252,13 @@ export default function CxP({ pushToast }) {
           <div className="filterbar">
             <div className="search-wrap" style={{ flex: 1, maxWidth: 320 }}>
               <Icon name="search" className="icon" size={13} />
-              <input className="search-input" placeholder="Buscar proveedor o documento…" value={search} onChange={e => setSearch(e.target.value)} />
+              <input className="search-input" placeholder={t('cxp.searchPlaceholder', 'Buscar proveedor o documento…')} value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <select className="input" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="all">Todos los estados</option>
+              <option value="all">{t('common.all', 'Todos')} los estados</option>
               <option value="open">Abiertos</option>
               <option value="partial">Parciales</option>
-              <option value="paid">Pagados</option>
+              <option value="paid">{t('common.completed', 'Pagados')}</option>
             </select>
           </div>
 
@@ -265,14 +267,14 @@ export default function CxP({ pushToast }) {
               <thead>
                 <tr>
                   <th>Documento</th>
-                  <th>Proveedor</th>
+                  <th>{t('common.supplier', 'Proveedor')}</th>
                   <th>OC</th>
                   <th>Emisión</th>
                   <th>Vencimiento</th>
-                  <th style={{ textAlign: 'right' }}>Monto</th>
+                  <th style={{ textAlign: 'right' }}>{t('common.amount', 'Monto')}</th>
                   <th style={{ textAlign: 'right' }}>Pendiente</th>
                   <th>Antigüedad</th>
-                  <th>Estado</th>
+                  <th>{t('common.status', 'Estado')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -317,13 +319,13 @@ export default function CxP({ pushToast }) {
           <div className="tbl-wrap"><table className="tbl">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Proveedor</th>
+                <th>{t('common.date', 'Fecha')}</th>
+                <th>{t('common.supplier', 'Proveedor')}</th>
                 <th>Documento</th>
-                <th>Referencia</th>
+                <th>{t('common.reference', 'Referencia')}</th>
                 <th>Método</th>
-                <th style={{ textAlign: 'right' }}>Monto</th>
-                <th>Notas</th>
+                <th style={{ textAlign: 'right' }}>{t('common.amount', 'Monto')}</th>
+                <th>{t('common.notes', 'Notas')}</th>
               </tr>
             </thead>
             <tbody>
@@ -355,11 +357,11 @@ export default function CxP({ pushToast }) {
               <button className="icon-btn" onClick={() => setSelectedBill(null)}><Icon name="close" /></button>
             </div>
             <div className="drawer-body detail-grid">
-              <Row label="Proveedor"     value={selectedBill.supplierName} />
+              <Row label={t('common.supplier', 'Proveedor')}     value={selectedBill.supplierName} />
               <Row label="OC relacionada" value={selectedBill.ocId || '—'} mono />
               <Row label="Fecha emisión"  value={selectedBill.date} />
               <Row label="Vencimiento"    value={selectedBill.dueDate} />
-              <Row label="Monto total"    value={Q(selectedBill.amount)} />
+              <Row label={t('common.amount', 'Monto total')}    value={Q(selectedBill.amount)} />
               <Row label="Pagado"         value={Q(selectedBill.paid)} />
               <Row label="Saldo pendiente" value={Q(selectedBill.balance)} bold />
               <Row label="Antigüedad"
@@ -402,6 +404,7 @@ function Row({ label, value, mono, bold }) {
 }
 
 function PayModal({ bill, onClose, onSave }) {
+  const { t } = useTranslation();
   const [amount, setAmount]       = useState(bill.balance.toString());
   const [method, setMethod]       = useState('efectivo');
   const [reference, setReference] = useState('');
@@ -421,7 +424,7 @@ function PayModal({ bill, onClose, onSave }) {
             <div className="mono" style={{ fontSize: 13, padding: '6px 0' }}>{bill.id} — {bill.supplierName}</div>
           </div>
           <div className="field">
-            <label className="field-label">Saldo pendiente</label>
+            <label className="field-label">{t('clients.payment.pendingBalance', 'Saldo pendiente')}</label>
             <div style={{ fontWeight: 700, color: 'var(--danger)', padding: '6px 0' }}>{Q(bill.balance)}</div>
           </div>
           <div className="field">
@@ -431,7 +434,7 @@ function PayModal({ bill, onClose, onSave }) {
               onChange={e => setAmount(e.target.value)} />
           </div>
           <div className="field">
-            <label className="field-label">Método de pago</label>
+            <label className="field-label">{t('clients.payment.method', 'Método de pago')}</label>
             <select className="field-input" value={method} onChange={e => setMethod(e.target.value)}>
               {PAY_METHODS.map(m => (
                 <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
@@ -440,13 +443,13 @@ function PayModal({ bill, onClose, onSave }) {
           </div>
           {method !== 'efectivo' && (
             <div className="field">
-              <label className="field-label">Referencia / No. cheque / transferencia</label>
+              <label className="field-label">{t('clients.payment.reference', 'Referencia / No. cheque / transferencia')}</label>
               <input className="field-input" value={reference} onChange={e => setReference(e.target.value)} placeholder="Ej. TRF-49102" />
             </div>
           )}
         </div>
         <div className="modal-foot">
-          <button className="btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
           <button
             className="btn"
             disabled={!valid}

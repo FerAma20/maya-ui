@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { ACCOUNTS, JOURNAL_ENTRIES, ACCOUNTING_PERIODS } from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 const Q   = v => `Q ${Math.abs(v).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const Qn  = v => v === 0 ? '—' : Q(v);
@@ -129,6 +130,7 @@ function Row({ label, value, prevValue, indent = 0, bold, total, grand, loss, sh
 // ── Main component ──────────────────────────────────────────────────────────
 
 export default function FinancialStatements() {
+  const { t } = useTranslation();
   const [tab, setTab]         = useState('income');
   const [periodId, setPeriodId] = useState(5);
   const [cmp, setCmp]         = useState(false);
@@ -147,13 +149,13 @@ export default function FinancialStatements() {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="page-title">Estados Financieros</div>
-          <div className="page-sub">{period?.name} · Sucursal Zona 10</div>
+          <div className="page-title">{t('financials.title', 'Estados Financieros')}</div>
+          <div className="page-sub">{period?.name} · {t('financials.branch', 'Sucursal Zona 10')}</div>
         </div>
         <div className="page-head-actions">
           <label className="fs-cmp-label">
             <input type="checkbox" checked={cmp} onChange={e => setCmp(e.target.checked)} />
-            Comparativo
+            {t('financials.comparative', 'Comparativo')}
           </label>
           <select
             className="field-input"
@@ -166,7 +168,7 @@ export default function FinancialStatements() {
           </select>
           <button className="btn-outline" onClick={() => window.print()}>
             <Icon name="receipt" size={13} />
-            Imprimir
+            {t('common.print', 'Imprimir')}
           </button>
         </div>
       </div>
@@ -174,31 +176,31 @@ export default function FinancialStatements() {
       {/* KPIs */}
       <div className="stat-grid" style={{ marginBottom: 20 }}>
         <div className="stat-card">
-          <div className="label">Ingresos del período</div>
+          <div className="label">{t('financials.periodRevenue', 'Ingresos del período')}</div>
           <div className="value">{Q(inc.totalIngresos)}</div>
           <div className="sub muted">{period?.name}</div>
         </div>
         <div className="stat-card">
-          <div className="label">Utilidad Bruta</div>
+          <div className="label">{t('financials.grossProfit', 'Utilidad Bruta')}</div>
           <div className={`value ${inc.utilBruta < 0 ? 'danger' : 'success'}`}>
             {inc.utilBruta < 0 ? '(' : ''}{Q(inc.utilBruta)}{inc.utilBruta < 0 ? ')' : ''}
           </div>
           <div className="sub muted">
-            Margen {inc.totalIngresos > 0 ? ((inc.utilBruta / inc.totalIngresos) * 100).toFixed(1) : '0.0'}%
+            {t('common.margin', 'Margen')} {inc.totalIngresos > 0 ? ((inc.utilBruta / inc.totalIngresos) * 100).toFixed(1) : '0.0'}%
           </div>
         </div>
         <div className="stat-card">
-          <div className="label">Utilidad / Pérdida Neta</div>
+          <div className="label">{t('financials.netProfitLoss', 'Utilidad / Pérdida Neta')}</div>
           <div className={`value ${inc.utilNeta < 0 ? 'danger' : 'success'}`}>
             {inc.utilNeta < 0 ? '(' : ''}{Q(inc.utilNeta)}{inc.utilNeta < 0 ? ')' : ''}
           </div>
-          <div className="sub muted">{inc.utilNeta < 0 ? 'Pérdida' : 'Utilidad'} del período</div>
+          <div className="sub muted">{inc.utilNeta < 0 ? t('financials.loss', 'Pérdida') : t('financials.profit', 'Utilidad')} {t('financials.ofPeriod', 'del período')}</div>
         </div>
         <div className="stat-card">
-          <div className="label">Total Activo</div>
+          <div className="label">{t('financials.totalAssets', 'Total Activo')}</div>
           <div className="value">{Q(bs.totalActivo)}</div>
           <div className={`sub ${bs.balanced ? 'success' : 'danger'}`}>
-            {bs.balanced ? '✓ Balance cuadra' : '⚠ Revisar balance'}
+            {bs.balanced ? t('financials.balanceOk', '✓ Balance cuadra') : t('financials.balanceReview', '⚠ Revisar balance')}
           </div>
         </div>
       </div>
@@ -206,10 +208,10 @@ export default function FinancialStatements() {
       {/* Tabs */}
       <div className="tabs" style={{ marginBottom: 0 }}>
         <button className={`tab ${tab === 'income' ? 'active' : ''}`} onClick={() => setTab('income')}>
-          Estado de Resultados
+          {t('financials.tabs.income', 'Estado de Resultados')}
         </button>
         <button className={`tab ${tab === 'bs' ? 'active' : ''}`} onClick={() => setTab('bs')}>
-          Balance General
+          {t('financials.tabs.balance', 'Balance General')}
         </button>
       </div>
 
@@ -232,37 +234,37 @@ export default function FinancialStatements() {
                 <col style={{ width: 180 }} />
               </colgroup>
               <tbody>
-                <SectionHdr label="INGRESOS OPERACIONALES" colSpan={cols} />
-                <Row label="Ventas al Contado" value={inc.venContado} prevValue={pInc.venContado} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
-                <Row label="Ventas a Crédito"  value={inc.venCredito} prevValue={pInc.venCredito} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
-                <Row label="Total Ingresos"    value={inc.totalIngresos} prevValue={pInc.totalIngresos} bold total cmp={cmp} />
+                <SectionHdr label={t('financials.operationalRevenue', 'INGRESOS OPERACIONALES')} colSpan={cols} />
+                <Row label={t('financials.cashSales', 'Ventas al Contado')} value={inc.venContado} prevValue={pInc.venContado} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
+                <Row label={t('financials.creditSales', 'Ventas a Crédito')}  value={inc.venCredito} prevValue={pInc.venCredito} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
+                <Row label={t('financials.totalRevenue', 'Total Ingresos')}    value={inc.totalIngresos} prevValue={pInc.totalIngresos} bold total cmp={cmp} />
                 <Spacer colSpan={cols} />
 
-                <SectionHdr label="COSTO DE VENTAS" colSpan={cols} />
-                <Row label="Costo de Mercadería Vendida" value={inc.cmv} prevValue={pInc.cmv} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
-                <Row label="Total Costo de Ventas"       value={inc.cmv} prevValue={pInc.cmv} bold total cmp={cmp} />
+                <SectionHdr label={t('financials.costOfSales', 'COSTO DE VENTAS')} colSpan={cols} />
+                <Row label={t('financials.cmv', 'Costo de Mercadería Vendida')} value={inc.cmv} prevValue={pInc.cmv} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
+                <Row label={t('financials.totalCostOfSales', 'Total Costo de Ventas')}       value={inc.cmv} prevValue={pInc.cmv} bold total cmp={cmp} />
                 <Spacer colSpan={cols} />
 
-                <Row label="UTILIDAD BRUTA"
+                <Row label={t('financials.grossProfitLine', 'UTILIDAD BRUTA')}
                   value={inc.utilBruta} prevValue={pInc.utilBruta}
                   bold total loss={inc.utilBruta < 0} showPct pctBase={inc.totalIngresos} cmp={cmp} />
                 <Spacer colSpan={cols} />
 
-                <SectionHdr label="GASTOS DE OPERACIÓN" colSpan={cols} />
-                <Row label="Sueldos y Salarios"  value={inc.sueldos}    prevValue={pInc.sueldos}    indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
-                <Row label="Arrendamientos"       value={inc.arrend}     prevValue={pInc.arrend}     indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
-                <Row label="Energía Eléctrica"    value={inc.energia}    prevValue={pInc.energia}    indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
-                <Row label="Comisiones Bancarias" value={inc.comisiones} prevValue={pInc.comisiones} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
-                <Row label="Total Gastos Operación" value={inc.totalGastos} prevValue={pInc.totalGastos} bold total cmp={cmp} />
+                <SectionHdr label={t('financials.operatingExpenses', 'GASTOS DE OPERACIÓN')} colSpan={cols} />
+                <Row label={t('financials.salaries', 'Sueldos y Salarios')}  value={inc.sueldos}    prevValue={pInc.sueldos}    indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
+                <Row label={t('financials.rent', 'Arrendamientos')}       value={inc.arrend}     prevValue={pInc.arrend}     indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
+                <Row label={t('financials.energy', 'Energía Eléctrica')}    value={inc.energia}    prevValue={pInc.energia}    indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
+                <Row label={t('financials.bankFees', 'Comisiones Bancarias')} value={inc.comisiones} prevValue={pInc.comisiones} indent={1} showPct pctBase={inc.totalIngresos} cmp={cmp} />
+                <Row label={t('financials.totalOperatingExpenses', 'Total Gastos Operación')} value={inc.totalGastos} prevValue={pInc.totalGastos} bold total cmp={cmp} />
                 <Spacer colSpan={cols} />
 
-                <Row label="UTILIDAD DE OPERACIÓN"
+                <Row label={t('financials.operatingProfit', 'UTILIDAD DE OPERACIÓN')}
                   value={inc.utilNeta} prevValue={pInc.utilNeta}
                   grand loss={inc.utilNeta < 0} showPct pctBase={inc.totalIngresos} cmp={cmp} />
                 <Spacer colSpan={cols} />
 
                 <tr className={`fs-net ${inc.utilNeta < 0 ? 'loss' : 'profit'}`}>
-                  <td><strong>UTILIDAD (PÉRDIDA) NETA DEL PERÍODO</strong></td>
+                  <td><strong>{t('financials.netProfitLossLine', 'UTILIDAD (PÉRDIDA) NETA DEL PERÍODO')}</strong></td>
                   <td className="fs-amt">
                     <strong>{inc.utilNeta < 0 ? '(' : ''}{Q(inc.utilNeta)}{inc.utilNeta < 0 ? ')' : ''}</strong>
                   </td>
@@ -285,52 +287,52 @@ export default function FinancialStatements() {
               </colgroup>
               <tbody>
                 {/* ACTIVO */}
-                <SectionHdr label="ACTIVO" colSpan={cols} />
-                <Row label="Activo Corriente" value={null} indent={0} bold cmp={cmp} />
-                <Row label="Caja General"                value={bs.cajaGral}   prevValue={pBS.cajaGral}   indent={2} cmp={cmp} />
-                <Row label="Banco Industrial CTA 001"    value={bs.bancoInd}   prevValue={pBS.bancoInd}   indent={2} cmp={cmp} />
-                <Row label="Banco G&T Continental"       value={bs.bancoGT}    prevValue={pBS.bancoGT}    indent={2} cmp={cmp} />
-                <Row label="Clientes Nacionales"         value={bs.clientes}   prevValue={pBS.clientes}   indent={2} cmp={cmp} />
-                <Row label="Inventario de Mercaderías"   value={bs.inventario} prevValue={pBS.inventario} indent={2} cmp={cmp} />
-                <Row label="IVA Crédito Fiscal"          value={bs.ivaCredito} prevValue={pBS.ivaCredito} indent={2} cmp={cmp} />
-                <Row label="Total Activo Corriente"      value={bs.totalAC}    prevValue={pBS.totalAC}    bold total cmp={cmp} />
+                <SectionHdr label={t('financials.assets', 'ACTIVO')} colSpan={cols} />
+                <Row label={t('financials.currentAssets', 'Activo Corriente')} value={null} indent={0} bold cmp={cmp} />
+                <Row label={t('financials.cashGeral', 'Caja General')}                value={bs.cajaGral}   prevValue={pBS.cajaGral}   indent={2} cmp={cmp} />
+                <Row label={t('financials.bankInd', 'Banco Industrial CTA 001')}    value={bs.bancoInd}   prevValue={pBS.bancoInd}   indent={2} cmp={cmp} />
+                <Row label={t('financials.bankGT', 'Banco G&T Continental')}       value={bs.bancoGT}    prevValue={pBS.bancoGT}    indent={2} cmp={cmp} />
+                <Row label={t('financials.receivables', 'Clientes Nacionales')}         value={bs.clientes}   prevValue={pBS.clientes}   indent={2} cmp={cmp} />
+                <Row label={t('financials.inventory', 'Inventario de Mercaderías')}   value={bs.inventario} prevValue={pBS.inventario} indent={2} cmp={cmp} />
+                <Row label={t('financials.ivaCredit', 'IVA Crédito Fiscal')}          value={bs.ivaCredito} prevValue={pBS.ivaCredito} indent={2} cmp={cmp} />
+                <Row label={t('financials.totalCurrentAssets', 'Total Activo Corriente')}      value={bs.totalAC}    prevValue={pBS.totalAC}    bold total cmp={cmp} />
                 <Spacer colSpan={cols} />
 
-                <Row label="Activo No Corriente" value={null} indent={0} bold cmp={cmp} />
-                <Row label="Mobiliario y Equipo"       value={bs.mobEquipo} prevValue={pBS.mobEquipo} indent={2} cmp={cmp} />
-                <Row label="Total Activo No Corriente" value={bs.totalANC}  prevValue={pBS.totalANC}  bold total cmp={cmp} />
+                <Row label={t('financials.nonCurrentAssets', 'Activo No Corriente')} value={null} indent={0} bold cmp={cmp} />
+                <Row label={t('financials.furniture', 'Mobiliario y Equipo')}       value={bs.mobEquipo} prevValue={pBS.mobEquipo} indent={2} cmp={cmp} />
+                <Row label={t('financials.totalNonCurrentAssets', 'Total Activo No Corriente')} value={bs.totalANC}  prevValue={pBS.totalANC}  bold total cmp={cmp} />
                 <Spacer colSpan={cols} />
 
-                <Row label="TOTAL ACTIVO" value={bs.totalActivo} prevValue={pBS.totalActivo} grand cmp={cmp} />
+                <Row label={t('financials.totalAssets', 'TOTAL ACTIVO')} value={bs.totalActivo} prevValue={pBS.totalActivo} grand cmp={cmp} />
                 <Spacer colSpan={cols} /><Spacer colSpan={cols} />
 
                 {/* PASIVO */}
-                <SectionHdr label="PASIVO" colSpan={cols} />
-                <Row label="Pasivo Corriente" value={null} indent={0} bold cmp={cmp} />
-                <Row label="Proveedores Nacionales"       value={bs.proveedores} prevValue={pBS.proveedores} indent={2} cmp={cmp} />
-                <Row label="IVA por Pagar (Débito Fiscal)" value={bs.ivaPagar}  prevValue={pBS.ivaPagar}   indent={2} cmp={cmp} />
-                <Row label="Sueldos por Pagar"             value={bs.sueldosPag} prevValue={pBS.sueldosPag} indent={2} cmp={cmp} />
-                <Row label="Total Pasivo Corriente"        value={bs.totalPC}    prevValue={pBS.totalPC}    bold total cmp={cmp} />
+                <SectionHdr label={t('financials.liabilities', 'PASIVO')} colSpan={cols} />
+                <Row label={t('financials.currentLiabilities', 'Pasivo Corriente')} value={null} indent={0} bold cmp={cmp} />
+                <Row label={t('financials.suppliers', 'Proveedores Nacionales')}       value={bs.proveedores} prevValue={pBS.proveedores} indent={2} cmp={cmp} />
+                <Row label={t('financials.ivaPagar', 'IVA por Pagar (Débito Fiscal)')} value={bs.ivaPagar}  prevValue={pBS.ivaPagar}   indent={2} cmp={cmp} />
+                <Row label={t('financials.salariesPayable', 'Sueldos por Pagar')}             value={bs.sueldosPag} prevValue={pBS.sueldosPag} indent={2} cmp={cmp} />
+                <Row label={t('financials.totalCurrentLiabilities', 'Total Pasivo Corriente')}        value={bs.totalPC}    prevValue={pBS.totalPC}    bold total cmp={cmp} />
                 <Spacer colSpan={cols} />
-                <Row label="TOTAL PASIVO" value={bs.totalPasivo ?? bs.totalPC} prevValue={pBS.totalPC} grand cmp={cmp} />
+                <Row label={t('financials.totalLiabilities', 'TOTAL PASIVO')} value={bs.totalPasivo ?? bs.totalPC} prevValue={pBS.totalPC} grand cmp={cmp} />
                 <Spacer colSpan={cols} /><Spacer colSpan={cols} />
 
                 {/* CAPITAL */}
-                <SectionHdr label="CAPITAL Y RESERVAS" colSpan={cols} />
-                <Row label="Capital Social Pagado"        value={bs.capitalSocial} prevValue={pBS.capitalSocial} indent={1} cmp={cmp} />
-                <Row label="Utilidades Retenidas"         value={bs.utilRetened}   prevValue={pBS.utilRetened}   indent={1} cmp={cmp} />
-                <Row label="Resultado Ejercicio Anterior" value={bs.resultAnt}     prevValue={pBS.resultAnt}     indent={1} cmp={cmp} />
-                <Row label="Resultado del Período"        value={bs.resultPer}     prevValue={pBS.resultPer}
+                <SectionHdr label={t('financials.equity', 'CAPITAL Y RESERVAS')} colSpan={cols} />
+                <Row label={t('financials.paidCapital', 'Capital Social Pagado')}        value={bs.capitalSocial} prevValue={pBS.capitalSocial} indent={1} cmp={cmp} />
+                <Row label={t('financials.retainedEarnings', 'Utilidades Retenidas')}         value={bs.utilRetened}   prevValue={pBS.utilRetened}   indent={1} cmp={cmp} />
+                <Row label={t('financials.priorPeriodResult', 'Resultado Ejercicio Anterior')} value={bs.resultAnt}     prevValue={pBS.resultAnt}     indent={1} cmp={cmp} />
+                <Row label={t('financials.currentPeriodResult', 'Resultado del Período')}        value={bs.resultPer}     prevValue={pBS.resultPer}
                   indent={1} loss={bs.resultPer < 0} cmp={cmp} />
-                <Row label="Total Capital y Reservas" value={bs.totalCap} prevValue={pBS.totalCap} bold total cmp={cmp} />
+                <Row label={t('financials.totalEquity', 'Total Capital y Reservas')} value={bs.totalCap} prevValue={pBS.totalCap} bold total cmp={cmp} />
                 <Spacer colSpan={cols} />
 
-                <Row label="TOTAL PASIVO + CAPITAL" value={bs.totalPasCap} prevValue={pBS.totalPasCap} grand cmp={cmp} />
+                <Row label={t('financials.totalLiabilitiesEquity', 'TOTAL PASIVO + CAPITAL')} value={bs.totalPasCap} prevValue={pBS.totalPasCap} grand cmp={cmp} />
 
                 {!bs.balanced && (
                   <tr>
                     <td colSpan={cols} style={{ paddingTop: 12 }}>
-                      <span className="pill danger">⚠ El balance no cuadra — verificar partidas</span>
+                      <span className="pill danger">{t('financials.balanceReviewWarning', '⚠ El balance no cuadra — verificar partidas')}</span>
                     </td>
                   </tr>
                 )}

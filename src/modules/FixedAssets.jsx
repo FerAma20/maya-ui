@@ -1,6 +1,7 @@
 // ERP MAYA — Fixed Assets / Activos Fijos (Guatemala · Decreto 26-92 ISR)
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
+import { useTranslation } from 'react-i18next';
 
 const Q  = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const pct = (n) => `${(n * 100).toFixed(2)}%`;
@@ -65,6 +66,7 @@ const STATUS_PILL   = { active:'success', baja:'danger', mantenimiento:'warning'
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function FixedAssets({ pushToast }) {
+  const { t } = useTranslation();
   const [tab,         setTab]         = useState('activos');
   const [selAsset,    setSelAsset]    = useState(null);
   const [showNew,     setShowNew]     = useState(false);
@@ -126,15 +128,15 @@ export default function FixedAssets({ pushToast }) {
       {/* Header */}
       <div className="page-head">
         <div>
-          <h1 className="page-title">Activos Fijos</h1>
+          <h1 className="page-title">{t('fixedassets.title', 'Activos Fijos')}</h1>
           <div className="page-subtitle">
-            Depreciación línea recta · Decreto 26-92 ISR Guatemala · {CUR_YEAR}
+            {t('fixedassets.subtitle', 'Depreciación línea recta · Decreto 26-92 ISR Guatemala')} · {CUR_YEAR}
           </div>
         </div>
         <div className="page-head-actions">
-          <button className="btn"><Icon name="download" size={12}/>Exportar</button>
+          <button className="btn"><Icon name="download" size={12}/>{t('common.export', 'Exportar')}</button>
           <button className="btn accent" onClick={() => setShowNew(true)}>
-            <Icon name="plus" size={12}/>Nuevo activo
+            <Icon name="plus" size={12}/>{t('fixedassets.newAsset', 'Nuevo activo')}
           </button>
         </div>
       </div>
@@ -142,13 +144,13 @@ export default function FixedAssets({ pushToast }) {
       {/* Tabs */}
       <div className="tabs">
         {[
-          { id:'activos',      label:`Activos (${activeAssets.length})` },
-          { id:'depreciacion', label:'Depreciación del período' },
-          { id:'categorias',   label:'Categorías SAT' },
-          { id:'bajas',        label:'Bajas' },
-        ].map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'active':''}`}
-            onClick={() => setTab(t.id)}>{t.label}
+          { id:'activos',      label:`${t('fixedassets.tabs.assets', 'Activos')} (${activeAssets.length})` },
+          { id:'depreciacion', label: t('fixedassets.tabs.depreciation', 'Depreciación del período') },
+          { id:'categorias',   label: t('fixedassets.tabs.categories', 'Categorías SAT') },
+          { id:'bajas',        label: t('fixedassets.tabs.retirements', 'Bajas') },
+        ].map(t2 => (
+          <button key={t2.id} className={`tab ${tab === t2.id ? 'active':''}`}
+            onClick={() => setTab(t2.id)}>{t2.label}
           </button>
         ))}
       </div>
@@ -159,28 +161,28 @@ export default function FixedAssets({ pushToast }) {
           {/* KPIs */}
           <div className="stat-grid" style={{gridTemplateColumns:'repeat(4,1fr)', marginBottom:16}}>
             <div className="stat">
-              <div className="label"><Icon name="box" size={11}/>Costo histórico total</div>
+              <div className="label"><Icon name="box" size={11}/>{t('fixedassets.historicalCost', 'Costo histórico total')}</div>
               <div className="val mono" style={{fontSize:20}}>{Q(summary.totalCosto)}</div>
-              <div className="delta" style={{color:'var(--muted)'}}>{summary.count} activos activos</div>
+              <div className="delta" style={{color:'var(--muted)'}}>{summary.count} {t('fixedassets.activeAssets', 'activos activos')}</div>
             </div>
             <div className="stat">
-              <div className="label"><Icon name="chart" size={11}/>Valor en libros</div>
+              <div className="label"><Icon name="chart" size={11}/>{t('fixedassets.bookValue', 'Valor en libros')}</div>
               <div className="val mono" style={{fontSize:20}}>{Q(summary.totalLibros)}</div>
               <div className="delta" style={{color:'var(--muted)'}}>
-                {pct(summary.totalLibros / summary.totalCosto)} del costo
+                {pct(summary.totalLibros / summary.totalCosto)} {t('fixedassets.ofCost', 'del costo')}
               </div>
             </div>
             <div className="stat">
-              <div className="label"><Icon name="arrowDown" size={11}/>Depreciación acumulada</div>
+              <div className="label"><Icon name="arrowDown" size={11}/>{t('fixedassets.accumulatedDepr', 'Depreciación acumulada')}</div>
               <div className="val mono" style={{fontSize:20, color:'var(--danger)'}}>{Q(summary.totalAcum)}</div>
               <div className="delta" style={{color:'var(--muted)'}}>
-                {pct(summary.totalAcum / summary.totalCosto)} depreciado
+                {pct(summary.totalAcum / summary.totalCosto)} {t('fixedassets.depreciated', 'depreciado')}
               </div>
             </div>
             <div className="stat">
-              <div className="label"><Icon name="calendar" size={11}/>Depreciación mensual</div>
+              <div className="label"><Icon name="calendar" size={11}/>{t('fixedassets.monthlyDepr', 'Depreciación mensual')}</div>
               <div className="val mono" style={{fontSize:20, color:'var(--accent)'}}>{Q(summary.totalMensual)}</div>
-              <div className="delta" style={{color:'var(--muted)'}}>{Q(summary.totalAnual)} anual</div>
+              <div className="delta" style={{color:'var(--muted)'}}>{Q(summary.totalAnual)} {t('fixedassets.annual', 'anual')}</div>
             </div>
           </div>
 
@@ -188,21 +190,21 @@ export default function FixedAssets({ pushToast }) {
           <div className="toolbar">
             <div className="search-wrap" style={{flex:1, maxWidth:320}}>
               <Icon name="search" size={13} className="icon"/>
-              <input className="search-input" placeholder="Buscar activo…"
+              <input className="search-input" placeholder={t('fixedassets.searchPlaceholder', 'Buscar activo…')}
                 value={search} onChange={e => setSearch(e.target.value)}/>
             </div>
             <select className="field-input" value={catFilter}
               onChange={e => setCatFilter(e.target.value)} style={{width:'auto'}}>
-              <option value="todos">Todas las categorías</option>
+              <option value="todos">{t('fixedassets.allCategories', 'Todas las categorías')}</option>
               {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <select className="field-input" value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)} style={{width:'auto'}}>
-              <option value="todos">Todos los estados</option>
-              <option value="active">Activos</option>
-              <option value="baja">Dados de baja</option>
+              <option value="todos">{t('fixedassets.allStatuses', 'Todos los estados')}</option>
+              <option value="active">{t('fixedassets.statusActive', 'Activos')}</option>
+              <option value="baja">{t('fixedassets.statusRetired', 'Dados de baja')}</option>
             </select>
-            <span className="muted" style={{fontSize:11, marginLeft:'auto'}}>{filtered.length} registros</span>
+            <span className="muted" style={{fontSize:11, marginLeft:'auto'}}>{filtered.length} {t('fixedassets.records', 'registros')}</span>
           </div>
 
           {/* Tabla */}
@@ -210,15 +212,15 @@ export default function FixedAssets({ pushToast }) {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Código</th>
-                  <th>Activo</th>
-                  <th>Categoría</th>
-                  <th>Sucursal</th>
-                  <th className="num">Costo histórico</th>
-                  <th className="num">Dep. acumulada</th>
-                  <th className="num">Valor en libros</th>
-                  <th>% Dep.</th>
-                  <th>Estado</th>
+                  <th>{t('common.code', 'Código')}</th>
+                  <th>{t('fixedassets.asset', 'Activo')}</th>
+                  <th>{t('common.category', 'Categoría')}</th>
+                  <th>{t('common.branch', 'Sucursal')}</th>
+                  <th className="num">{t('fixedassets.historicalCostShort', 'Costo histórico')}</th>
+                  <th className="num">{t('fixedassets.accDeprShort', 'Dep. acumulada')}</th>
+                  <th className="num">{t('fixedassets.bookValue', 'Valor en libros')}</th>
+                  <th>{t('fixedassets.pctDepr', '% Dep.')}</th>
+                  <th>{t('common.status', 'Estado')}</th>
                   <th/>
                 </tr>
               </thead>
@@ -271,7 +273,7 @@ export default function FixedAssets({ pushToast }) {
                   );
                 })}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={10} className="empty">Sin activos</td></tr>
+                  <tr><td colSpan={10} className="empty">{t('fixedassets.noAssets', 'Sin activos')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -285,11 +287,11 @@ export default function FixedAssets({ pushToast }) {
           <div className="card" style={{marginBottom:16}}>
             <div className="card-head">
               <div>
-                <h3>Partida de depreciación — {`${String(CUR_MONTH).padStart(2,'0')}/${CUR_YEAR}`}</h3>
-                <div className="meta">Línea recta · Método aceptado SAT Decreto 26-92</div>
+                <h3>{t('fixedassets.deprEntry', 'Partida de depreciación')} — {`${String(CUR_MONTH).padStart(2,'0')}/${CUR_YEAR}`}</h3>
+                <div className="meta">{t('fixedassets.straightLineMethod', 'Línea recta · Método aceptado SAT Decreto 26-92')}</div>
               </div>
               <div className="row gap-6">
-                <button className="btn sm"><Icon name="receipt" size={12}/>Registrar partida</button>
+                <button className="btn sm"><Icon name="receipt" size={12}/>{t('fixedassets.registerEntry', 'Registrar partida')}</button>
                 <button className="btn sm"><Icon name="download" size={12}/>Excel</button>
               </div>
             </div>
@@ -297,15 +299,15 @@ export default function FixedAssets({ pushToast }) {
               <table className="tbl" style={{fontSize:11.5}}>
                 <thead>
                   <tr>
-                    <th>Código</th>
-                    <th>Activo</th>
-                    <th>Categoría</th>
-                    <th className="num">Costo histórico</th>
-                    <th className="num">Tasa anual</th>
-                    <th className="num">Dep. anual</th>
-                    <th className="num">Dep. mensual</th>
-                    <th className="num">Dep. acumulada</th>
-                    <th className="num">Valor en libros</th>
+                    <th>{t('common.code', 'Código')}</th>
+                    <th>{t('fixedassets.asset', 'Activo')}</th>
+                    <th>{t('common.category', 'Categoría')}</th>
+                    <th className="num">{t('fixedassets.historicalCostShort', 'Costo histórico')}</th>
+                    <th className="num">{t('fixedassets.annualRate', 'Tasa anual')}</th>
+                    <th className="num">{t('fixedassets.annualDepr', 'Dep. anual')}</th>
+                    <th className="num">{t('fixedassets.monthlyDeprShort', 'Dep. mensual')}</th>
+                    <th className="num">{t('fixedassets.accDeprShort', 'Dep. acumulada')}</th>
+                    <th className="num">{t('fixedassets.bookValue', 'Valor en libros')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -326,7 +328,7 @@ export default function FixedAssets({ pushToast }) {
                         <td className="num" style={{fontWeight:600,
                           color: a.depr.fullyDepr ? 'var(--muted)' : 'var(--text)'}}>
                           {Q(a.depr.valorLibros)}
-                          {a.depr.fullyDepr && <span className="pill warning" style={{marginLeft:6, fontSize:9}}>Agotado</span>}
+                          {a.depr.fullyDepr && <span className="pill warning" style={{marginLeft:6, fontSize:9}}>{t('fixedassets.exhausted', 'Agotado')}</span>}
                         </td>
                       </tr>
                     );
@@ -334,7 +336,7 @@ export default function FixedAssets({ pushToast }) {
                 </tbody>
                 <tfoot>
                   <tr style={{background:'var(--surface-2)', fontWeight:700}}>
-                    <td colSpan={3} style={{padding:'8px 12px'}}>TOTALES</td>
+                    <td colSpan={3} style={{padding:'8px 12px'}}>{t('fixedassets.totals', 'TOTALES')}</td>
                     <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalCosto)}</td>
                     <td/>
                     <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalAnual)}</td>
@@ -350,13 +352,13 @@ export default function FixedAssets({ pushToast }) {
           {/* Asiento contable sugerido */}
           <div className="card">
             <div className="card-head">
-              <h3>Asiento contable sugerido</h3>
+              <h3>{t('fixedassets.suggestedEntry', 'Asiento contable sugerido')}</h3>
               <span className="meta">{`${String(CUR_MONTH).padStart(2,'0')}/${CUR_YEAR}`}</span>
             </div>
             <div className="card-body">
               <table className="tbl">
                 <thead>
-                  <tr><th>Cuenta</th><th>Descripción</th><th className="num">Débito</th><th className="num">Crédito</th></tr>
+                  <tr><th>{t('fixedassets.account', 'Cuenta')}</th><th>{t('common.description', 'Descripción')}</th><th className="num">{t('fixedassets.debit', 'Débito')}</th><th className="num">{t('fixedassets.credit', 'Crédito')}</th></tr>
                 </thead>
                 <tbody>
                   <tr>
@@ -398,7 +400,7 @@ export default function FixedAssets({ pushToast }) {
                 </tbody>
                 <tfoot>
                   <tr style={{fontWeight:700}}>
-                    <td colSpan={2} style={{padding:'8px 12px'}}>TOTALES</td>
+                    <td colSpan={2} style={{padding:'8px 12px'}}>{t('fixedassets.totals', 'TOTALES')}</td>
                     <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalMensual)}</td>
                     <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalMensual)}</td>
                   </tr>
@@ -420,34 +422,34 @@ export default function FixedAssets({ pushToast }) {
                   <h3>
                     <span style={{marginRight:8}}>{cat.icon}</span>{cat.name}
                   </h3>
-                  <span className="pill accent mono">{pct(cat.rate)}/año</span>
+                  <span className="pill accent mono">{pct(cat.rate)}/{t('fixedassets.year', 'año')}</span>
                 </div>
                 <div className="card-body">
                   <div className="detail-grid">
                     <div className="detail-row">
-                      <span className="detail-label">Vida útil</span>
-                      <span className="mono">{cat.years} años</span>
+                      <span className="detail-label">{t('fixedassets.usefulLife', 'Vida útil')}</span>
+                      <span className="mono">{cat.years} {t('fixedassets.years', 'años')}</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-label">Tasa anual SAT</span>
+                      <span className="detail-label">{t('fixedassets.satAnnualRate', 'Tasa anual SAT')}</span>
                       <span className="mono">{pct(cat.rate)}</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-label">Activos registrados</span>
+                      <span className="detail-label">{t('fixedassets.registeredAssets', 'Activos registrados')}</span>
                       <span className="mono">{info?.count ?? 0}</span>
                     </div>
                     {info && (
                       <>
                         <div className="detail-row">
-                          <span className="detail-label">Costo total</span>
+                          <span className="detail-label">{t('fixedassets.totalCost', 'Costo total')}</span>
                           <span className="mono">{Q(info.costo)}</span>
                         </div>
                         <div className="detail-row">
-                          <span className="detail-label">Valor en libros</span>
+                          <span className="detail-label">{t('fixedassets.bookValue', 'Valor en libros')}</span>
                           <span className="mono" style={{color:'var(--accent)'}}>{Q(info.libros)}</span>
                         </div>
                         <div className="detail-row">
-                          <span className="detail-label">Dep. mensual total</span>
+                          <span className="detail-label">{t('fixedassets.totalMonthlyDepr', 'Dep. mensual total')}</span>
                           <span className="mono">{Q(info.costo * cat.rate / 12)}</span>
                         </div>
                       </>
@@ -464,13 +466,11 @@ export default function FixedAssets({ pushToast }) {
           })}
           {/* Referencia legal */}
           <div className="card" style={{gridColumn:'1 / -1'}}>
-            <div className="card-head"><h3>Referencia legal · Decreto 26-92 Art. 19</h3></div>
+            <div className="card-head"><h3>{t('fixedassets.legalReference', 'Referencia legal · Decreto 26-92 Art. 19')}</h3></div>
             <div className="card-body">
               <div className="alert">
                 <Icon name="alert" size={13}/>
-                Tasas máximas permitidas por la SAT para el régimen general. El método de línea recta
-                es el más utilizado. La depreciación inicia desde el mes de adquisición.
-                El valor residual para efectos fiscales es Q0.
+                {t('fixedassets.legalNote', 'Tasas máximas permitidas por la SAT para el régimen general. El método de línea recta es el más utilizado. La depreciación inicia desde el mes de adquisición. El valor residual para efectos fiscales es Q0.')}
               </div>
             </div>
           </div>
@@ -483,11 +483,11 @@ export default function FixedAssets({ pushToast }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Código</th><th>Activo</th><th>Categoría</th>
-                <th className="num">Costo histórico</th>
-                <th className="num">Dep. acumulada al dar de baja</th>
-                <th className="num">Valor en libros</th>
-                <th>Motivo</th>
+                <th>{t('common.code', 'Código')}</th><th>{t('fixedassets.asset', 'Activo')}</th><th>{t('common.category', 'Categoría')}</th>
+                <th className="num">{t('fixedassets.historicalCostShort', 'Costo histórico')}</th>
+                <th className="num">{t('fixedassets.accDeprAtRetirement', 'Dep. acumulada al dar de baja')}</th>
+                <th className="num">{t('fixedassets.bookValue', 'Valor en libros')}</th>
+                <th>{t('fixedassets.reason', 'Motivo')}</th>
               </tr>
             </thead>
             <tbody>
@@ -506,7 +506,7 @@ export default function FixedAssets({ pushToast }) {
                 );
               })}
               {assets.filter(a => a.status === 'baja').length === 0 && (
-                <tr><td colSpan={7} className="empty">Sin activos dados de baja</td></tr>
+                <tr><td colSpan={7} className="empty">{t('fixedassets.noRetirements', 'Sin activos dados de baja')}</td></tr>
               )}
             </tbody>
           </table>
@@ -536,14 +536,14 @@ export default function FixedAssets({ pushToast }) {
               </div>
 
               {/* Datos */}
-              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Datos del activo</div>
+              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('fixedassets.assetData', 'Datos del activo')}</div>
               <div className="detail-grid" style={{marginBottom:20}}>
                 {[
-                  ['Fecha de adquisición', selAsset.acquired],
-                  ['No. serie / placa',    selAsset.serial || '—'],
-                  ['Sucursal',             selAsset.branch],
-                  ['Costo histórico',      Q(selAsset.purchase)],
-                  ['Notas',                selAsset.notes || '—'],
+                  [t('fixedassets.acquisitionDate', 'Fecha de adquisición'), selAsset.acquired],
+                  [t('fixedassets.serialPlate', 'No. serie / placa'),    selAsset.serial || '—'],
+                  [t('common.branch', 'Sucursal'),             selAsset.branch],
+                  [t('fixedassets.historicalCostShort', 'Costo histórico'),      Q(selAsset.purchase)],
+                  [t('common.notes', 'Notas'),                selAsset.notes || '—'],
                 ].map(([l,v]) => (
                   <div className="detail-row" key={l}>
                     <span className="detail-label">{l}</span>
@@ -558,11 +558,11 @@ export default function FixedAssets({ pushToast }) {
                 const barW = Math.round(d.pctDepAcum * 100);
                 return (
                   <>
-                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Depreciación acumulada</div>
+                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('fixedassets.accumulatedDepr', 'Depreciación acumulada')}</div>
                     <div style={{marginBottom:10}}>
                       <div className="row" style={{justifyContent:'space-between', marginBottom:4, fontSize:11}}>
                         <span className="mono muted">0%</span>
-                        <span className="mono" style={{fontWeight:600}}>{barW}% depreciado</span>
+                        <span className="mono" style={{fontWeight:600}}>{barW}% {t('fixedassets.depreciated', 'depreciado')}</span>
                         <span className="mono muted">100%</span>
                       </div>
                       <div className="bar" style={{height:10}}>
@@ -574,23 +574,23 @@ export default function FixedAssets({ pushToast }) {
                       <div className="card-body" style={{padding:0}}>
                         <table className="tbl" style={{fontSize:12}}>
                           <tbody>
-                            <tr><td>Tasa de depreciación</td><td className="num">{pct(d.rate)}/año</td></tr>
-                            <tr><td>Depreciación anual</td><td className="num">{Q(d.deprAnual)}</td></tr>
-                            <tr><td>Depreciación mensual</td><td className="num" style={{color:'var(--accent)'}}>{Q(d.deprMensual)}</td></tr>
-                            <tr><td>Meses en uso</td><td className="num">{d.monthsOwned} meses</td></tr>
-                            <tr><td>Dep. acumulada a la fecha</td><td className="num" style={{color:'var(--danger)'}}>{Q(d.deprAcum)}</td></tr>
+                            <tr><td>{t('fixedassets.deprRate', 'Tasa de depreciación')}</td><td className="num">{pct(d.rate)}/{t('fixedassets.year', 'año')}</td></tr>
+                            <tr><td>{t('fixedassets.annualDepr', 'Depreciación anual')}</td><td className="num">{Q(d.deprAnual)}</td></tr>
+                            <tr><td>{t('fixedassets.monthlyDeprShort', 'Depreciación mensual')}</td><td className="num" style={{color:'var(--accent)'}}>{Q(d.deprMensual)}</td></tr>
+                            <tr><td>{t('fixedassets.monthsInUse', 'Meses en uso')}</td><td className="num">{d.monthsOwned} {t('fixedassets.months', 'meses')}</td></tr>
+                            <tr><td>{t('fixedassets.accDeprToDate', 'Dep. acumulada a la fecha')}</td><td className="num" style={{color:'var(--danger)'}}>{Q(d.deprAcum)}</td></tr>
                             <tr style={{background:'var(--surface-2)', fontWeight:700}}>
-                              <td style={{padding:'9px 12px'}}>Valor en libros</td>
+                              <td style={{padding:'9px 12px'}}>{t('fixedassets.bookValue', 'Valor en libros')}</td>
                               <td className="num" style={{padding:'9px 12px', fontSize:15,
                                 color: d.fullyDepr ? 'var(--muted)' : 'var(--text)'}}>
                                 {Q(d.valorLibros)}
-                                {d.fullyDepr && <span className="pill warning" style={{marginLeft:8, fontSize:9}}>Totalmente depreciado</span>}
+                                {d.fullyDepr && <span className="pill warning" style={{marginLeft:8, fontSize:9}}>{t('fixedassets.fullyDepreciated', 'Totalmente depreciado')}</span>}
                               </td>
                             </tr>
                             {!d.fullyDepr && (
                               <tr>
-                                <td>Años restantes (estimado)</td>
-                                <td className="num">{d.yearsLeft.toFixed(1)} años</td>
+                                <td>{t('fixedassets.remainingYears', 'Años restantes (estimado)')}</td>
+                                <td className="num">{d.yearsLeft.toFixed(1)} {t('fixedassets.years', 'años')}</td>
                               </tr>
                             )}
                           </tbody>
@@ -602,13 +602,13 @@ export default function FixedAssets({ pushToast }) {
               })()}
             </div>
             <div className="drawer-foot">
-              <button className="btn ghost" onClick={() => setSelAsset(null)}>Cerrar</button>
+              <button className="btn ghost" onClick={() => setSelAsset(null)}>{t('common.close', 'Cerrar')}</button>
               {selAsset.status === 'active' && (
                 <button className="btn danger" onClick={() => { setShowBaja(selAsset); setSelAsset(null); }}>
-                  <Icon name="trash" size={12}/>Dar de baja
+                  <Icon name="trash" size={12}/>{t('fixedassets.retire', 'Dar de baja')}
                 </button>
               )}
-              <button className="btn accent"><Icon name="edit" size={12}/>Editar</button>
+              <button className="btn accent"><Icon name="edit" size={12}/>{t('common.edit', 'Editar')}</button>
             </div>
           </div>
         </>
@@ -619,47 +619,47 @@ export default function FixedAssets({ pushToast }) {
         <div className="modal-overlay" onClick={() => setShowNew(false)}>
           <div className="modal" style={{width:560}} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>Registrar nuevo activo fijo</h3>
+              <h3>{t('fixedassets.registerNewAsset', 'Registrar nuevo activo fijo')}</h3>
               <button className="icon-btn" onClick={() => setShowNew(false)}><Icon name="x"/></button>
             </div>
             <div className="modal-body">
               <div className="form-grid">
                 <div className="field span-2">
-                  <label className="field-label">Nombre / descripción</label>
-                  <input className="field-input" placeholder="Ej. Camión Isuzu 2026"
+                  <label className="field-label">{t('fixedassets.nameDescription', 'Nombre / descripción')}</label>
+                  <input className="field-input" placeholder={t('fixedassets.namePlaceholder', 'Ej. Camión Isuzu 2026')}
                     value={newForm.name} onChange={e => setNew('name', e.target.value)}/>
                 </div>
                 <div className="field">
-                  <label className="field-label">Categoría SAT</label>
+                  <label className="field-label">{t('fixedassets.satCategory', 'Categoría SAT')}</label>
                   <select className="field-input" value={newForm.cat} onChange={e => setNew('cat', e.target.value)}>
                     {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                   </select>
                 </div>
                 <div className="field">
-                  <label className="field-label">Sucursal</label>
+                  <label className="field-label">{t('common.branch', 'Sucursal')}</label>
                   <select className="field-input" value={newForm.branch} onChange={e => setNew('branch', e.target.value)}>
                     {['Zona 10','Central','Zona 1','Zona 15','Mixco'].map(b =>
                       <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
                 <div className="field">
-                  <label className="field-label">Costo de adquisición (Q)</label>
+                  <label className="field-label">{t('fixedassets.acquisitionCost', 'Costo de adquisición (Q)')}</label>
                   <input className="field-input mono" type="number" placeholder="0.00"
                     value={newForm.purchase} onChange={e => setNew('purchase', e.target.value)}/>
                 </div>
                 <div className="field">
-                  <label className="field-label">Fecha de adquisición</label>
+                  <label className="field-label">{t('fixedassets.acquisitionDate', 'Fecha de adquisición')}</label>
                   <input className="field-input" type="date"
                     value={newForm.acquired} onChange={e => setNew('acquired', e.target.value)}/>
                 </div>
                 <div className="field span-2">
-                  <label className="field-label">No. de serie / placa (opcional)</label>
-                  <input className="field-input mono" placeholder="Ej. ABC-1234"
+                  <label className="field-label">{t('fixedassets.serialPlateOptional', 'No. de serie / placa (opcional)')}</label>
+                  <input className="field-input mono" placeholder={t('fixedassets.serialPlaceholder', 'Ej. ABC-1234')}
                     value={newForm.serial} onChange={e => setNew('serial', e.target.value)}/>
                 </div>
                 <div className="field span-2">
-                  <label className="field-label">Notas</label>
-                  <input className="field-input" placeholder="Descripción adicional…"
+                  <label className="field-label">{t('common.notes', 'Notas')}</label>
+                  <input className="field-input" placeholder={t('fixedassets.additionalDesc', 'Descripción adicional…')}
                     value={newForm.notes} onChange={e => setNew('notes', e.target.value)}/>
                 </div>
               </div>
@@ -668,7 +668,7 @@ export default function FixedAssets({ pushToast }) {
               {newForm.cat && newForm.purchase && (
                 <div style={{marginTop:16, padding:'12px 14px', background:'var(--accent-soft)', borderRadius:'var(--r-md)'}}>
                   <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--accent-ink)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6}}>
-                    Vista previa depreciación
+                    {t('fixedassets.deprPreview', 'Vista previa depreciación')}
                   </div>
                   {(() => {
                     const cat = CAT_MAP[newForm.cat];
@@ -676,16 +676,16 @@ export default function FixedAssets({ pushToast }) {
                     return (
                       <div className="row" style={{gap:20, flexWrap:'wrap'}}>
                         <span style={{fontSize:12, color:'var(--accent-ink)'}}>
-                          Tasa: <strong>{pct(cat.rate)}/año</strong>
+                          {t('fixedassets.rate', 'Tasa')}: <strong>{pct(cat.rate)}/{t('fixedassets.year', 'año')}</strong>
                         </span>
                         <span style={{fontSize:12, color:'var(--accent-ink)'}}>
-                          Dep. anual: <strong>{Q(val * cat.rate)}</strong>
+                          {t('fixedassets.annualDepr', 'Dep. anual')}: <strong>{Q(val * cat.rate)}</strong>
                         </span>
                         <span style={{fontSize:12, color:'var(--accent-ink)'}}>
-                          Dep. mensual: <strong>{Q(val * cat.rate / 12)}</strong>
+                          {t('fixedassets.monthlyDeprShort', 'Dep. mensual')}: <strong>{Q(val * cat.rate / 12)}</strong>
                         </span>
                         <span style={{fontSize:12, color:'var(--accent-ink)'}}>
-                          Vida útil: <strong>{cat.years} años</strong>
+                          {t('fixedassets.usefulLife', 'Vida útil')}: <strong>{cat.years} {t('fixedassets.years', 'años')}</strong>
                         </span>
                       </div>
                     );
@@ -694,9 +694,9 @@ export default function FixedAssets({ pushToast }) {
               )}
             </div>
             <div className="modal-foot">
-              <button className="btn ghost" onClick={() => setShowNew(false)}>Cancelar</button>
+              <button className="btn ghost" onClick={() => setShowNew(false)}>{t('common.cancel', 'Cancelar')}</button>
               <button className="btn accent" onClick={handleSaveNew}>
-                <Icon name="check" size={12}/>Registrar activo
+                <Icon name="check" size={12}/>{t('fixedassets.registerAsset', 'Registrar activo')}
               </button>
             </div>
           </div>
@@ -708,40 +708,40 @@ export default function FixedAssets({ pushToast }) {
         <div className="modal-overlay" onClick={() => setShowBaja(null)}>
           <div className="modal" style={{width:460}} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>Dar de baja activo</h3>
+              <h3>{t('fixedassets.retireAsset', 'Dar de baja activo')}</h3>
               <button className="icon-btn" onClick={() => setShowBaja(null)}><Icon name="x"/></button>
             </div>
             <div className="modal-body">
               <div className="alert" style={{marginBottom:16}}>
                 <Icon name="alert" size={13}/>
-                Esta acción registrará la baja en contabilidad y lo moverá al historial.
+                {t('fixedassets.retireNote', 'Esta acción registrará la baja en contabilidad y lo moverá al historial.')}
               </div>
               <div className="detail-grid">
-                <div className="detail-row"><span className="detail-label">Activo</span>
+                <div className="detail-row"><span className="detail-label">{t('fixedassets.asset', 'Activo')}</span>
                   <span style={{fontWeight:600}}>{showBaja.name}</span></div>
-                <div className="detail-row"><span className="detail-label">Costo histórico</span>
+                <div className="detail-row"><span className="detail-label">{t('fixedassets.historicalCostShort', 'Costo histórico')}</span>
                   <span className="mono">{Q(showBaja.purchase)}</span></div>
-                <div className="detail-row"><span className="detail-label">Dep. acumulada</span>
+                <div className="detail-row"><span className="detail-label">{t('fixedassets.accDeprShort', 'Dep. acumulada')}</span>
                   <span className="mono" style={{color:'var(--danger)'}}>{Q(showBaja.depr.deprAcum)}</span></div>
-                <div className="detail-row"><span className="detail-label">Valor en libros</span>
+                <div className="detail-row"><span className="detail-label">{t('fixedassets.bookValue', 'Valor en libros')}</span>
                   <span className="mono" style={{fontWeight:700}}>{Q(showBaja.depr.valorLibros)}</span></div>
               </div>
               <div className="field" style={{marginTop:16}}>
-                <label className="field-label">Motivo de la baja</label>
+                <label className="field-label">{t('fixedassets.retirementReason', 'Motivo de la baja')}</label>
                 <select className="field-input">
-                  <option>Obsolescencia</option>
-                  <option>Falla irreparable</option>
-                  <option>Venta del activo</option>
-                  <option>Robo o pérdida</option>
-                  <option>Donación</option>
-                  <option>Otro</option>
+                  <option>{t('fixedassets.reasons.obsolescence', 'Obsolescencia')}</option>
+                  <option>{t('fixedassets.reasons.irreparableFault', 'Falla irreparable')}</option>
+                  <option>{t('fixedassets.reasons.sale', 'Venta del activo')}</option>
+                  <option>{t('fixedassets.reasons.theft', 'Robo o pérdida')}</option>
+                  <option>{t('fixedassets.reasons.donation', 'Donación')}</option>
+                  <option>{t('fixedassets.reasons.other', 'Otro')}</option>
                 </select>
               </div>
             </div>
             <div className="modal-foot">
-              <button className="btn ghost" onClick={() => setShowBaja(null)}>Cancelar</button>
+              <button className="btn ghost" onClick={() => setShowBaja(null)}>{t('common.cancel', 'Cancelar')}</button>
               <button className="btn danger" onClick={handleBaja}>
-                <Icon name="trash" size={12}/>Confirmar baja
+                <Icon name="trash" size={12}/>{t('fixedassets.confirmRetirement', 'Confirmar baja')}
               </button>
             </div>
           </div>

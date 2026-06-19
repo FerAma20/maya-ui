@@ -1,6 +1,7 @@
 // ERP MAYA — Payroll / Planilla module (Guatemala)
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
+import { useTranslation } from 'react-i18next';
 
 const Q = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -73,6 +74,7 @@ const PAYROLL_HISTORY = [
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function Payroll({ pushToast }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState('planilla');
   const [selEmp, setSelEmp] = useState(null);
   const [showEmpModal, setShowEmpModal] = useState(false);
@@ -120,17 +122,17 @@ export default function Payroll({ pushToast }) {
       {/* Header */}
       <div className="page-head">
         <div>
-          <h1 className="page-title">Planilla · Nómina</h1>
+          <h1 className="page-title">{t('payroll.title', 'Planilla')} · {t('payroll.nomina', 'Nómina')}</h1>
           <div className="page-subtitle">
-            Período actual: {periodLabel} · {activeEmps.length} empleados activos · IGSS · ISR · Bonificación incentivo
+            {t('payroll.currentPeriod', 'Período actual')}: {periodLabel} · {activeEmps.length} {t('payroll.activeEmployees', 'empleados activos')} · IGSS · ISR · {t('payroll.incentiveBonus', 'Bonificación incentivo')}
           </div>
         </div>
         <div className="page-head-actions">
           <button className="btn" onClick={() => setShowEmpModal(true)}>
-            <Icon name="plus" size={12} />Nuevo empleado
+            <Icon name="plus" size={12} />{t('payroll.newEmployee', 'Nuevo empleado')}
           </button>
           <button className="btn accent" onClick={() => setShowGenModal(true)}>
-            <Icon name="receipt" size={12} />Generar planilla
+            <Icon name="receipt" size={12} />{t('payroll.generatePayroll', 'Generar planilla')}
           </button>
         </div>
       </div>
@@ -138,13 +140,13 @@ export default function Payroll({ pushToast }) {
       {/* Tabs */}
       <div className="tabs">
         {[
-          { id:'planilla',   label:'Planilla actual' },
-          { id:'empleados',  label:`Empleados (${EMPLOYEES.length})` },
-          { id:'historial',  label:'Historial' },
-          { id:'calculo',    label:'Tabla ISR / IGSS' },
-        ].map(t => (
-          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`}
-            onClick={() => setTab(t.id)}>{t.label}</button>
+          { id:'planilla',   label: t('payroll.tabs.current', 'Planilla actual') },
+          { id:'empleados',  label: `${t('payroll.tabs.employees', 'Empleados')} (${EMPLOYEES.length})` },
+          { id:'historial',  label: t('payroll.tabs.history', 'Historial') },
+          { id:'calculo',    label: t('payroll.tabs.calc', 'Tabla ISR / IGSS') },
+        ].map(t2 => (
+          <button key={t2.id} className={`tab ${tab === t2.id ? 'active' : ''}`}
+            onClick={() => setTab(t2.id)}>{t2.label}</button>
         ))}
       </div>
 
@@ -154,24 +156,24 @@ export default function Payroll({ pushToast }) {
           {/* KPIs */}
           <div className="stat-grid" style={{ gridTemplateColumns:'repeat(4,1fr)', marginBottom:16 }}>
             <div className="stat">
-              <div className="label"><Icon name="cash" size={11}/>Salarios base</div>
+              <div className="label"><Icon name="cash" size={11}/>{t('payroll.baseSalaries', 'Salarios base')}</div>
               <div className="val mono" style={{fontSize:20}}>{Q(summary.totalBase)}</div>
-              <div className="delta up"><Icon name="users" size={11}/>{activeEmps.length} empleados</div>
+              <div className="delta up"><Icon name="users" size={11}/>{activeEmps.length} {t('payroll.employees', 'empleados')}</div>
             </div>
             <div className="stat">
-              <div className="label"><Icon name="shield" size={11}/>IGSS patronal</div>
+              <div className="label"><Icon name="shield" size={11}/>{t('payroll.igssEmployer', 'IGSS patronal')}</div>
               <div className="val mono" style={{fontSize:20}}>{Q(summary.totalIgssP)}</div>
-              <div className="delta" style={{color:'var(--muted)'}}>10.67% · cuota empresa</div>
+              <div className="delta" style={{color:'var(--muted)'}}>10.67% · {t('payroll.companyShare', 'cuota empresa')}</div>
             </div>
             <div className="stat">
-              <div className="label"><Icon name="receipt" size={11}/>ISR retención</div>
+              <div className="label"><Icon name="receipt" size={11}/>{t('payroll.isrRetention', 'ISR retención')}</div>
               <div className="val mono" style={{fontSize:20}}>{Q(summary.totalIsr)}</div>
-              <div className="delta" style={{color:'var(--muted)'}}>Retención mensual empleados</div>
+              <div className="delta" style={{color:'var(--muted)'}}>{t('payroll.monthlyRetention', 'Retención mensual empleados')}</div>
             </div>
             <div className="stat">
-              <div className="label"><Icon name="cash" size={11}/>Costo total empresa</div>
+              <div className="label"><Icon name="cash" size={11}/>{t('payroll.totalCompanyCost', 'Costo total empresa')}</div>
               <div className="val mono" style={{fontSize:20, color:'var(--accent)'}}>{Q(summary.totalEmpresa)}</div>
-              <div className="delta" style={{color:'var(--muted)'}}>Base + Bon + IGSS pat.</div>
+              <div className="delta" style={{color:'var(--muted)'}}>{t('payroll.baseBonIgss', 'Base + Bon + IGSS pat.')}</div>
             </div>
           </div>
 
@@ -179,29 +181,29 @@ export default function Payroll({ pushToast }) {
           <div className="card">
             <div className="card-head">
               <div>
-                <h3>Detalle de planilla — {periodLabel}</h3>
-                <div className="meta">Todos los cálculos según Decreto 295 (IGSS) y Ley ISR Guatemala</div>
+                <h3>{t('payroll.payrollDetail', 'Detalle de planilla')} — {periodLabel}</h3>
+                <div className="meta">{t('payroll.calculationsNote', 'Todos los cálculos según Decreto 295 (IGSS) y Ley ISR Guatemala')}</div>
               </div>
               <div className="row gap-6">
                 <button className="btn sm"><Icon name="download" size={12}/>Excel</button>
-                <button className="btn sm"><Icon name="print" size={12}/>Imprimir</button>
+                <button className="btn sm"><Icon name="print" size={12}/>{t('common.print', 'Imprimir')}</button>
               </div>
             </div>
             <div className="tbl-wrap">
               <table className="tbl" style={{fontSize:11.5}}>
                 <thead>
                   <tr>
-                    <th>Empleado</th>
-                    <th>Puesto</th>
-                    <th className="num">Salario base</th>
-                    <th className="num">Bon. incentivo</th>
-                    <th className="num">IGSS emp. (4.83%)</th>
-                    <th className="num">ISR mensual</th>
-                    <th className="num">Total deducc.</th>
-                    <th className="num" style={{color:'var(--success)'}}>Neto a pagar</th>
-                    <th className="num" style={{color:'var(--muted)'}}>IGSS pat. (10.67%)</th>
-                    <th className="num" style={{color:'var(--accent)'}}>Costo empresa</th>
-                    <th className="center">Recibo</th>
+                    <th>{t('payroll.headers.employee', 'Empleado')}</th>
+                    <th>{t('payroll.headers.position', 'Puesto')}</th>
+                    <th className="num">{t('payroll.headers.baseSalary', 'Salario base')}</th>
+                    <th className="num">{t('payroll.headers.bonIncentive', 'Bon. incentivo')}</th>
+                    <th className="num">{t('payroll.headers.igssEmployee', 'IGSS emp. (4.83%)')}</th>
+                    <th className="num">{t('payroll.headers.monthlyIsr', 'ISR mensual')}</th>
+                    <th className="num">{t('payroll.headers.totalDeductions', 'Total deducc.')}</th>
+                    <th className="num" style={{color:'var(--success)'}}>{t('payroll.headers.netPay', 'Neto a pagar')}</th>
+                    <th className="num" style={{color:'var(--muted)'}}>{t('payroll.headers.igssEmployer', 'IGSS pat. (10.67%)')}</th>
+                    <th className="num" style={{color:'var(--accent)'}}>{t('payroll.headers.companyCost', 'Costo empresa')}</th>
+                    <th className="center">{t('payroll.headers.receipt', 'Recibo')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -225,7 +227,7 @@ export default function Payroll({ pushToast }) {
                       <td className="num" style={{color:'var(--accent)', fontWeight:600}}>{Q(r.calc.totalEmp)}</td>
                       <td className="center">
                         <button className="btn sm ghost" onClick={() => setShowRecibo(r)}>
-                          <Icon name="receipt" size={11}/>Ver
+                          <Icon name="receipt" size={11}/>{t('common.view', 'Ver')}
                         </button>
                       </td>
                     </tr>
@@ -233,7 +235,7 @@ export default function Payroll({ pushToast }) {
                 </tbody>
                 <tfoot>
                   <tr style={{background:'var(--surface-2)', fontWeight:700}}>
-                    <td colSpan={2} style={{padding:'8px 12px', fontSize:12}}>TOTALES</td>
+                    <td colSpan={2} style={{padding:'8px 12px', fontSize:12}}>{t('payroll.totals', 'TOTALES')}</td>
                     <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalBase)}</td>
                     <td className="num" style={{padding:'8px 12px', color:'var(--success)'}}>{Q(summary.totalBon)}</td>
                     <td className="num" style={{padding:'8px 12px', color:'var(--danger)'}}>−{Q(summary.totalIgssE)}</td>
@@ -252,46 +254,46 @@ export default function Payroll({ pushToast }) {
           {/* Resumen cuotas IGSS para pagar al estado */}
           <div className="grid-2 mt-12" style={{gridTemplateColumns:'1fr 1fr'}}>
             <div className="card">
-              <div className="card-head"><h3>Liquidación IGSS del período</h3></div>
+              <div className="card-head"><h3>{t('payroll.igssLiquidation', 'Liquidación IGSS del período')}</h3></div>
               <div className="card-body">
                 <div className="detail-grid">
                   <div className="detail-row">
-                    <span className="detail-label">Cuota empleados (4.83%)</span>
+                    <span className="detail-label">{t('payroll.employeeShare483', 'Cuota empleados (4.83%)')}</span>
                     <span className="mono">{Q(summary.totalIgssE)}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Cuota patronal (10.67%)</span>
+                    <span className="detail-label">{t('payroll.employerShare1067', 'Cuota patronal (10.67%)')}</span>
                     <span className="mono">{Q(summary.totalIgssP)}</span>
                   </div>
                   <div className="detail-row" style={{fontWeight:700}}>
-                    <span className="detail-label">Total a pagar al IGSS</span>
+                    <span className="detail-label">{t('payroll.totalToIgss', 'Total a pagar al IGSS')}</span>
                     <span className="mono" style={{color:'var(--accent)'}}>{Q(summary.totalIgssE + summary.totalIgssP)}</span>
                   </div>
                 </div>
                 <button className="btn accent" style={{marginTop:12, width:'100%'}}>
-                  <Icon name="receipt" size={12}/>Generar planilla IGSS
+                  <Icon name="receipt" size={12}/>{t('payroll.generateIgssPayroll', 'Generar planilla IGSS')}
                 </button>
               </div>
             </div>
             <div className="card">
-              <div className="card-head"><h3>Retención ISR del período</h3></div>
+              <div className="card-head"><h3>{t('payroll.isrRetentionPeriod', 'Retención ISR del período')}</h3></div>
               <div className="card-body">
                 <div className="detail-grid">
                   <div className="detail-row">
-                    <span className="detail-label">ISR retenido empleados</span>
+                    <span className="detail-label">{t('payroll.isrRetainedEmployees', 'ISR retenido empleados')}</span>
                     <span className="mono">{Q(summary.totalIsr)}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Vencimiento declaración</span>
-                    <span className="mono">10 del mes siguiente</span>
+                    <span className="detail-label">{t('payroll.declarationDue', 'Vencimiento declaración')}</span>
+                    <span className="mono">{t('payroll.tenthNextMonth', '10 del mes siguiente')}</span>
                   </div>
                   <div className="detail-row" style={{fontWeight:700}}>
-                    <span className="detail-label">Total a pagar a la SAT</span>
+                    <span className="detail-label">{t('payroll.totalToSat', 'Total a pagar a la SAT')}</span>
                     <span className="mono" style={{color:'var(--accent)'}}>{Q(summary.totalIsr)}</span>
                   </div>
                 </div>
                 <button className="btn accent" style={{marginTop:12, width:'100%'}}>
-                  <Icon name="receipt" size={12}/>Generar formulario SAT
+                  <Icon name="receipt" size={12}/>{t('payroll.generateSatForm', 'Generar formulario SAT')}
                 </button>
               </div>
             </div>
@@ -305,16 +307,16 @@ export default function Payroll({ pushToast }) {
           <div className="toolbar">
             <div className="search-wrap" style={{flex:1, maxWidth:320}}>
               <Icon name="search" size={13} className="icon"/>
-              <input className="search-input" placeholder="Buscar empleado…"
+              <input className="search-input" placeholder={t('payroll.searchEmployee', 'Buscar empleado…')}
                 value={search} onChange={e => setSearch(e.target.value)}/>
             </div>
             <select className="field-input" value={deptFilter}
               onChange={e => setDeptFilter(e.target.value)} style={{width:'auto'}}>
-              <option value="todos">Todos los departamentos</option>
+              <option value="todos">{t('payroll.allDepartments', 'Todos los departamentos')}</option>
               {DEPARTAMENTOS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
             <span className="muted" style={{fontSize:11, marginLeft:'auto'}}>
-              {filteredEmps.length} empleados
+              {filteredEmps.length} {t('payroll.employees', 'empleados')}
             </span>
           </div>
 
@@ -323,14 +325,14 @@ export default function Payroll({ pushToast }) {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Departamento</th>
-                  <th>Puesto</th>
-                  <th className="num">Salario base</th>
-                  <th className="num">Neto estimado</th>
-                  <th>Banco</th>
-                  <th>Estado</th>
-                  <th>Ingreso</th>
+                  <th>{t('common.name', 'Nombre')}</th>
+                  <th>{t('payroll.headers.department', 'Departamento')}</th>
+                  <th>{t('payroll.headers.position', 'Puesto')}</th>
+                  <th className="num">{t('payroll.headers.baseSalary', 'Salario base')}</th>
+                  <th className="num">{t('payroll.headers.estimatedNet', 'Neto estimado')}</th>
+                  <th>{t('payroll.headers.bank', 'Banco')}</th>
+                  <th>{t('common.status', 'Estado')}</th>
+                  <th>{t('payroll.headers.hireDate', 'Ingreso')}</th>
                   <th/>
                 </tr>
               </thead>
@@ -349,7 +351,7 @@ export default function Payroll({ pushToast }) {
                       <td>
                         <span className={`pill ${e.status === 'active' ? 'success' : 'warning'}`}>
                           <span className="dot"/>
-                          {e.status === 'active' ? 'Activo' : 'Inactivo'}
+                          {e.status === 'active' ? t('common.active', 'Activo') : t('common.inactive', 'Inactivo')}
                         </span>
                       </td>
                       <td className="mono muted" style={{fontSize:11}}>{e.hired}</td>
@@ -362,7 +364,7 @@ export default function Payroll({ pushToast }) {
                   );
                 })}
                 {filteredEmps.length === 0 && (
-                  <tr><td colSpan={10} className="empty">Sin empleados</td></tr>
+                  <tr><td colSpan={10} className="empty">{t('payroll.noEmployees', 'Sin empleados')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -376,11 +378,11 @@ export default function Payroll({ pushToast }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>No. Planilla</th>
-                <th>Período</th>
-                <th className="num">Empleados</th>
-                <th className="num">Total nómina</th>
-                <th>Estado</th>
+                <th>{t('payroll.headers.payrollNo', 'No. Planilla')}</th>
+                <th>{t('payroll.headers.period', 'Período')}</th>
+                <th className="num">{t('payroll.headers.employees', 'Empleados')}</th>
+                <th className="num">{t('payroll.headers.totalPayroll', 'Total nómina')}</th>
+                <th>{t('common.status', 'Estado')}</th>
                 <th/>
               </tr>
             </thead>
@@ -391,10 +393,10 @@ export default function Payroll({ pushToast }) {
                   <td style={{fontWeight:500}}>{p.period}</td>
                   <td className="num">{p.employees}</td>
                   <td className="num" style={{fontWeight:600}}>{Q(p.total)}</td>
-                  <td><span className="pill success"><span className="dot"/>Cerrada</span></td>
+                  <td><span className="pill success"><span className="dot"/>{t('payroll.closed', 'Cerrada')}</span></td>
                   <td>
                     <div className="row gap-6">
-                      <button className="btn sm ghost"><Icon name="eye" size={11}/>Ver</button>
+                      <button className="btn sm ghost"><Icon name="eye" size={11}/>{t('common.view', 'Ver')}</button>
                       <button className="btn sm ghost"><Icon name="download" size={11}/>Excel</button>
                     </div>
                   </td>
@@ -409,38 +411,38 @@ export default function Payroll({ pushToast }) {
       {tab === 'calculo' && (
         <div className="grid-2 mt-12" style={{gridTemplateColumns:'1fr 1fr', gap:16}}>
           <div className="card">
-            <div className="card-head"><h3>Tasas IGSS vigentes · Decreto 295</h3></div>
+            <div className="card-head"><h3>{t('payroll.igssRates', 'Tasas IGSS vigentes · Decreto 295')}</h3></div>
             <div className="card-body">
               <table className="tbl">
-                <thead><tr><th>Concepto</th><th className="num">Tasa</th><th>Cargo a</th></tr></thead>
+                <thead><tr><th>{t('payroll.concept', 'Concepto')}</th><th className="num">{t('payroll.rate', 'Tasa')}</th><th>{t('payroll.chargedTo', 'Cargo a')}</th></tr></thead>
                 <tbody>
-                  <tr><td>Cuota empleado (IVS)</td><td className="num">4.83%</td><td>Empleado</td></tr>
-                  <tr><td>Cuota patronal (IVS)</td><td className="num">10.67%</td><td>Empresa</td></tr>
-                  <tr><td>Bonificación incentivo</td><td className="num">Q 250.00/mes</td><td>Empresa · Decreto 78-89</td></tr>
+                  <tr><td>{t('payroll.employeeShareIvs', 'Cuota empleado (IVS)')}</td><td className="num">4.83%</td><td>{t('payroll.employee', 'Empleado')}</td></tr>
+                  <tr><td>{t('payroll.employerShareIvs', 'Cuota patronal (IVS)')}</td><td className="num">10.67%</td><td>{t('payroll.company', 'Empresa')}</td></tr>
+                  <tr><td>{t('payroll.incentiveBonus', 'Bonificación incentivo')}</td><td className="num">Q 250.00/mes</td><td>{t('payroll.companyDecree', 'Empresa · Decreto 78-89')}</td></tr>
                 </tbody>
               </table>
               <div className="alert" style={{marginTop:12}}>
                 <Icon name="alert" size={13}/>
-                Base de cálculo: salario ordinario mensual. Excluye horas extra y bonificaciones variables.
+                {t('payroll.calcBaseNote', 'Base de cálculo: salario ordinario mensual. Excluye horas extra y bonificaciones variables.')}
               </div>
             </div>
           </div>
 
           <div className="card">
-            <div className="card-head"><h3>ISR en relación de dependencia · Ley ISR</h3></div>
+            <div className="card-head"><h3>{t('payroll.isrRates', 'ISR en relación de dependencia · Ley ISR')}</h3></div>
             <div className="card-body">
               <table className="tbl">
-                <thead><tr><th>Concepto</th><th className="num">Valor anual</th></tr></thead>
+                <thead><tr><th>{t('payroll.concept', 'Concepto')}</th><th className="num">{t('payroll.annualValue', 'Valor anual')}</th></tr></thead>
                 <tbody>
-                  <tr><td>Renta exenta</td><td className="num">Q 48,000</td></tr>
-                  <tr><td>Ded. gastos médicos</td><td className="num">Q 12,000</td></tr>
-                  <tr><td>Cuotas IGSS pagadas</td><td className="num">Variable</td></tr>
-                  <tr><td style={{borderTop:'2px solid var(--border)', paddingTop:8}}>Tasa 1 (hasta Q300,000)</td><td className="num" style={{borderTop:'2px solid var(--border)', paddingTop:8}}>5%</td></tr>
-                  <tr><td>Tasa 2 (sobre Q300,000)</td><td className="num">7%</td></tr>
+                  <tr><td>{t('payroll.exemptIncome', 'Renta exenta')}</td><td className="num">Q 48,000</td></tr>
+                  <tr><td>{t('payroll.medicalDeduction', 'Ded. gastos médicos')}</td><td className="num">Q 12,000</td></tr>
+                  <tr><td>{t('payroll.igssPaid', 'Cuotas IGSS pagadas')}</td><td className="num">{t('payroll.variable', 'Variable')}</td></tr>
+                  <tr><td style={{borderTop:'2px solid var(--border)', paddingTop:8}}>{t('payroll.rate1', 'Tasa 1 (hasta Q300,000)')}</td><td className="num" style={{borderTop:'2px solid var(--border)', paddingTop:8}}>5%</td></tr>
+                  <tr><td>{t('payroll.rate2', 'Tasa 2 (sobre Q300,000)')}</td><td className="num">7%</td></tr>
                 </tbody>
               </table>
               <div className="detail-row" style={{marginTop:12, padding:'8px 0', borderTop:'1px solid var(--border)'}}>
-                <span className="detail-label">Fórmula neta mensual</span>
+                <span className="detail-label">{t('payroll.netFormula', 'Fórmula neta mensual')}</span>
                 <span style={{fontSize:11, fontFamily:'var(--font-mono)', color:'var(--text-2)'}}>
                   Base + Bon − IGSS emp − ISR
                 </span>
@@ -450,18 +452,18 @@ export default function Payroll({ pushToast }) {
 
           {/* Simulador por empleado */}
           <div className="card" style={{gridColumn:'1 / -1'}}>
-            <div className="card-head"><h3>Simulador de cálculo por salario</h3></div>
+            <div className="card-head"><h3>{t('payroll.salarySimulator', 'Simulador de cálculo por salario')}</h3></div>
             <div className="card-body">
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>Salario base</th>
-                    <th className="num">Bon. inc.</th>
-                    <th className="num">IGSS emp.</th>
-                    <th className="num">ISR mensual</th>
-                    <th className="num">Neto empleado</th>
-                    <th className="num">IGSS patronal</th>
-                    <th className="num">Costo empresa</th>
+                    <th>{t('payroll.headers.baseSalary', 'Salario base')}</th>
+                    <th className="num">{t('payroll.headers.bonIncentiveShort', 'Bon. inc.')}</th>
+                    <th className="num">{t('payroll.headers.igssEmpShort', 'IGSS emp.')}</th>
+                    <th className="num">{t('payroll.headers.monthlyIsr', 'ISR mensual')}</th>
+                    <th className="num">{t('payroll.headers.netEmployee', 'Neto empleado')}</th>
+                    <th className="num">{t('payroll.headers.igssEmployer', 'IGSS patronal')}</th>
+                    <th className="num">{t('payroll.headers.companyCost', 'Costo empresa')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -502,20 +504,20 @@ export default function Payroll({ pushToast }) {
               {/* Status */}
               <div className="row" style={{marginBottom:16, gap:8}}>
                 <span className={`pill ${selEmp.status === 'active' ? 'success' : 'warning'}`}>
-                  <span className="dot"/>{selEmp.status === 'active' ? 'Activo' : 'Inactivo'}
+                  <span className="dot"/>{selEmp.status === 'active' ? t('common.active', 'Activo') : t('common.inactive', 'Inactivo')}
                 </span>
                 <span className="pill">{selEmp.dept}</span>
               </div>
 
               {/* Datos personales */}
-              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Datos personales</div>
+              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('payroll.personalData', 'Datos personales')}</div>
               <div className="detail-grid" style={{marginBottom:20}}>
                 {[
                   ['DPI', selEmp.dpi],
                   ['NIT', selEmp.nit],
-                  ['Fecha de ingreso', selEmp.hired],
-                  ['Banco', selEmp.banco],
-                  ['No. cuenta', selEmp.cuenta],
+                  [t('payroll.hireDate', 'Fecha de ingreso'), selEmp.hired],
+                  [t('payroll.bank', 'Banco'), selEmp.banco],
+                  [t('payroll.accountNo', 'No. cuenta'), selEmp.cuenta],
                 ].map(([l,v]) => (
                   <div className="detail-row" key={l}>
                     <span className="detail-label">{l}</span>
@@ -529,39 +531,39 @@ export default function Payroll({ pushToast }) {
                 const c = calcPayroll(selEmp);
                 return (
                   <>
-                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Desglose salarial mensual</div>
+                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('payroll.monthlySalaryBreakdown', 'Desglose salarial mensual')}</div>
                     <div className="card" style={{marginBottom:16}}>
                       <div className="card-body" style={{padding:0}}>
                         <table className="tbl" style={{fontSize:12}}>
                           <tbody>
-                            <tr><td>Salario base</td><td className="num">{Q(c.base)}</td></tr>
-                            <tr><td style={{color:'var(--success)'}}>+ Bonificación incentivo</td><td className="num" style={{color:'var(--success)'}}>{Q(c.bon)}</td></tr>
-                            <tr><td style={{color:'var(--danger)'}}>− IGSS empleado (4.83%)</td><td className="num" style={{color:'var(--danger)'}}>−{Q(c.igssE)}</td></tr>
-                            <tr><td style={{color:'var(--danger)'}}>− ISR mensual retenido</td><td className="num" style={{color:'var(--danger)'}}>−{Q(c.isrM)}</td></tr>
+                            <tr><td>{t('payroll.headers.baseSalary', 'Salario base')}</td><td className="num">{Q(c.base)}</td></tr>
+                            <tr><td style={{color:'var(--success)'}}>+ {t('payroll.incentiveBonus', 'Bonificación incentivo')}</td><td className="num" style={{color:'var(--success)'}}>{Q(c.bon)}</td></tr>
+                            <tr><td style={{color:'var(--danger)'}}>− {t('payroll.igssEmployee483', 'IGSS empleado (4.83%)')}</td><td className="num" style={{color:'var(--danger)'}}>−{Q(c.igssE)}</td></tr>
+                            <tr><td style={{color:'var(--danger)'}}>− {t('payroll.isrMonthlyRetained', 'ISR mensual retenido')}</td><td className="num" style={{color:'var(--danger)'}}>−{Q(c.isrM)}</td></tr>
                             <tr style={{background:'var(--surface-2)', fontWeight:700}}>
-                              <td style={{padding:'9px 12px'}}>Neto a pagar</td>
+                              <td style={{padding:'9px 12px'}}>{t('payroll.headers.netPay', 'Neto a pagar')}</td>
                               <td className="num" style={{padding:'9px 12px', color:'var(--success)', fontSize:15}}>{Q(c.neto)}</td>
                             </tr>
                           </tbody>
                         </table>
                       </div>
                     </div>
-                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Costo para la empresa</div>
+                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>{t('payroll.companyCostSection', 'Costo para la empresa')}</div>
                     <div className="detail-grid">
                       <div className="detail-row">
-                        <span className="detail-label">Salario + bonificación</span>
+                        <span className="detail-label">{t('payroll.salaryPlusBonus', 'Salario + bonificación')}</span>
                         <span className="mono">{Q(c.base + c.bon)}</span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">IGSS patronal (10.67%)</span>
+                        <span className="detail-label">{t('payroll.igssEmployer1067', 'IGSS patronal (10.67%)')}</span>
                         <span className="mono">{Q(c.igssP)}</span>
                       </div>
                       <div className="detail-row" style={{fontWeight:700}}>
-                        <span className="detail-label">Costo total mensual</span>
+                        <span className="detail-label">{t('payroll.totalMonthlyCost', 'Costo total mensual')}</span>
                         <span className="mono" style={{color:'var(--accent)'}}>{Q(c.totalEmp)}</span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">Costo anual estimado</span>
+                        <span className="detail-label">{t('payroll.estimatedAnnualCost', 'Costo anual estimado')}</span>
                         <span className="mono">{Q(c.totalEmp * 14)}</span>
                       </div>
                     </div>
@@ -570,11 +572,11 @@ export default function Payroll({ pushToast }) {
               })()}
             </div>
             <div className="drawer-foot">
-              <button className="btn ghost" onClick={() => setSelEmp(null)}>Cerrar</button>
+              <button className="btn ghost" onClick={() => setSelEmp(null)}>{t('common.close', 'Cerrar')}</button>
               <button className="btn" onClick={() => { setShowRecibo({...selEmp, calc: calcPayroll(selEmp)}); setSelEmp(null); }}>
-                <Icon name="receipt" size={12}/>Ver recibo
+                <Icon name="receipt" size={12}/>{t('payroll.viewReceipt', 'Ver recibo')}
               </button>
-              <button className="btn accent"><Icon name="edit" size={12}/>Editar</button>
+              <button className="btn accent"><Icon name="edit" size={12}/>{t('common.edit', 'Editar')}</button>
             </div>
           </div>
         </>
@@ -585,56 +587,56 @@ export default function Payroll({ pushToast }) {
         <div className="modal-overlay" onClick={() => setShowGenModal(false)}>
           <div className="modal" style={{width:480}} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>Generar planilla — {periodLabel}</h3>
+              <h3>{t('payroll.generatePayroll', 'Generar planilla')} — {periodLabel}</h3>
               <button className="icon-btn" onClick={() => setShowGenModal(false)}><Icon name="x"/></button>
             </div>
             <div className="modal-body">
               <div className="alert" style={{marginBottom:16}}>
                 <Icon name="alert" size={13}/>
-                Al cerrar la planilla se registrarán las partidas contables automáticamente.
+                {t('payroll.closePayrollNote', 'Al cerrar la planilla se registrarán las partidas contables automáticamente.')}
               </div>
               <div className="detail-grid">
                 <div className="detail-row">
-                  <span className="detail-label">Período</span>
+                  <span className="detail-label">{t('payroll.headers.period', 'Período')}</span>
                   <span className="mono">{periodLabel}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Empleados incluidos</span>
+                  <span className="detail-label">{t('payroll.includedEmployees', 'Empleados incluidos')}</span>
                   <span className="mono">{activeEmps.length}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Total salarios base</span>
+                  <span className="detail-label">{t('payroll.totalBaseSalaries', 'Total salarios base')}</span>
                   <span className="mono">{Q(summary.totalBase)}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Total bonificaciones</span>
+                  <span className="detail-label">{t('payroll.totalBonuses', 'Total bonificaciones')}</span>
                   <span className="mono" style={{color:'var(--success)'}}>{Q(summary.totalBon)}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">IGSS empleados</span>
+                  <span className="detail-label">{t('payroll.igssEmployees', 'IGSS empleados')}</span>
                   <span className="mono" style={{color:'var(--danger)'}}>−{Q(summary.totalIgssE)}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">ISR retenido</span>
+                  <span className="detail-label">{t('payroll.isrRetainedLabel', 'ISR retenido')}</span>
                   <span className="mono" style={{color:'var(--danger)'}}>−{Q(summary.totalIsr)}</span>
                 </div>
                 <div className="detail-row" style={{fontWeight:700, fontSize:13}}>
-                  <span className="detail-label">Total neto a pagar</span>
+                  <span className="detail-label">{t('payroll.totalNetToPay', 'Total neto a pagar')}</span>
                   <span className="mono" style={{color:'var(--success)'}}>{Q(summary.totalNeto)}</span>
                 </div>
                 <div className="detail-row" style={{fontWeight:700, fontSize:13}}>
-                  <span className="detail-label">Costo total empresa</span>
+                  <span className="detail-label">{t('payroll.totalCompanyCost', 'Costo total empresa')}</span>
                   <span className="mono" style={{color:'var(--accent)'}}>{Q(summary.totalEmpresa)}</span>
                 </div>
               </div>
             </div>
             <div className="modal-foot">
-              <button className="btn ghost" onClick={() => setShowGenModal(false)}>Cancelar</button>
+              <button className="btn ghost" onClick={() => setShowGenModal(false)}>{t('common.cancel', 'Cancelar')}</button>
               <button className="btn" onClick={() => { pushToast && pushToast('Planilla exportada a Excel', ''); setShowGenModal(false); }}>
-                <Icon name="download" size={12}/>Exportar Excel
+                <Icon name="download" size={12}/>{t('payroll.exportExcel', 'Exportar Excel')}
               </button>
               <button className="btn accent" onClick={handleCerrarPlanilla}>
-                <Icon name="check" size={12}/>Cerrar planilla
+                <Icon name="check" size={12}/>{t('payroll.closePayroll', 'Cerrar planilla')}
               </button>
             </div>
           </div>
@@ -647,9 +649,9 @@ export default function Payroll({ pushToast }) {
           <div style={{display:'flex', gap:20, alignItems:'flex-start'}} onClick={e => e.stopPropagation()}>
             <ReciboSueldo emp={showRecibo} period={periodLabel}/>
             <div style={{display:'flex', flexDirection:'column', gap:8, paddingTop:16}}>
-              <button className="btn primary"><Icon name="print" size={12}/>Imprimir</button>
+              <button className="btn primary"><Icon name="print" size={12}/>{t('common.print', 'Imprimir')}</button>
               <button className="btn"><Icon name="download" size={12}/>PDF</button>
-              <button className="btn ghost" onClick={() => setShowRecibo(null)}><Icon name="x" size={12}/>Cerrar</button>
+              <button className="btn ghost" onClick={() => setShowRecibo(null)}><Icon name="x" size={12}/>{t('common.close', 'Cerrar')}</button>
             </div>
           </div>
         </div>

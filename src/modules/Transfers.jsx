@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import * as MAYA from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_LABEL = { draft: 'Borrador', in_transit: 'En tránsito', completed: 'Completada', cancelled: 'Cancelada' };
 const STATUS_CLASS  = { draft: 'neutral', in_transit: 'warning', completed: 'success', cancelled: 'neutral' };
@@ -11,6 +12,7 @@ function fmt(n) { return `Q ${Number(n).toLocaleString('es-GT', { minimumFractio
 
 // ── Modal: Nueva transferencia ────────────────────────────────────────────────
 function NewTransferModal({ branches, products, onSave, onClose }) {
+  const { t } = useTranslation();
   const [fromBranch, setFrom]   = useState('');
   const [toBranch, setTo]       = useState('');
   const [transporter, setTrans] = useState('');
@@ -42,7 +44,7 @@ function NewTransferModal({ branches, products, onSave, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-title">Nueva transferencia</div>
+          <div className="modal-title">{t('transfers.newTransfer', 'Nueva transferencia')}</div>
           <button className="icon-btn" onClick={onClose}><Icon name="x" /></button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -68,8 +70,8 @@ function NewTransferModal({ branches, products, onSave, onClose }) {
             </div>
 
             <div className="field" style={{ marginBottom: 16 }}>
-              <label className="field-label">Transportista / responsable</label>
-              <input className="field-input" value={transporter} onChange={e => setTrans(e.target.value)} placeholder="Nombre del conductor o mensajero..." />
+              <label className="field-label">{t('inventory.transfer.carrier', 'Transportista / chofer')}</label>
+              <input className="field-input" value={transporter} onChange={e => setTrans(e.target.value)} placeholder={t('inventory.transfer.carrierPlaceholder', 'Nombre del conductor o mensajero...')} />
             </div>
 
             <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8 }}>Productos a transferir</div>
@@ -77,7 +79,7 @@ function NewTransferModal({ branches, products, onSave, onClose }) {
             <div style={{ position: 'relative', marginBottom: 12 }}>
               <div className="search-wrap">
                 <Icon name="search" className="icon" size={13} />
-                <input className="search-input" placeholder="Buscar producto para agregar…" value={search} onChange={e => setSearch(e.target.value)} />
+                <input className="search-input" placeholder={t('transfers.searchPlaceholder', 'Buscar producto para agregar…')} value={search} onChange={e => setSearch(e.target.value)} />
               </div>
               {matched.length > 0 && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: 'var(--shadow-md)', zIndex: 50, maxHeight: 200, overflowY: 'auto' }}>
@@ -96,8 +98,8 @@ function NewTransferModal({ branches, products, onSave, onClose }) {
             <table className="data-table" style={{ marginBottom: 8 }}>
               <thead>
                 <tr>
-                  <th>Producto</th>
-                  <th className="right" style={{ width: 100 }}>Cantidad</th>
+                  <th>{t('common.product', 'Producto')}</th>
+                  <th className="right" style={{ width: 100 }}>{t('common.quantity', 'Cantidad')}</th>
                   <th style={{ width: 36 }}></th>
                 </tr>
               </thead>
@@ -135,9 +137,9 @@ function NewTransferModal({ branches, products, onSave, onClose }) {
             </button>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
             <button type="submit" className="btn accent" disabled={!valid}>
-              <Icon name="check" size={12} />Crear transferencia
+              <Icon name="check" size={12} />{t('inventory.transfer.create', 'Crear transferencia')}
             </button>
           </div>
         </form>
@@ -148,6 +150,7 @@ function NewTransferModal({ branches, products, onSave, onClose }) {
 
 // ── Panel detalle ─────────────────────────────────────────────────────────────
 function TransferDetail({ transfer, onClose, onDispatch, onReceive, onCancel }) {
+  const { t } = useTranslation();
   const canDispatch = transfer.status === 'draft';
   const canReceive  = transfer.status === 'in_transit';
   const canCancel   = transfer.status === 'draft' || transfer.status === 'in_transit';
@@ -163,7 +166,7 @@ function TransferDetail({ transfer, onClose, onDispatch, onReceive, onCancel }) 
         <div style={{ display: 'flex', gap: 8 }}>
           {canDispatch && <button className="btn accent" onClick={() => onDispatch(transfer)}><Icon name="truck" size={12} />Despachar</button>}
           {canReceive  && <button className="btn accent" onClick={() => onReceive(transfer)}><Icon name="check" size={12} />Recibir</button>}
-          {canCancel   && <button className="btn" style={{ color: 'var(--danger)' }} onClick={() => onCancel(transfer)}>Cancelar</button>}
+          {canCancel   && <button className="btn" style={{ color: 'var(--danger)' }} onClick={() => onCancel(transfer)}>{t('common.cancel', 'Cancelar')}</button>}
           <button className="icon-btn" onClick={onClose}><Icon name="x" /></button>
         </div>
       </div>
@@ -202,12 +205,12 @@ function TransferDetail({ transfer, onClose, onDispatch, onReceive, onCancel }) 
           </div>
           {transfer.transporter && (
             <div className="detail-row">
-              <span className="detail-label">Transportista</span>
+              <span className="detail-label">{t('inventory.transfer.carrier', 'Transportista / chofer')}</span>
               <span>{transfer.transporter}</span>
             </div>
           )}
           <div className="detail-row">
-            <span className="detail-label">Estado</span>
+            <span className="detail-label">{t('common.status', 'Estado')}</span>
             <span className={`pill ${STATUS_CLASS[transfer.status]}`} style={{ fontSize: 10 }}>{STATUS_LABEL[transfer.status]}</span>
           </div>
         </div>
@@ -215,8 +218,8 @@ function TransferDetail({ transfer, onClose, onDispatch, onReceive, onCancel }) 
         <table className="data-table">
           <thead>
             <tr>
-              <th>Producto</th>
-              <th className="right">Qty</th>
+              <th>{t('common.product', 'Producto')}</th>
+              <th className="right">{t('common.quantity', 'Cantidad')}</th>
               {transfer.status === 'completed' && <th className="right">Recibido</th>}
             </tr>
           </thead>
@@ -246,6 +249,7 @@ function TransferDetail({ transfer, onClose, onDispatch, onReceive, onCancel }) 
 
 // ── Módulo principal ──────────────────────────────────────────────────────────
 export default function Transfers({ pushToast }) {
+  const { t } = useTranslation();
   const { BRANCHES, PRODUCTS } = MAYA;
   const [transfers, setTransfers]   = useState(MAYA.TRANSFERS);
   const [selected, setSelected]     = useState(null);
@@ -307,12 +311,12 @@ export default function Transfers({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Transferencias entre sucursales</h1>
+          <h1 className="page-title">{t('transfers.title', 'Transferencias entre sucursales')}</h1>
           <div className="page-subtitle">{transfers.length} transferencias · {inTransit.length} en tránsito</div>
         </div>
         <div className="page-head-actions">
           <button className="btn accent" onClick={() => setShowNew(true)}>
-            <Icon name="plus" size={12} />Nueva transferencia
+            <Icon name="plus" size={12} />{t('transfers.newTransfer', 'Nueva transferencia')}
           </button>
         </div>
       </div>
@@ -345,18 +349,18 @@ export default function Transfers({ pushToast }) {
       <div className="toolbar">
         <div className="search-wrap" style={{ flex: 1, maxWidth: 300 }}>
           <Icon name="search" className="icon" size={13} />
-          <input className="search-input" placeholder="Buscar por ID o sucursal…"
+          <input className="search-input" placeholder={t('transfers.searchPlaceholder', 'No. transferencia, sucursal…')}
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select className="field-input" style={{ width: 'auto' }} value={statusFilter} onChange={e => setStatus(e.target.value)}>
-          <option value="all">Todos los estados</option>
-          <option value="draft">Borrador</option>
+          <option value="all">{t('common.all', 'Todos')} los estados</option>
+          <option value="draft">{t('common.draft', 'Borrador')}</option>
           <option value="in_transit">En tránsito</option>
-          <option value="completed">Completada</option>
-          <option value="cancelled">Cancelada</option>
+          <option value="completed">{t('common.completed', 'Completado')}</option>
+          <option value="cancelled">{t('common.cancelled', 'Cancelado')}</option>
         </select>
         <select className="field-input" style={{ width: 'auto' }} value={branchFilter} onChange={e => setBranch(e.target.value)}>
-          <option value="all">Todas las sucursales</option>
+          <option value="all">{t('common.allFem', 'Todas')} las sucursales</option>
           {BRANCHES.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
         </select>
         <span className="muted" style={{ fontSize: 12 }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
@@ -367,18 +371,18 @@ export default function Transfers({ pushToast }) {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Fecha</th>
+              <th>{t('common.date', 'Fecha')}</th>
               <th>Origen</th>
               <th>Destino</th>
-              <th>Transportista</th>
+              <th>{t('inventory.transfer.carrier', 'Transportista / chofer')}</th>
               <th className="right">Ítems</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th>{t('common.status', 'Estado')}</th>
+              <th>{t('common.actions', 'Acciones')}</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} className="empty">Sin transferencias</td></tr>
+              <tr><td colSpan={8} className="empty">{t('common.noResults', 'Sin resultados')}</td></tr>
             ) : filtered.map(t => (
               <tr key={t.id} className="clickable" onClick={() => setSelected(t)}>
                 <td className="mono" style={{ fontWeight: 600 }}>{t.id}</td>

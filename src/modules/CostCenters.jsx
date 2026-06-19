@@ -1,5 +1,6 @@
 // ERP MAYA — Centros de Costo
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon.jsx';
 import { ACCOUNTING_PERIODS } from '../data/mock.js';
 
@@ -58,6 +59,7 @@ const EXPENSE_LINES = [
 // ── Modal: crear / editar centro ──────────────────────────────────────────
 
 function CenterModal({ center, onSave, onClose }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(center || {
     code: '', name: '', group: GROUPS[0], type: 'cost', responsible: '', budget: '', active: true,
   });
@@ -68,51 +70,51 @@ function CenterModal({ center, onSave, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" style={{ width: 400 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <span className="modal-title">{center ? 'Editar centro' : 'Nuevo centro de costo'}</span>
+          <span className="modal-title">{center ? t('costcenters.editCenter', 'Editar centro') : t('costcenters.newCenter', 'Nuevo centro de costo')}</span>
           <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
         </div>
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div className="field-group">
-              <label className="field-label">Código</label>
+              <label className="field-label">{t('common.code', 'Código')}</label>
               <input className="field-input" placeholder="CC-XXX" value={form.code}
                 onChange={e => set('code', e.target.value.toUpperCase())} disabled={!!center} />
             </div>
             <div className="field-group">
-              <label className="field-label">Tipo</label>
+              <label className="field-label">{t('common.type', 'Tipo')}</label>
               <select className="field-input" value={form.type} onChange={e => set('type', e.target.value)}>
-                <option value="cost">Centro de Costo</option>
-                <option value="profit">Centro de Utilidad</option>
+                <option value="cost">{t('costcenters.typeCost', 'Centro de Costo')}</option>
+                <option value="profit">{t('costcenters.typeProfit', 'Centro de Utilidad')}</option>
               </select>
             </div>
           </div>
           <div className="field-group">
-            <label className="field-label">Nombre</label>
-            <input className="field-input" placeholder="Nombre del centro" value={form.name}
+            <label className="field-label">{t('common.name', 'Nombre')}</label>
+            <input className="field-input" placeholder={t('costcenters.namePlaceholder', 'Nombre del centro')} value={form.name}
               onChange={e => set('name', e.target.value)} />
           </div>
           <div className="field-group">
-            <label className="field-label">Grupo</label>
+            <label className="field-label">{t('costcenters.group', 'Grupo')}</label>
             <select className="field-input" value={form.group} onChange={e => set('group', e.target.value)}>
               {GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
           <div className="field-group">
-            <label className="field-label">Responsable</label>
-            <input className="field-input" placeholder="Nombre del responsable" value={form.responsible}
+            <label className="field-label">{t('costcenters.responsible', 'Responsable')}</label>
+            <input className="field-input" placeholder={t('costcenters.responsiblePlaceholder', 'Nombre del responsable')} value={form.responsible}
               onChange={e => set('responsible', e.target.value)} />
           </div>
           <div className="field-group">
-            <label className="field-label">Presupuesto mensual (Q)</label>
+            <label className="field-label">{t('costcenters.monthlyBudget', 'Presupuesto mensual (Q)')}</label>
             <input className="field-input" type="number" min="0" step="100" placeholder="0.00" value={form.budget}
               onChange={e => set('budget', e.target.value)} />
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn-ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
           <button className="btn" disabled={!valid}
             onClick={() => onSave({ ...form, budget: Number(form.budget) })}>
-            {center ? 'Guardar cambios' : 'Crear centro'}
+            {center ? t('costcenters.saveChanges', 'Guardar cambios') : t('costcenters.createCenter', 'Crear centro')}
           </button>
         </div>
       </div>
@@ -123,6 +125,7 @@ function CenterModal({ center, onSave, onClose }) {
 // ── Componente principal ───────────────────────────────────────────────────
 
 export default function CostCenters({ pushToast }) {
+  const { t } = useTranslation();
   const [tab, setTab]         = useState('catalog');
   const [centers, setCenters] = useState(INIT_CENTERS);
   const [periodId, setPeriodId] = useState(5);
@@ -171,8 +174,8 @@ export default function CostCenters({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="page-title">Centros de Costo</div>
-          <div className="page-sub">Seguimiento de gastos por área y sucursal</div>
+          <div className="page-title">{t('costcenters.title', 'Centros de Costo')}</div>
+          <div className="page-sub">{t('costcenters.subtitle', 'Seguimiento de gastos por área y sucursal')}</div>
         </div>
         <div className="page-head-actions">
           {tab === 'analysis' && (
@@ -181,7 +184,7 @@ export default function CostCenters({ pushToast }) {
             </select>
           )}
           <button className="btn" onClick={openNew}>
-            <Icon name="plus" size={12} /> Nuevo centro
+            <Icon name="plus" size={12} /> {t('costcenters.newCenter', 'Nuevo centro')}
           </button>
         </div>
       </div>
@@ -189,36 +192,36 @@ export default function CostCenters({ pushToast }) {
       {/* KPIs */}
       <div className="stat-grid" style={{ marginBottom: 20 }}>
         <div className="stat-card">
-          <div className="label">Centros activos</div>
+          <div className="label">{t('costcenters.activeCenters', 'Centros activos')}</div>
           <div className="value">{centers.filter(c => c.active).length}</div>
-          <div className="sub muted">{centers.length} en total</div>
+          <div className="sub muted">{centers.length} {t('costcenters.inTotal', 'en total')}</div>
         </div>
         <div className="stat-card">
-          <div className="label">Gasto total período</div>
+          <div className="label">{t('costcenters.totalSpent', 'Gasto total período')}</div>
           <div className="value">{Q(totalSpent)}</div>
           <div className="sub muted">{period?.name}</div>
         </div>
         <div className="stat-card">
-          <div className="label">Presupuesto total</div>
+          <div className="label">{t('costcenters.totalBudget', 'Presupuesto total')}</div>
           <div className="value">{Q(totalBudget)}</div>
           <div className={`sub ${totalSpent / totalBudget > 0.9 ? 'danger' : 'muted'}`}>
-            {((totalSpent / totalBudget) * 100).toFixed(1)}% utilizado
+            {((totalSpent / totalBudget) * 100).toFixed(1)}% {t('costcenters.used', 'utilizado')}
           </div>
         </div>
         <div className="stat-card">
-          <div className="label">Centros en alerta</div>
+          <div className="label">{t('costcenters.alertCenters', 'Centros en alerta')}</div>
           <div className={`value ${overCount > 0 ? 'danger' : 'success'}`}>{overCount}</div>
-          <div className="sub muted">≥ 90% del presupuesto</div>
+          <div className="sub muted">{t('costcenters.alertThreshold', '≥ 90% del presupuesto')}</div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="tabs" style={{ marginBottom: 0 }}>
         <button className={`tab ${tab === 'catalog'  ? 'active' : ''}`} onClick={() => setTab('catalog')}>
-          Catálogo
+          {t('costcenters.tabCatalog', 'Catálogo')}
         </button>
         <button className={`tab ${tab === 'analysis' ? 'active' : ''}`} onClick={() => setTab('analysis')}>
-          Análisis de Gastos
+          {t('costcenters.tabAnalysis', 'Análisis de Gastos')}
         </button>
       </div>
 
@@ -229,13 +232,13 @@ export default function CostCenters({ pushToast }) {
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Código</th>
-                  <th>Nombre</th>
-                  <th>Grupo</th>
-                  <th>Tipo</th>
-                  <th>Responsable</th>
-                  <th style={{ textAlign: 'right' }}>Presupuesto / mes</th>
-                  <th>Estado</th>
+                  <th>{t('common.code', 'Código')}</th>
+                  <th>{t('common.name', 'Nombre')}</th>
+                  <th>{t('costcenters.group', 'Grupo')}</th>
+                  <th>{t('common.type', 'Tipo')}</th>
+                  <th>{t('costcenters.responsible', 'Responsable')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('costcenters.monthlyBudget', 'Presupuesto / mes')}</th>
+                  <th>{t('common.status', 'Estado')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -255,11 +258,11 @@ export default function CostCenters({ pushToast }) {
                           <td><span className={`pill ${TYPE_CLASS[c.type]}`}>{TYPE_LABEL[c.type]}</span></td>
                           <td style={{ fontSize: 12.5 }}>{c.responsible}</td>
                           <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)' }}>{Q(c.budget)}</td>
-                          <td><span className={`pill ${c.active ? 'success' : ''}`}>{c.active ? 'Activo' : 'Inactivo'}</span></td>
+                          <td><span className={`pill ${c.active ? 'success' : ''}`}>{c.active ? t('common.active', 'Activo') : t('common.inactive', 'Inactivo')}</span></td>
                           <td style={{ display: 'flex', gap: 4 }}>
-                            <button className="btn-ghost" onClick={() => openEdit(c)}>Editar</button>
+                            <button className="btn-ghost" onClick={() => openEdit(c)}>{t('common.edit', 'Editar')}</button>
                             <button className="btn-ghost" onClick={() => toggleActive(c.code)}>
-                              {c.active ? 'Desactivar' : 'Activar'}
+                              {c.active ? t('costcenters.deactivate', 'Desactivar') : t('costcenters.activate', 'Activar')}
                             </button>
                           </td>
                         </tr>
@@ -280,12 +283,12 @@ export default function CostCenters({ pushToast }) {
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Centro</th>
-                  <th>Responsable</th>
-                  <th style={{ textAlign: 'right' }}>Gastado</th>
-                  <th style={{ textAlign: 'right' }}>Presupuesto</th>
-                  <th style={{ minWidth: 160 }}>Utilización</th>
-                  <th style={{ textAlign: 'right' }}>Variación</th>
+                  <th>{t('costcenters.center', 'Centro')}</th>
+                  <th>{t('costcenters.responsible', 'Responsable')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('costcenters.spent', 'Gastado')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('costcenters.budget', 'Presupuesto')}</th>
+                  <th style={{ minWidth: 160 }}>{t('costcenters.utilization', 'Utilización')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('costcenters.variation', 'Variación')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -336,7 +339,7 @@ export default function CostCenters({ pushToast }) {
                             </td>
                             <td>
                               <button className="btn-ghost" onClick={e => { e.stopPropagation(); setSelected({ center: c, lines }); }}>
-                                Detalle
+                                {t('common.viewDetail', 'Detalle')}
                               </button>
                             </td>
                           </tr>
@@ -369,7 +372,7 @@ export default function CostCenters({ pushToast }) {
               {/* Info rápida */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                 <span className={`pill ${TYPE_CLASS[selected.center.type]}`}>{TYPE_LABEL[selected.center.type]}</span>
-                <span className="pill neutral">Responsable: {selected.center.responsible}</span>
+                <span className="pill neutral">{t('costcenters.responsible', 'Responsable')}: {selected.center.responsible}</span>
                 <span className="pill neutral">{period?.name}</span>
               </div>
 
@@ -383,11 +386,11 @@ export default function CostCenters({ pushToast }) {
                   <div className="card" style={{ padding: '14px 16px', marginBottom: 16, background: 'var(--surface-2)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                       <div>
-                        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>GASTO DEL PERÍODO</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>{t('costcenters.periodSpent', 'GASTO DEL PERÍODO')}</div>
                         <div style={{ fontWeight: 700, fontSize: 18, fontFamily: 'var(--font-mono)' }}>{Q(spent)}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>PRESUPUESTO</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>{t('costcenters.budget', 'PRESUPUESTO')}</div>
                         <div style={{ fontWeight: 700, fontSize: 18, fontFamily: 'var(--font-mono)' }}>{Q(selected.center.budget)}</div>
                       </div>
                     </div>
@@ -399,10 +402,10 @@ export default function CostCenters({ pushToast }) {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                       <span style={{ color: bc === 'danger' ? 'var(--danger)' : bc === 'warning' ? 'var(--warning)' : 'var(--success)', fontWeight: 600 }}>
-                        {pct.toFixed(1)}% utilizado
+                        {pct.toFixed(1)}% {t('costcenters.used', 'utilizado')}
                       </span>
                       <span style={{ color: varAmt >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
-                        {varAmt >= 0 ? 'Disponible: ' : 'Excedido: '}{Q(Math.abs(varAmt))}
+                        {varAmt >= 0 ? t('costcenters.available', 'Disponible: ') : t('costcenters.exceeded', 'Excedido: ')}{Q(Math.abs(varAmt))}
                       </span>
                     </div>
                   </div>
@@ -411,20 +414,20 @@ export default function CostCenters({ pushToast }) {
 
               {/* Detalle de gastos */}
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>
-                DESGLOSE DE GASTOS
+                {t('costcenters.expenseBreakdown', 'DESGLOSE DE GASTOS')}
               </div>
               {selected.lines.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted)', fontSize: 13 }}>
-                  Sin gastos registrados en este período
+                  {t('costcenters.noExpenses', 'Sin gastos registrados en este período')}
                 </div>
               ) : (
                 <table className="tbl" style={{ marginBottom: 4 }}>
                   <thead>
                     <tr>
-                      <th>Fecha</th>
-                      <th>Descripción</th>
-                      <th>Cuenta</th>
-                      <th style={{ textAlign: 'right' }}>Importe</th>
+                      <th>{t('common.date', 'Fecha')}</th>
+                      <th>{t('common.description', 'Descripción')}</th>
+                      <th>{t('accounting.account', 'Cuenta')}</th>
+                      <th style={{ textAlign: 'right' }}>{t('costcenters.amount', 'Importe')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -433,7 +436,7 @@ export default function CostCenters({ pushToast }) {
                         <td className="mono muted" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>{fmtDate(e.date)}</td>
                         <td style={{ fontSize: 12.5 }}>
                           {e.desc}
-                          {e.distributed && <span className="pill" style={{ marginLeft: 6, fontSize: 10 }}>Prorrateo</span>}
+                          {e.distributed && <span className="pill" style={{ marginLeft: 6, fontSize: 10 }}>{t('costcenters.prorated', 'Prorrateo')}</span>}
                         </td>
                         <td className="muted" style={{ fontSize: 11 }}>{e.accountName}</td>
                         <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12.5 }}>{Q(e.amount)}</td>
@@ -442,7 +445,7 @@ export default function CostCenters({ pushToast }) {
                   </tbody>
                   <tfoot>
                     <tr>
-                      <td colSpan={3} style={{ textAlign: 'right', fontWeight: 700, padding: '8px 16px' }}>Total</td>
+                      <td colSpan={3} style={{ textAlign: 'right', fontWeight: 700, padding: '8px 16px' }}>{t('common.total', 'Total')}</td>
                       <td style={{ textAlign: 'right', fontWeight: 700, fontFamily: 'var(--font-mono)', padding: '8px 16px' }}>
                         {Q(selected.lines.reduce((s, e) => s + e.amount, 0))}
                       </td>
@@ -453,9 +456,9 @@ export default function CostCenters({ pushToast }) {
             </div>
 
             <div className="drawer-foot">
-              <button className="btn-ghost" onClick={() => setSelected(null)}>Cerrar</button>
+              <button className="btn-ghost" onClick={() => setSelected(null)}>{t('common.close', 'Cerrar')}</button>
               <button className="btn-outline" onClick={() => { setSelected(null); openEdit(selected.center); }}>
-                Editar centro
+                {t('costcenters.editCenter', 'Editar centro')}
               </button>
             </div>
           </div>

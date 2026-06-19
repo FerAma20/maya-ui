@@ -3,6 +3,7 @@ import Icon from '../components/Icon.jsx';
 import * as MAYA from '../data/mock.js';
 // ERP MAYA — Dashboard module
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 function Sparkline({ data, color = "currentColor", height = 32, width = 100 }) {
   if (!data || !data.length) return null;
   const max = Math.max(...data);
@@ -110,6 +111,7 @@ function DonutChart({ data, size = 160 }) {
 }
 
 function DashboardModule() {
+  const { t } = useTranslation();
   const { Q, Qs, SALES_TREND, SALES_BY_CAT, TOP_PRODUCTS, TICKETS, LOW_STOCK, EXPIRING_SOON, BRANCHES } = MAYA;
   const [range, setRange] = useState('14d');
 
@@ -127,7 +129,7 @@ function DashboardModule() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Dashboard general</h1>
+          <h1 className="page-title">{t('nav.dashboard', 'Dashboard general')}</h1>
           <div className="page-subtitle">Vista consolidada · 5 sucursales · {new Date().toLocaleDateString('es-GT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</div>
         </div>
         <div className="page-head-actions">
@@ -136,7 +138,7 @@ function DashboardModule() {
               <button key={r} className={`chip ${range === r.toLowerCase() ? 'active' : ''}`} onClick={() => setRange(r.toLowerCase())}>{r}</button>
             ))}
           </div>
-          <button className="btn"><Icon name="download"/>Exportar</button>
+          <button className="btn"><Icon name="download"/>{t('common.export', 'Exportar')}</button>
           <button className="btn primary"><Icon name="refresh"/>Sincronizar</button>
         </div>
       </div>
@@ -144,7 +146,7 @@ function DashboardModule() {
       {/* Stats */}
       <div className="stat-grid">
         <div className="stat">
-          <div className="label"><Icon name="cash" size={11}/>Ventas hoy</div>
+          <div className="label"><Icon name="cash" size={11}/>{t('dashboard.kpis.salesToday', 'Ventas hoy')}</div>
           <div className="val mono">{Qs(today.total)}</div>
           <div className={`delta ${deltaToday >= 0 ? 'up' : 'dn'}`}>
             <Icon name={deltaToday >= 0 ? 'arrowUp' : 'arrowDown'} size={11}/>
@@ -153,21 +155,21 @@ function DashboardModule() {
           <div className="spark"><Sparkline data={SALES_TREND.slice(-7).map(d => d.total)} color="var(--accent)" width={84} height={32}/></div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="receipt" size={11}/>Tickets hoy</div>
+          <div className="label"><Icon name="receipt" size={11}/>{t('dashboard.kpis.transactions', 'Tickets hoy')}</div>
           <div className="val mono">{today.tickets}</div>
           <div className="delta up"><Icon name="arrowUp" size={11}/>8.4% vs ayer</div>
           <div className="spark"><Sparkline data={SALES_TREND.slice(-7).map(d => d.tickets)} color="var(--info)" width={84} height={32}/></div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="chart" size={11}/>Ticket promedio</div>
+          <div className="label"><Icon name="chart" size={11}/>{t('dashboard.kpis.avgTicket', 'Ticket promedio')}</div>
           <div className="val mono">{Q(avgTicket)}</div>
           <div className="delta up"><Icon name="arrowUp" size={11}/>2.1% vs sem. anterior</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="alert" size={11}/>Alertas activas</div>
+          <div className="label"><Icon name="alert" size={11}/>{t('dashboard.sections.inventoryAlerts', 'Alertas activas')}</div>
           <div className="val mono" style={{color:'var(--danger)'}}>{LOW_STOCK.length + EXPIRING_SOON.filter(p => p.daysLeft < 30).length}</div>
           <div className="delta dn">
-            {LOW_STOCK.length} stock bajo · {EXPIRING_SOON.filter(p => p.daysLeft < 30).length} por vencer
+            {LOW_STOCK.length} {t('dashboard.alerts.lowStock', 'stock bajo')} · {EXPIRING_SOON.filter(p => p.daysLeft < 30).length} {t('dashboard.alerts.expiringSoon', 'por vencer')}
           </div>
         </div>
       </div>
@@ -177,7 +179,7 @@ function DashboardModule() {
         <div className="card">
           <div className="card-head">
             <div>
-              <h3>Ventas por día</h3>
+              <h3>{t('dashboard.charts.salesByDay', 'Ventas por día')}</h3>
               <div className="meta">Últimos 14 días · Q en miles</div>
             </div>
             <div className="row gap-6">
@@ -190,7 +192,7 @@ function DashboardModule() {
         </div>
         <div className="card">
           <div className="card-head">
-            <h3>Ventas por categoría</h3>
+            <h3>{t('dashboard.charts.salesByCategory', 'Ventas por categoría')}</h3>
             <span className="meta">MTD</span>
           </div>
           <div className="card-body" style={{display:'flex', alignItems:'center', gap:16}}>
@@ -214,7 +216,7 @@ function DashboardModule() {
       <div className="grid-2 mt-12">
         <div className="card">
           <div className="card-head">
-            <h3>Productos más vendidos</h3>
+            <h3>{t('dashboard.charts.topProducts', 'Productos más vendidos')}</h3>
             <a className="meta" href="#" style={{color:'var(--accent)'}}>Ver todos →</a>
           </div>
           <div className="card-body flush">
@@ -222,9 +224,9 @@ function DashboardModule() {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Producto</th>
+                  <th>{t('dashboard.headers.product', 'Producto')}</th>
                   <th className="num">Vendidos</th>
-                  <th className="num">Total</th>
+                  <th className="num">{t('common.total', 'Total')}</th>
                   <th className="num">∆</th>
                 </tr>
               </thead>
@@ -247,16 +249,16 @@ function DashboardModule() {
         </div>
         <div className="card">
           <div className="card-head">
-            <h3>Sucursales en vivo</h3>
+            <h3>{t('dashboard.sections.branches', 'Sucursales en vivo')}</h3>
             <span className="meta">Tiempo real</span>
           </div>
           <div className="card-body flush">
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Sucursal</th>
-                  <th className="num">Ventas hoy</th>
-                  <th className="center">Estado</th>
+                  <th>{t('dashboard.headers.branch', 'Sucursal')}</th>
+                  <th className="num">{t('dashboard.kpis.salesToday', 'Ventas hoy')}</th>
+                  <th className="center">{t('common.status', 'Estado')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -277,7 +279,7 @@ function DashboardModule() {
                       </td>
                       <td className="center">
                         {b.status === 'active'
-                          ? <span className="pill success"><span className="dot"/>Activa</span>
+                          ? <span className="pill success"><span className="dot"/>{t('common.active', 'Activa')}</span>
                           : <span className="pill warning"><span className="dot"/>Pausada</span>}
                       </td>
                     </tr>
@@ -293,23 +295,23 @@ function DashboardModule() {
       <div className="grid-2 mt-12">
         <div className="card">
           <div className="card-head">
-            <h3>Alertas de inventario</h3>
+            <h3>{t('dashboard.sections.inventoryAlerts', 'Alertas de inventario')}</h3>
             <span className="pill danger">{LOW_STOCK.length + EXPIRING_SOON.filter(p => p.daysLeft < 30).length} activas</span>
           </div>
           <div className="card-body flush">
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Tipo</th>
-                  <th>Producto</th>
+                  <th>{t('dashboard.headers.type', 'Tipo')}</th>
+                  <th>{t('dashboard.headers.product', 'Producto')}</th>
                   <th className="num">Stock / Días</th>
-                  <th>Acción</th>
+                  <th>{t('dashboard.headers.action', 'Acción')}</th>
                 </tr>
               </thead>
               <tbody>
                 {LOW_STOCK.slice(0,4).map(p => (
                   <tr key={p.sku}>
-                    <td><span className="pill warning"><span className="dot"/>Stock bajo</span></td>
+                    <td><span className="pill warning"><span className="dot"/>{t('dashboard.alerts.lowStock', 'Stock bajo')}</span></td>
                     <td>
                       <div style={{fontWeight:500}}>{p.name}</div>
                       <div className="code muted" style={{fontSize:10.5}}>{p.sku}</div>
@@ -340,18 +342,18 @@ function DashboardModule() {
         </div>
         <div className="card">
           <div className="card-head">
-            <h3>Últimas transacciones</h3>
+            <h3>{t('dashboard.sections.recentTransactions', 'Últimas transacciones')}</h3>
             <a className="meta" href="#" style={{color:'var(--accent)'}}>Ver feed →</a>
           </div>
           <div className="card-body flush">
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Ticket</th>
-                  <th>Hora</th>
-                  <th>Sucursal</th>
-                  <th>Pago</th>
-                  <th className="num">Total</th>
+                  <th>{t('dashboard.headers.ticket', 'Ticket')}</th>
+                  <th>{t('dashboard.headers.time', 'Hora')}</th>
+                  <th>{t('dashboard.headers.branch', 'Sucursal')}</th>
+                  <th>{t('dashboard.headers.payment', 'Pago')}</th>
+                  <th className="num">{t('common.total', 'Total')}</th>
                 </tr>
               </thead>
               <tbody>

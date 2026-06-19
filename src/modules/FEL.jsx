@@ -1,6 +1,7 @@
 // ERP MAYA — FEL · SAT Panel
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
+import { useTranslation } from 'react-i18next';
 
 const Q   = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const Qs  = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -69,6 +70,7 @@ const EMISOR = {
 
 // ── Componente ─────────────────────────────────────────────────────────────
 export default function FEL({ pushToast }) {
+  const { t } = useTranslation();
   const [tab, setTab]         = useState('dtes');
   const [search, setSearch]   = useState('');
   const [tipoFiltro, setTipoFiltro]   = useState('todos');
@@ -105,7 +107,7 @@ export default function FEL({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="page-title">FEL · Panel SAT</div>
+          <div className="page-title">{t('fel.title', 'FEL · SAT')}</div>
           <div className="muted" style={{fontSize:12}}>
             Factura Electrónica en Línea · NIT {EMISOR.nit} · Certificador: {CERTIFIER.nombre}
           </div>
@@ -123,14 +125,14 @@ export default function FEL({ pushToast }) {
 
       <div className="tabs" style={{marginBottom:20}}>
         {[
-          { id:'dtes',       label:'DTEs emitidos' },
-          { id:'anulaciones',label:'Anulaciones' },
-          { id:'libro',      label:'Libro de ventas' },
+          { id:'dtes',        label: t('fel.tabs.pending', 'DTEs emitidos') },
+          { id:'anulaciones', label: t('fel.tabs.errors', 'Anulaciones') },
+          { id:'libro',       label:'Libro de ventas' },
           { id:'certificador',label:'Certificador' },
-          { id:'config',     label:'Configuración' },
-        ].map(t => (
-          <button key={t.id} className={`tab ${tab===t.id?'active':''}`} onClick={() => setTab(t.id)}>
-            {t.label}
+          { id:'config',      label: t('nav.config', 'Configuración') },
+        ].map(tabItem => (
+          <button key={tabItem.id} className={`tab ${tab===tabItem.id?'active':''}`} onClick={() => setTab(tabItem.id)}>
+            {tabItem.label}
           </button>
         ))}
       </div>
@@ -165,7 +167,7 @@ export default function FEL({ pushToast }) {
 
           <div className="filterbar">
             <Icon name="search" size={13} style={{color:'var(--muted)'}}/>
-            <input className="input grow" placeholder="Buscar por receptor, NIT o correlativo…"
+            <input className="input grow" placeholder={t('billing.searchPlaceholder', 'Buscar por receptor, NIT o correlativo…')}
               value={search} onChange={e => setSearch(e.target.value)}/>
             <select className="input" value={tipoFiltro} onChange={e => setTipoFiltro(e.target.value)}>
               <option value="todos">Todos los tipos</option>
@@ -182,14 +184,14 @@ export default function FEL({ pushToast }) {
               <thead>
                 <tr>
                   <th>Correlativo</th>
-                  <th>Tipo</th>
-                  <th>Fecha</th>
+                  <th>{t('common.type', 'Tipo')}</th>
+                  <th>{t('common.date', 'Fecha')}</th>
                   <th>Receptor</th>
                   <th>NIT</th>
                   <th className="num">Afecto</th>
-                  <th className="num">IVA</th>
-                  <th className="num">Total</th>
-                  <th>Estado</th>
+                  <th className="num">{t('common.iva', 'IVA')}</th>
+                  <th className="num">{t('common.total', 'Total')}</th>
+                  <th>{t('common.status', 'Estado')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -215,9 +217,9 @@ export default function FEL({ pushToast }) {
                       <td><span className={`pill ${estado.pill}`} style={{fontSize:10}}>{estado.label}</span></td>
                       <td onClick={e => e.stopPropagation()}>
                         <div style={{display:'flex'}}>
-                          <button className="icon-btn" title="Descargar XML"
+                          <button className="icon-btn" title={t('common.download', 'Descargar XML')}
                             onClick={() => pushToast?.(`Descargando ${d.serie}-${d.numero}.xml`, '')}><Icon name="download"/></button>
-                          <button className="icon-btn" title="Reenviar correo"
+                          <button className="icon-btn" title={t('common.sendEmail', 'Reenviar correo')}
                             onClick={() => pushToast?.(`DTE reenviado a ${d.receptor}`, 'success')}><Icon name="transfer"/></button>
                           {d.estado === 'autorizado' && d.tipo === 'FACT' && (
                             <button className="icon-btn" title="Anular" style={{color:'var(--danger)'}}
@@ -229,7 +231,7 @@ export default function FEL({ pushToast }) {
                   );
                 })}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={10} style={{textAlign:'center', padding:28, color:'var(--muted)'}}>Sin resultados</td></tr>
+                  <tr><td colSpan={10} style={{textAlign:'center', padding:28, color:'var(--muted)'}}>{t('common.noResults', 'Sin resultados')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -250,9 +252,9 @@ export default function FEL({ pushToast }) {
                   <th>Correlativo</th>
                   <th>Fecha anulación</th>
                   <th>Receptor</th>
-                  <th className="num">Total</th>
+                  <th className="num">{t('common.total', 'Total')}</th>
                   <th>Motivo</th>
-                  <th>Estado</th>
+                  <th>{t('common.status', 'Estado')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -282,7 +284,7 @@ export default function FEL({ pushToast }) {
                     <th>Correlativo</th>
                     <th>Hora emisión</th>
                     <th>Receptor</th>
-                    <th className="num">Total</th>
+                    <th className="num">{t('common.total', 'Total')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -322,7 +324,7 @@ export default function FEL({ pushToast }) {
                 <option>Marzo 2026</option>
               </select>
               <button className="btn" onClick={() => pushToast?.('Exportando libro de ventas…', '')}>
-                <Icon name="download" size={13}/>Exportar Excel
+                <Icon name="download" size={13}/>{t('common.export', 'Exportar')} Excel
               </button>
             </div>
           </div>
@@ -332,7 +334,7 @@ export default function FEL({ pushToast }) {
               <thead>
                 <tr>
                   <th>No.</th>
-                  <th>Fecha</th>
+                  <th>{t('common.date', 'Fecha')}</th>
                   <th>Serie-Número</th>
                   <th>UUID (corto)</th>
                   <th>NIT receptor</th>
@@ -340,7 +342,7 @@ export default function FEL({ pushToast }) {
                   <th className="num">Afecto</th>
                   <th className="num">Exento</th>
                   <th className="num">IVA 12%</th>
-                  <th className="num">Total</th>
+                  <th className="num">{t('common.total', 'Total')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -438,7 +440,7 @@ export default function FEL({ pushToast }) {
                   <tr>
                     <th>Correlativo</th>
                     <th>Receptor</th>
-                    <th className="num">Total</th>
+                    <th className="num">{t('common.total', 'Total')}</th>
                     <th>Error SAT</th>
                     <th></th>
                   </tr>
@@ -484,7 +486,7 @@ export default function FEL({ pushToast }) {
               </div>
             ))}
             <button className="btn" style={{marginTop:14}} onClick={() => pushToast?.('Abriendo edición de emisor…', '')}>
-              <Icon name="edit" size={13}/>Editar datos
+              <Icon name="edit" size={13}/>{t('common.edit', 'Editar')} datos
             </button>
           </div>
 
@@ -521,7 +523,7 @@ export default function FEL({ pushToast }) {
                 <Icon name="transfer" size={13}/>Probar conexión
               </button>
               <button className="btn accent" onClick={() => pushToast?.('Configuración guardada', 'success')}>
-                <Icon name="check" size={13}/>Guardar
+                <Icon name="check" size={13}/>{t('common.save', 'Guardar')}
               </button>
             </div>
           </div>
@@ -550,7 +552,7 @@ export default function FEL({ pushToast }) {
                 ['NIT',        drawer.nit],
                 ['Afecto IVA', Q(drawer.afecto)],
                 ['IVA 12%',    Q(drawer.iva)],
-                ['Total',      Q(drawer.total)],
+                [t('common.total', 'Total'), Q(drawer.total)],
                 ['Hora cert.', drawer.certTs],
                 ['DTE ref.',   drawer.refDTE ?? '—'],
               ].map(([k, v]) => (
@@ -617,7 +619,7 @@ export default function FEL({ pushToast }) {
                   <span className="muted">Receptor</span><span style={{fontWeight:500}}>{showAnul.receptor}</span>
                 </div>
                 <div style={{display:'flex', justifyContent:'space-between', padding:'6px 0'}}>
-                  <span className="muted">Total</span><span style={{fontWeight:700, fontFamily:'var(--font-mono)'}}>{Q(showAnul.total)}</span>
+                  <span className="muted">{t('common.total', 'Total')}</span><span style={{fontWeight:700, fontFamily:'var(--font-mono)'}}>{Q(showAnul.total)}</span>
                 </div>
               </div>
               <div className="field">
@@ -627,13 +629,13 @@ export default function FEL({ pushToast }) {
               </div>
             </div>
             <div className="modal-foot">
-              <button className="btn" onClick={() => setShowAnul(null)}>Cancelar</button>
+              <button className="btn" onClick={() => setShowAnul(null)}>{t('common.cancel', 'Cancelar')}</button>
               <button
                 className="btn danger"
                 disabled={!motivoAnul.trim()}
                 onClick={() => { pushToast?.(`DTE ${showAnul.serie}-${showAnul.numero} anulado`, 'success'); setShowAnul(null); }}
               >
-                <Icon name="check" size={13}/>Confirmar anulación
+                <Icon name="check" size={13}/>{t('common.confirm', 'Confirmar')} anulación
               </button>
             </div>
           </div>

@@ -4,7 +4,9 @@ import Icon from '../components/Icon.jsx';
 import * as MAYA from '../data/mock.js';
 // ERP MAYA — Reports module
 import React, { useState as useStateRpt } from 'react';
+import { useTranslation } from 'react-i18next';
 function ReportsModule() {
+  const { t } = useTranslation();
   const { Q, Qs, SALES_TREND, SALES_BY_CAT, TOP_PRODUCTS, PURCHASE_ORDERS, SUPPLIERS, BRANCHES, TICKETS } = MAYA;
   const [section, setSection] = useStateRpt('ventas');
   const [range, setRange] = useStateRpt('14d');
@@ -17,7 +19,7 @@ function ReportsModule() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Reportería</h1>
+          <h1 className="page-title">{t('reports.title', 'Reportería')}</h1>
           <div className="page-subtitle">Análisis de ventas, compras y rentabilidad · 21 May 2026</div>
         </div>
         <div className="page-head-actions">
@@ -26,13 +28,13 @@ function ReportsModule() {
               <button key={r} className={`chip ${range === r.toLowerCase() ? 'active' : ''}`} onClick={() => setRange(r.toLowerCase())}>{r}</button>
             ))}
           </div>
-          <button className="btn"><Icon name="download"/>Excel</button>
-          <button className="btn"><Icon name="print"/>PDF</button>
+          <button className="btn"><Icon name="download"/>{t('reports.export', 'Excel')}</button>
+          <button className="btn"><Icon name="print"/>{t('reports.print', 'PDF')}</button>
         </div>
       </div>
 
       <div className="tabs">
-        <div className={`tab ${section==='ventas'?'active':''}`} onClick={() => setSection('ventas')}>Reportes de ventas</div>
+        <div className={`tab ${section==='ventas'?'active':''}`} onClick={() => setSection('ventas')}>{t('reports.tabs.sales', 'Reportes de ventas')}</div>
         <div className={`tab ${section==='compras'?'active':''}`} onClick={() => setSection('compras')}>Reportes de compras</div>
         <div className={`tab ${section==='rentabilidad'?'active':''}`} onClick={() => setSection('rentabilidad')}>Rentabilidad &amp; márgenes</div>
         <div className={`tab ${section==='caja'?'active':''}`} onClick={() => setSection('caja')}>Cierres de caja</div>
@@ -53,7 +55,7 @@ function ReportsModule() {
               <div className="delta up"><Icon name="arrowUp" size={11}/>8.6%</div>
             </div>
             <div className="stat">
-              <div className="label"><Icon name="chart" size={11}/>Ticket promedio</div>
+              <div className="label"><Icon name="chart" size={11}/>{t('dashboard.kpis.avgTicket', 'Ticket promedio')}</div>
               <div className="val mono">{Q(totalSales/totalTickets)}</div>
               <div className="delta up"><Icon name="arrowUp" size={11}/>5.1%</div>
             </div>
@@ -87,7 +89,14 @@ function ReportsModule() {
               <div className="card-body flush">
                 <table className="tbl">
                   <thead>
-                    <tr><th>Sucursal</th><th className="num">Tickets</th><th className="num">Ventas</th><th className="num">Promedio</th><th className="num">% Total</th><th></th></tr>
+                    <tr>
+                      <th>{t('common.branch', 'Sucursal')}</th>
+                      <th className="num">Tickets</th>
+                      <th className="num">Ventas</th>
+                      <th className="num">Promedio</th>
+                      <th className="num">% Total</th>
+                      <th></th>
+                    </tr>
                   </thead>
                   <tbody>
                     {BRANCHES.map(b => {
@@ -118,7 +127,15 @@ function ReportsModule() {
               <div className="card-head"><h3>Ranking de cajeros</h3><span className="meta">MTD</span></div>
               <div className="card-body flush">
                 <table className="tbl">
-                  <thead><tr><th>#</th><th>Cajero</th><th>Sucursal</th><th className="num">Tickets</th><th className="num">Ventas</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Cajero</th>
+                      <th>{t('common.branch', 'Sucursal')}</th>
+                      <th className="num">Tickets</th>
+                      <th className="num">Ventas</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {[
                       { rk:1, name:'Carlos Méndez', br:'Zona 10', tk:842, sales:124800 },
@@ -144,10 +161,18 @@ function ReportsModule() {
 
           <div className="grid-2 mt-12">
             <div className="card">
-              <div className="card-head"><h3>Top 10 productos vendidos</h3></div>
+              <div className="card-head"><h3>{t('dashboard.charts.topProducts', 'Top 10 productos vendidos')}</h3></div>
               <div className="card-body flush">
                 <table className="tbl">
-                  <thead><tr><th>#</th><th>Producto</th><th className="num">Unidades</th><th className="num">Ventas</th><th className="num">∆</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>{t('common.product', 'Producto')}</th>
+                      <th className="num">{t('common.quantity', 'Unidades')}</th>
+                      <th className="num">Ventas</th>
+                      <th className="num">∆</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {TOP_PRODUCTS.map((p, i) => (
                       <tr key={p.sku}>
@@ -200,7 +225,7 @@ function ReportsModule() {
             <div className="stat">
               <div className="label"><Icon name="receipt" size={11}/>Órdenes emitidas</div>
               <div className="val mono">{PURCHASE_ORDERS.length}</div>
-              <div className="delta muted">{PURCHASE_ORDERS.filter(p => p.status==='pending').length} pendientes</div>
+              <div className="delta muted">{PURCHASE_ORDERS.filter(p => p.status==='pending').length} {t('common.pending', 'pendientes')}</div>
             </div>
             <div className="stat">
               <div className="label"><Icon name="supplier" size={11}/>Proveedores activos</div>
@@ -220,8 +245,14 @@ function ReportsModule() {
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>No. OC</th><th>Fecha</th><th>Proveedor</th><th>Sucursal</th>
-                    <th className="num">Items</th><th className="num">Total</th><th>Estado</th><th></th>
+                    <th>No. OC</th>
+                    <th>{t('common.date', 'Fecha')}</th>
+                    <th>{t('common.supplier', 'Proveedor')}</th>
+                    <th>{t('common.branch', 'Sucursal')}</th>
+                    <th className="num">Items</th>
+                    <th className="num">{t('common.total', 'Total')}</th>
+                    <th>{t('common.status', 'Estado')}</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -235,9 +266,9 @@ function ReportsModule() {
                       <td className="num" style={{fontWeight:600}}>{Q(po.total)}</td>
                       <td>
                         {po.status === 'received' && <span className="pill success"><span className="dot"/>Recibida</span>}
-                        {po.status === 'pending' && <span className="pill warning"><span className="dot"/>Pendiente</span>}
+                        {po.status === 'pending' && <span className="pill warning"><span className="dot"/>{t('common.pending', 'Pendiente')}</span>}
                         {po.status === 'partial' && <span className="pill info"><span className="dot"/>Parcial</span>}
-                        {po.status === 'cancelled' && <span className="pill danger"><span className="dot"/>Anulada</span>}
+                        {po.status === 'cancelled' && <span className="pill danger"><span className="dot"/>{t('common.cancelled', 'Anulada')}</span>}
                       </td>
                       <td><button className="icon-btn"><Icon name="dots"/></button></td>
                     </tr>
@@ -252,7 +283,15 @@ function ReportsModule() {
               <div className="card-head"><h3>Top proveedores por monto</h3></div>
               <div className="card-body flush">
                 <table className="tbl">
-                  <thead><tr><th>#</th><th>Proveedor</th><th>NIT</th><th className="num">OCs</th><th className="num">Comprado</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>{t('common.supplier', 'Proveedor')}</th>
+                      <th>NIT</th>
+                      <th className="num">OCs</th>
+                      <th className="num">Comprado</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {SUPPLIERS.slice(0,6).map((s, i) => (
                       <tr key={s.id}>
@@ -271,7 +310,14 @@ function ReportsModule() {
               <div className="card-head"><h3>Cuentas por pagar &amp; vencimientos</h3></div>
               <div className="card-body flush">
                 <table className="tbl">
-                  <thead><tr><th>Proveedor</th><th>Términos</th><th className="num">Saldo</th><th>Vence</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>{t('common.supplier', 'Proveedor')}</th>
+                      <th>Términos</th>
+                      <th className="num">Saldo</th>
+                      <th>Vence</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {SUPPLIERS.filter(s => s.balance > 0).map((s, i) => {
                       const days = [3, 12, 28, 45][i % 4];
@@ -313,14 +359,14 @@ function ReportsModule() {
               <div className="delta muted">68% sobre ventas</div>
             </div>
             <div className="stat">
-              <div className="label">Margen bruto</div>
+              <div className="label">{t('dashboard.kpis.gross', 'Margen bruto')}</div>
               <div className="val mono" style={{color:'var(--success)'}}>{Qs(totalSales*0.32)}</div>
               <div className="delta up">32.0% promedio</div>
             </div>
             <div className="stat">
               <div className="label">Productos no rentables</div>
               <div className="val mono" style={{color:'var(--warning)'}}>14</div>
-              <div className="delta dn">Margen &lt;10%</div>
+              <div className="delta dn">{t('common.margin', 'Margen')} &lt;10%</div>
             </div>
           </div>
 
@@ -330,11 +376,11 @@ function ReportsModule() {
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>Categoría</th>
+                    <th>{t('common.category', 'Categoría')}</th>
                     <th className="num">Ventas</th>
-                    <th className="num">Costo</th>
+                    <th className="num">{t('common.cost', 'Costo')}</th>
                     <th className="num">Utilidad</th>
-                    <th className="num">Margen %</th>
+                    <th className="num">{t('common.margin', 'Margen')} %</th>
                     <th>Distribución</th>
                   </tr>
                 </thead>
@@ -380,7 +426,7 @@ function ReportsModule() {
                     <th>Fecha cierre</th>
                     <th>Caja</th>
                     <th>Cajero</th>
-                    <th>Sucursal</th>
+                    <th>{t('common.branch', 'Sucursal')}</th>
                     <th className="num">Apertura</th>
                     <th className="num">Ventas efec.</th>
                     <th className="num">Egresos</th>
@@ -428,7 +474,15 @@ function ReportsModule() {
               <div className="card-head"><h3>Libro de Ventas — Mayo 2026</h3><button className="btn sm"><Icon name="download"/>Excel SAT</button></div>
               <div className="card-body flush">
                 <table className="tbl">
-                  <thead><tr><th>Día</th><th className="num">Facturas</th><th className="num">Gravable</th><th className="num">IVA 12%</th><th className="num">Total</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Día</th>
+                      <th className="num">Facturas</th>
+                      <th className="num">Gravable</th>
+                      <th className="num">IVA 12%</th>
+                      <th className="num">{t('common.total', 'Total')}</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {SALES_TREND.slice(-10).map(d => (
                       <tr key={d.d}>
@@ -440,7 +494,7 @@ function ReportsModule() {
                       </tr>
                     ))}
                     <tr style={{background:'var(--surface-2)'}}>
-                      <td style={{fontWeight:700}}>TOTAL</td>
+                      <td style={{fontWeight:700}}>{t('common.total', 'TOTAL')}</td>
                       <td className="num" style={{fontWeight:700}}>{SALES_TREND.slice(-10).reduce((s,d)=>s+d.tickets,0)}</td>
                       <td className="num" style={{fontWeight:700}}>{Qs(SALES_TREND.slice(-10).reduce((s,d)=>s+d.total/1.12,0))}</td>
                       <td className="num" style={{fontWeight:700}}>{Qs(SALES_TREND.slice(-10).reduce((s,d)=>s+(d.total-d.total/1.12),0))}</td>
@@ -454,7 +508,16 @@ function ReportsModule() {
               <div className="card-head"><h3>Libro de Compras — Mayo 2026</h3><button className="btn sm"><Icon name="download"/>Excel SAT</button></div>
               <div className="card-body flush">
                 <table className="tbl">
-                  <thead><tr><th>Fecha</th><th>NIT</th><th>Doc</th><th className="num">Gravable</th><th className="num">IVA</th><th className="num">Total</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>{t('common.date', 'Fecha')}</th>
+                      <th>NIT</th>
+                      <th>Doc</th>
+                      <th className="num">Gravable</th>
+                      <th className="num">{t('common.iva', 'IVA')}</th>
+                      <th className="num">{t('common.total', 'Total')}</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {PURCHASE_ORDERS.filter(p=>p.status!=='cancelled').map(po => (
                       <tr key={po.id}>

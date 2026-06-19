@@ -305,22 +305,21 @@ html, body {
   flex: 1; max-width: 380px;
   position: relative;
   margin-left: 12px;
-}
-.topbar-search input {
-  width: 100%;
+  display: flex; align-items: center;
+  gap: 7px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  padding: 6px 10px 6px 28px;
-  font: inherit;
-  color: inherit;
-  outline: none;
+  padding: 5px 36px 5px 28px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
-.topbar-search input:focus { border-color: var(--accent); background: var(--surface); }
+.topbar-search:hover { background: var(--surface-3); border-color: var(--border-strong); }
 .topbar-search .icon {
   position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
   color: var(--muted);
   width: 13px; height: 13px;
+  pointer-events: none;
 }
 .topbar-search .kbd {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
@@ -331,6 +330,7 @@ html, body {
   border-radius: 3px;
   padding: 1px 5px;
   color: var(--muted);
+  pointer-events: none;
 }
 
 .topbar-spacer { flex: 1; }
@@ -938,6 +938,206 @@ table.tbl tbody tr:last-child td { border-bottom: none; }
 .pos-charge:hover { filter: brightness(1.07); }
 .pos-charge:disabled { opacity: 0.4; cursor: not-allowed; }
 .pos-charge .amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ── POS: Modo táctil ── */
+.pos-touch-layout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+.pos-touch-layout .pos-products {
+  flex: 1;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  min-height: 0;
+}
+.pos-touch-layout .pos-cat {
+  padding: 10px 16px;
+  font-size: 13px;
+  min-height: 42px;
+}
+.pos-touch-cart {
+  flex: 1;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Grid de productos táctil: 3 col, tarjetas grandes */
+.pos-touch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+.pos-touch-grid .pos-prod {
+  padding: 14px 12px;
+  gap: 8px;
+  min-height: 112px;
+}
+.pos-touch-grid .pos-prod .img { height: 52px; font-size: 18px; }
+.pos-touch-grid .pos-prod .nm { font-size: 13.5px; }
+.pos-touch-grid .pos-prod .pr { font-size: 14px; font-weight: 700; }
+
+/* Items de carrito grandes */
+.pos-touch-item { padding: 12px 16px; min-height: 68px; }
+.pos-touch-item .nm { font-size: 14px; }
+.pos-touch-item .meta { font-size: 12px; margin-top: 3px; }
+.pos-touch-item .pr { font-size: 15px; font-family: var(--font-mono); }
+
+/* Botones de cantidad táctiles (44×44px) */
+.pos-touch-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.pos-touch-qty-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.pos-touch-qty-btn:hover  { background: var(--surface-3); }
+.pos-touch-qty-btn:active { background: var(--accent-soft); }
+.pos-touch-qty .n {
+  padding: 0 12px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Botón de cobro táctil (72px, fuente grande) */
+.pos-touch-charge {
+  height: 72px;
+  font-size: 18px;
+  margin: 0 12px 12px;
+  border-radius: var(--r-lg);
+  flex-shrink: 0;
+}
+
+/* Tab bar inferior */
+.pos-touch-tab-bar {
+  display: flex;
+  height: 64px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.pos-touch-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  position: relative;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pos-touch-tab.active { color: var(--accent); }
+.pos-touch-tab.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 2px 2px;
+}
+.pos-touch-cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 0 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* Numpad para pago en efectivo */
+.pos-touch-numpad-display {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  text-align: right;
+}
+.pos-touch-numpad-value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.pos-touch-numpad-change {
+  font-size: 13px;
+  color: var(--success);
+  margin-top: 4px;
+  font-weight: 500;
+}
+.pos-touch-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.pos-touch-numpad-key {
+  height: 64px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--r-md);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.08s, transform 0.08s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pos-touch-numpad-key:hover  { background: var(--surface-3); }
+.pos-touch-numpad-key:active { background: var(--accent-soft); transform: scale(0.96); }
+.pos-touch-numpad-key.del    { color: var(--danger); font-size: 18px; }
 
 /* ===== Modal ===== */
 .modal-overlay {
@@ -1806,3 +2006,165 @@ table.tbl .empty { text-align: center; padding: 28px; color: var(--muted); }
   margin: 0 auto;
 }
 
+
+/* ===== Búsqueda global (⌘K) ===== */
+.gsearch-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 96px;
+}
+.gsearch-box {
+  width: 100%;
+  max-width: 600px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 540px;
+  animation: gsearch-in 0.14s ease;
+}
+@keyframes gsearch-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.gsearch-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.gsearch-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  min-width: 0;
+}
+.gsearch-input::placeholder { color: var(--muted); }
+.gsearch-results {
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 0;
+}
+.gsearch-group {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 16px 4px;
+  font-family: var(--font-mono);
+}
+.gsearch-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+.gsearch-item:hover,
+.gsearch-item.active { background: var(--surface-2); }
+.gsearch-item-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.gsearch-item.active .gsearch-item-icon { background: var(--accent-soft); }
+.gsearch-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.gsearch-item-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gsearch-item-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gsearch-item-tag {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.gsearch-item-alert {
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--danger-soft);
+  color: var(--danger);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.gsearch-item-enter {
+  color: var(--muted);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.gsearch-empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.gsearch-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.gsearch-footer kbd {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text);
+  margin-right: 2px;
+}

@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { ACCOUNTS, JOURNAL_ENTRIES, ACCOUNTING_PERIODS } from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 const Q  = v => `Q ${Math.abs(v).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const Qn = v => v === 0 ? '—' : Q(v);
@@ -118,6 +119,7 @@ function useTrialBalance(periodId) {
 
 // ── Módulo principal ──────────────────────────────────────────────────────────
 export default function Ledger() {
+  const { t } = useTranslation();
   const [tab,           setTab]           = useState('trial');
   const [periodId,      setPeriodId]      = useState(5);
   const [selectedCode,  setSelectedCode]  = useState('110101');
@@ -157,8 +159,8 @@ export default function Ledger() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Mayor General · Balance de Comprobación</h1>
-          <div className="page-subtitle">Movimientos por cuenta · saldos · verificación contable</div>
+          <h1 className="page-title">{t('ledger.title', 'Mayor General · Balance de Comprobación')}</h1>
+          <div className="page-subtitle">{t('ledger.subtitle', 'Movimientos por cuenta · saldos · verificación contable')}</div>
         </div>
         <div className="page-head-actions">
           <select
@@ -167,52 +169,52 @@ export default function Ledger() {
             onChange={e => setPeriodId(Number(e.target.value))}
           >
             {ACCOUNTING_PERIODS.map(p => (
-              <option key={p.id} value={p.id}>{p.name} {p.status === 'open' ? '● Abierto' : '✓ Cerrado'}</option>
+              <option key={p.id} value={p.id}>{p.name} {p.status === 'open' ? `● ${t('common.active', 'Abierto')}` : `✓ ${t('ledger.closed', 'Cerrado')}`}</option>
             ))}
           </select>
-          <button className="btn"><Icon name="download" size={12} /> Exportar</button>
+          <button className="btn"><Icon name="download" size={12} /> {t('common.export', 'Exportar')}</button>
         </div>
       </div>
 
       {/* Stats */}
       <div className="stat-grid">
         <div className="stat">
-          <div className="label"><Icon name="receipt" size={11} />Período</div>
+          <div className="label"><Icon name="receipt" size={11} />{t('ledger.period', 'Período')}</div>
           <div className="val" style={{ fontSize: 18 }}>{period?.name}</div>
           <div className="delta muted">
             <span className={`pill ${period?.status === 'open' ? 'success' : 'neutral'}`} style={{ fontSize: 9 }}>
-              {period?.status === 'open' ? 'Abierto' : 'Cerrado'}
+              {period?.status === 'open' ? t('ledger.open', 'Abierto') : t('ledger.closed', 'Cerrado')}
             </span>
           </div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="chart" size={11} />Cuentas con movimiento</div>
+          <div className="label"><Icon name="chart" size={11} />{t('ledger.accountsWithMovs', 'Cuentas con movimiento')}</div>
           <div className="val mono">{accountsWithMovs}</div>
-          <div className="delta muted">{totalEntries} partidas registradas</div>
+          <div className="delta muted">{totalEntries} {t('ledger.entriesRegistered', 'partidas registradas')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="check" size={11} />Balance de comprobación</div>
+          <div className="label"><Icon name="check" size={11} />{t('ledger.tabs.trial', 'Balance de Comprobación')}</div>
           <div className="val" style={{ fontSize: 16, color: balanced ? 'var(--success)' : 'var(--danger)' }}>
-            {balanced ? '✓ Cuadrado' : '✗ Descuadre'}
+            {balanced ? t('ledger.balanced', '✓ Cuadrado') : t('ledger.unbalanced', '✗ Descuadre')}
           </div>
           <div className="delta muted" style={{ color: balanced ? undefined : 'var(--danger)' }}>
-            {balanced ? 'Débitos = Créditos' : `Diferencia ${Q(diff)}`}
+            {balanced ? t('ledger.debitsEqCredits', 'Débitos = Créditos') : `${t('ledger.difference', 'Diferencia')} ${Q(diff)}`}
           </div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="cash" size={11} />Total movilizado</div>
+          <div className="label"><Icon name="cash" size={11} />{t('ledger.totalMoved', 'Total movilizado')}</div>
           <div className="val mono">{Q(totals.movDb)}</div>
-          <div className="delta muted">En {period?.name}</div>
+          <div className="delta muted">{t('ledger.inPeriod', 'En')} {period?.name}</div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="tabs">
         <button className={`tab ${tab === 'trial' ? 'active' : ''}`} onClick={() => setTab('trial')}>
-          Balance de Comprobación
+          {t('ledger.tabs.trial', 'Balance de Comprobación')}
         </button>
         <button className={`tab ${tab === 'ledger' ? 'active' : ''}`} onClick={() => setTab('ledger')}>
-          Mayor General
+          {t('ledger.tabs.ledger', 'Mayor General')}
         </button>
       </div>
 
@@ -227,11 +229,11 @@ export default function Ledger() {
                 onChange={e => setShowZero(e.target.checked)}
                 style={{ accentColor: 'var(--accent)' }}
               />
-              Mostrar cuentas sin movimiento
+              {t('ledger.showZeroAccounts', 'Mostrar cuentas sin movimiento')}
             </label>
             <div style={{ marginLeft: 'auto' }}>
               <span className={`pill ${balanced ? 'success' : 'danger'}`} style={{ fontSize: 10 }}>
-                {balanced ? '✓ Balanceado' : '✗ Descuadre'}
+                {balanced ? t('ledger.balanced', '✓ Balanceado') : t('ledger.unbalanced', '✗ Descuadre')}
               </span>
             </div>
           </div>
@@ -240,14 +242,14 @@ export default function Ledger() {
             <div className="tbl-wrap"><table className="tbl">
               <thead>
                 <tr>
-                  <th style={{ width: 90 }}>Código</th>
-                  <th>Cuenta</th>
-                  <th style={{ textAlign: 'right' }}>Saldo Ini. Db</th>
-                  <th style={{ textAlign: 'right' }}>Saldo Ini. Cr</th>
-                  <th style={{ textAlign: 'right' }}>Movim. Db</th>
-                  <th style={{ textAlign: 'right' }}>Movim. Cr</th>
-                  <th style={{ textAlign: 'right', background: 'rgba(var(--accent-rgb,20,184,166),.06)' }}>Saldo Final Db</th>
-                  <th style={{ textAlign: 'right', background: 'rgba(var(--accent-rgb,20,184,166),.06)' }}>Saldo Final Cr</th>
+                  <th style={{ width: 90 }}>{t('common.code', 'Código')}</th>
+                  <th>{t('ledger.account', 'Cuenta')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('ledger.openDb', 'Saldo Ini. Db')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('ledger.openCr', 'Saldo Ini. Cr')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('ledger.movDb', 'Movim. Db')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('ledger.movCr', 'Movim. Cr')}</th>
+                  <th style={{ textAlign: 'right', background: 'rgba(var(--accent-rgb,20,184,166),.06)' }}>{t('ledger.finalDb', 'Saldo Final Db')}</th>
+                  <th style={{ textAlign: 'right', background: 'rgba(var(--accent-rgb,20,184,166),.06)' }}>{t('ledger.finalCr', 'Saldo Final Cr')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -258,7 +260,7 @@ export default function Ledger() {
                       key={r.code}
                       style={{ cursor: 'pointer' }}
                       onClick={() => { setSelectedCode(r.code); setTab('ledger'); }}
-                      title="Ver en Mayor General"
+                      title={t('ledger.viewInLedger', 'Ver en Mayor General')}
                     >
                       <td>
                         <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>{r.code}</span>
@@ -292,7 +294,7 @@ export default function Ledger() {
               </tbody>
               <tfoot>
                 <tr style={{ background: 'var(--surface-2)', borderTop: '2px solid var(--border)' }}>
-                  <td colSpan={2} style={{ padding: '10px 12px', fontWeight: 700, fontSize: 12 }}>TOTALES</td>
+                  <td colSpan={2} style={{ padding: '10px 12px', fontWeight: 700, fontSize: 12 }}>{t('ledger.totals', 'TOTALES')}</td>
                   <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, padding: '10px 12px' }}>{Q(totals.openDb)}</td>
                   <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, padding: '10px 12px' }}>{Q(totals.openCr)}</td>
                   <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, padding: '10px 12px' }}>{Q(totals.movDb)}</td>
@@ -315,7 +317,7 @@ export default function Ledger() {
         <>
           <div className="filterbar">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <label className="field-label">Cuenta</label>
+              <label className="field-label">{t('ledger.account', 'Cuenta')}</label>
               <select
                 className="input"
                 value={selectedCode}
@@ -334,13 +336,13 @@ export default function Ledger() {
             <div>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{ledgerAccount?.name}</div>
               <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
-                Código: <span className="mono">{selectedCode}</span> ·
-                Naturaleza: {ledgerAccount?.normalBalance === 'debit' ? 'Deudora' : 'Acreedora'} ·
+                {t('common.code', 'Código')}: <span className="mono">{selectedCode}</span> ·
+                {t('ledger.nature', 'Naturaleza')}: {ledgerAccount?.normalBalance === 'debit' ? t('ledger.debit', 'Deudora') : t('ledger.credit', 'Acreedora')} ·
                 {period?.name}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div className="muted" style={{ fontSize: 11 }}>Saldo final</div>
+              <div className="muted" style={{ fontSize: 11 }}>{t('ledger.closingBalance', 'Saldo final')}</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 18, color: closingSaldo >= 0 ? 'var(--text)' : 'var(--danger)' }}>
                 {Q(closingSaldo)} <span className="muted" style={{ fontSize: 11 }}>{closingSaldo >= 0 ? 'Db' : 'Cr'}</span>
               </div>
@@ -351,19 +353,19 @@ export default function Ledger() {
             <div className="tbl-wrap"><table className="tbl">
               <thead>
                 <tr>
-                  <th style={{ width: 110 }}>Fecha</th>
-                  <th style={{ width: 120 }}>Referencia</th>
-                  <th>Descripción</th>
-                  <th style={{ textAlign: 'right' }}>Débito</th>
-                  <th style={{ textAlign: 'right' }}>Crédito</th>
-                  <th style={{ textAlign: 'right', background: 'rgba(var(--accent-rgb,20,184,166),.06)' }}>Saldo</th>
+                  <th style={{ width: 110 }}>{t('common.date', 'Fecha')}</th>
+                  <th style={{ width: 120 }}>{t('common.reference', 'Referencia')}</th>
+                  <th>{t('common.description', 'Descripción')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('ledger.debitCol', 'Débito')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('ledger.creditCol', 'Crédito')}</th>
+                  <th style={{ textAlign: 'right', background: 'rgba(var(--accent-rgb,20,184,166),.06)' }}>{t('ledger.balance', 'Saldo')}</th>
                 </tr>
               </thead>
               <tbody>
                 {/* Saldo inicial */}
                 <tr style={{ background: 'var(--surface-2)' }}>
                   <td colSpan={3} style={{ padding: '8px 12px', fontSize: 12, fontWeight: 600, color: 'var(--muted)', fontStyle: 'italic' }}>
-                    — Saldo inicial al {period?.startDate} —
+                    — {t('ledger.openingBalance', 'Saldo inicial al')} {period?.startDate} —
                   </td>
                   <td />
                   <td />
@@ -373,7 +375,7 @@ export default function Ledger() {
                 </tr>
 
                 {ledgerRows.length === 0 ? (
-                  <tr><td colSpan={6} className="empty">Sin movimientos en este período</td></tr>
+                  <tr><td colSpan={6} className="empty">{t('ledger.noMovements', 'Sin movimientos en este período')}</td></tr>
                 ) : ledgerRows.map((l, i) => (
                   <tr key={i}>
                     <td className="muted" style={{ fontSize: 12 }}>{l.date}</td>
@@ -396,7 +398,7 @@ export default function Ledger() {
                 {/* Saldo final */}
                 <tr style={{ background: 'var(--surface-2)', borderTop: '2px solid var(--border)' }}>
                   <td colSpan={3} style={{ padding: '9px 12px', fontWeight: 700, fontSize: 12 }}>
-                    Saldo final al {period?.endDate}
+                    {t('ledger.closingBalanceAt', 'Saldo final al')} {period?.endDate}
                   </td>
                   <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, padding: '9px 12px' }}>
                     {totalMovDb > 0 ? Q(totalMovDb) : '—'}

@@ -1,5 +1,6 @@
 // ERP MAYA — Variantes de Producto
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon.jsx';
 
 const Q = v => `Q ${v.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -85,6 +86,7 @@ function groupStatus(g) {
 }
 
 export default function Variants({ pushToast }) {
+  const { t } = useTranslation();
   const [groups, setGroups]         = useState(INIT_GROUPS);
   const [search, setSearch]         = useState('');
   const [filterCat, setFilterCat]   = useState('all');
@@ -151,18 +153,18 @@ export default function Variants({ pushToast }) {
 
   const statusBg  = { ok: 'var(--success)', low: 'var(--warning)', out: 'var(--danger)' };
   const statusPill = { ok: 'success', low: 'warning', out: 'danger' };
-  const statusTxt  = { ok: 'OK', low: 'Stock bajo', out: 'Agotada' };
+  const statusTxt  = { ok: 'OK', low: t('variants.stockLow', 'Stock bajo'), out: t('variants.outOfStock', 'Agotada') };
 
   return (
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Variantes de Producto</h1>
-          <div className="page-subtitle">Grupos de variantes · tamaño, peso, sabor · SKUs por variante</div>
+          <h1 className="page-title">{t('variants.title', 'Variantes de Producto')}</h1>
+          <div className="page-subtitle">{t('variants.subtitle', 'Grupos de variantes · tamaño, peso, sabor · SKUs por variante')}</div>
         </div>
         <div className="page-head-actions">
           <button className="btn accent" onClick={() => setGroupModal(true)}>
-            <Icon name="plus" size={12} /> Nuevo grupo
+            <Icon name="plus" size={12} /> {t('variants.newGroup', 'Nuevo grupo')}
           </button>
         </div>
       </div>
@@ -170,26 +172,26 @@ export default function Variants({ pushToast }) {
       {/* Stats */}
       <div className="stat-grid">
         <div className="stat">
-          <div className="label"><Icon name="box" size={11} />Grupos de variantes</div>
+          <div className="label"><Icon name="box" size={11} />{t('variants.variantGroups', 'Grupos de variantes')}</div>
           <div className="val mono">{groups.length}</div>
-          <div className="delta muted">{totalVariants} variantes en total</div>
+          <div className="delta muted">{totalVariants} {t('variants.totalVariants', 'variantes en total')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="alert" size={11} />Grupos con alertas</div>
+          <div className="label"><Icon name="alert" size={11} />{t('variants.groupsWithAlerts', 'Grupos con alertas')}</div>
           <div className="val mono" style={{ color: alertGroups > 0 ? 'var(--danger)' : undefined }}>{alertGroups}</div>
-          <div className="delta muted">{outGroups} agotadas · {lowGroups} stock bajo</div>
+          <div className="delta muted">{outGroups} {t('variants.outOfStock', 'agotadas')} · {lowGroups} {t('variants.stockLow', 'stock bajo')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="chart" size={11} />Tipo de atributo más usado</div>
-          <div className="val" style={{ fontSize: 20 }}>Tamaño</div>
-          <div className="delta muted">5 de 8 grupos</div>
+          <div className="label"><Icon name="chart" size={11} />{t('variants.mostUsedAttr', 'Tipo de atributo más usado')}</div>
+          <div className="val" style={{ fontSize: 20 }}>{t('variants.attrSize', 'Tamaño')}</div>
+          <div className="delta muted">5 {t('variants.of8groups', 'de 8 grupos')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="check" size={11} />Cobertura de variantes</div>
+          <div className="label"><Icon name="check" size={11} />{t('variants.variantCoverage', 'Cobertura de variantes')}</div>
           <div className="val mono" style={{ color: 'var(--success)' }}>
             {Math.round((groups.reduce((s, g) => s + g.variants.filter(v => v.active && v.stock > v.min).length, 0) / totalVariants) * 100)}%
           </div>
-          <div className="delta muted">Variantes con stock suficiente</div>
+          <div className="delta muted">{t('variants.variantsWithStock', 'Variantes con stock suficiente')}</div>
         </div>
       </div>
 
@@ -199,21 +201,21 @@ export default function Variants({ pushToast }) {
           <Icon name="search" className="icon" size={13} />
           <input
             className="search-input"
-            placeholder="Buscar producto o marca…"
+            placeholder={t('variants.searchPlaceholder', 'Buscar producto o marca…')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <select className="input" value={filterCat} onChange={e => setFilterCat(e.target.value)}>
-          <option value="all">Todas las categorías</option>
+          <option value="all">{t('variants.allCategories', 'Todas las categorías')}</option>
           {CATS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
         </select>
         <select className="input" value={filterAttr} onChange={e => setFilterAttr(e.target.value)}>
-          <option value="all">Todos los atributos</option>
-          <option value="tamaño">Tamaño</option>
-          <option value="peso">Peso</option>
-          <option value="sabor">Sabor</option>
-          <option value="color">Color</option>
+          <option value="all">{t('variants.allAttributes', 'Todos los atributos')}</option>
+          <option value="tamaño">{t('variants.attrSize', 'Tamaño')}</option>
+          <option value="peso">{t('variants.attrWeight', 'Peso')}</option>
+          <option value="sabor">{t('variants.attrFlavor', 'Sabor')}</option>
+          <option value="color">{t('variants.attrColor', 'Color')}</option>
         </select>
       </div>
 
@@ -222,26 +224,26 @@ export default function Variants({ pushToast }) {
         <div className="tbl-wrap"><table className="tbl">
           <thead>
             <tr>
-              <th>Producto</th>
-              <th>Marca</th>
-              <th>Categoría</th>
-              <th>Atributo</th>
-              <th style={{ textAlign: 'right' }}>Variantes</th>
-              <th style={{ textAlign: 'right' }}>Stock total</th>
-              <th>Rango de precios</th>
-              <th>Estado</th>
+              <th>{t('common.product', 'Producto')}</th>
+              <th>{t('variants.brand', 'Marca')}</th>
+              <th>{t('common.category', 'Categoría')}</th>
+              <th>{t('variants.attribute', 'Atributo')}</th>
+              <th style={{ textAlign: 'right' }}>{t('variants.variantsCol', 'Variantes')}</th>
+              <th style={{ textAlign: 'right' }}>{t('variants.totalStock', 'Stock total')}</th>
+              <th>{t('variants.priceRange', 'Rango de precios')}</th>
+              <th>{t('common.status', 'Estado')}</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} className="empty">Sin grupos con los filtros aplicados</td></tr>
+              <tr><td colSpan={8} className="empty">{t('variants.noGroupsWithFilters', 'Sin grupos con los filtros aplicados')}</td></tr>
             ) : filtered.map(g => (
               <tr key={g.id} style={{ cursor: 'pointer' }} onClick={() => setSelected(g)}>
                 <td>
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{g.name}</div>
                   {g.variants.some(v => !v.active) && (
                     <div className="muted" style={{ fontSize: 10 }}>
-                      {g.variants.filter(v => !v.active).length} variante(s) inactiva(s)
+                      {g.variants.filter(v => !v.active).length} {t('variants.inactiveVariants', 'variante(s) inactiva(s)')}
                     </div>
                   )}
                 </td>
@@ -269,10 +271,10 @@ export default function Variants({ pushToast }) {
                 </td>
                 <td>
                   {g.variants.some(v => v.active && v.stock === 0) && (
-                    <span className="pill danger" style={{ fontSize: 9, marginRight: 4 }}>Agotada</span>
+                    <span className="pill danger" style={{ fontSize: 9, marginRight: 4 }}>{t('variants.outOfStock', 'Agotada')}</span>
                   )}
                   {g.variants.some(v => v.active && v.stock > 0 && v.stock < v.min) && (
-                    <span className="pill warning" style={{ fontSize: 9 }}>Stock bajo</span>
+                    <span className="pill warning" style={{ fontSize: 9 }}>{t('variants.stockLow', 'Stock bajo')}</span>
                   )}
                   {g.status === 'ok' && (
                     <span className="pill success" style={{ fontSize: 9 }}>OK</span>
@@ -296,7 +298,7 @@ export default function Variants({ pushToast }) {
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="btn" style={{ fontSize: 11 }}
                   onClick={() => { setVariantModal(selected); }}>
-                  <Icon name="plus" size={11} /> Variante
+                  <Icon name="plus" size={11} /> {t('variants.variant', 'Variante')}
                 </button>
                 <button className="icon-btn" onClick={() => setSelected(null)}><Icon name="close" /></button>
               </div>
@@ -309,11 +311,11 @@ export default function Variants({ pushToast }) {
                       {ATTR_LABEL[selected.attrType]}
                     </th>
                     <th style={{ padding: '8px 14px', textAlign: 'left', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>SKU</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Precio</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Costo</th>
+                    <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('common.price', 'Precio')}</th>
+                    <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('common.cost', 'Costo')}</th>
                     <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Stock</th>
-                    <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Mín.</th>
-                    <th style={{ padding: '8px 14px', width: 60, fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Estado</th>
+                    <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('variants.min', 'Mín.')}</th>
+                    <th style={{ padding: '8px 14px', width: 60, fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('common.status', 'Estado')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -343,7 +345,7 @@ export default function Variants({ pushToast }) {
                             style={{ fontSize: 9, padding: '2px 6px' }}
                             onClick={() => { toggleVariant(selected.id, v.sku); }}
                           >
-                            {v.active ? 'Activa' : 'Inactiva'}
+                            {v.active ? t('variants.active', 'Activa') : t('variants.inactive', 'Inactiva')}
                           </button>
                         </td>
                       </tr>
@@ -375,6 +377,7 @@ export default function Variants({ pushToast }) {
 
 // ── Modal: crear grupo de variantes ──────────────────────────────────────────
 function GroupModal({ onClose, onSave }) {
+  const { t } = useTranslation();
   const [name,     setName]     = useState('');
   const [brand,    setBrand]    = useState('');
   const [cat,      setCat]      = useState('bebidas');
@@ -386,21 +389,21 @@ function GroupModal({ onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>Nuevo grupo de variantes</h3>
+          <h3>{t('variants.newGroupTitle', 'Nuevo grupo de variantes')}</h3>
           <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
         </div>
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="field">
-            <label className="field-label">Nombre del producto</label>
-            <input className="field-input" placeholder="Ej. Coca-Cola" value={name} onChange={e => setName(e.target.value)} />
+            <label className="field-label">{t('variants.productName', 'Nombre del producto')}</label>
+            <input className="field-input" placeholder={t('variants.productNamePlaceholder', 'Ej. Coca-Cola')} value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="field">
-            <label className="field-label">Marca / Proveedor</label>
-            <input className="field-input" placeholder="Ej. Coca-Cola Company" value={brand} onChange={e => setBrand(e.target.value)} />
+            <label className="field-label">{t('variants.brandSupplier', 'Marca / Proveedor')}</label>
+            <input className="field-input" placeholder={t('variants.brandPlaceholder', 'Ej. Coca-Cola Company')} value={brand} onChange={e => setBrand(e.target.value)} />
           </div>
           <div className="form-grid">
             <div className="field">
-              <label className="field-label">Categoría</label>
+              <label className="field-label">{t('common.category', 'Categoría')}</label>
               <select className="field-input" value={cat} onChange={e => setCat(e.target.value)}>
                 {['abarrotes','bebidas','lacteos','limpieza','higiene','snacks','congelados','papeleria','mascotas'].map(c => (
                   <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
@@ -408,21 +411,21 @@ function GroupModal({ onClose, onSave }) {
               </select>
             </div>
             <div className="field">
-              <label className="field-label">Tipo de atributo</label>
+              <label className="field-label">{t('variants.attributeType', 'Tipo de atributo')}</label>
               <select className="field-input" value={attrType} onChange={e => setAttrType(e.target.value)}>
-                <option value="tamaño">Tamaño</option>
-                <option value="peso">Peso</option>
-                <option value="sabor">Sabor</option>
-                <option value="color">Color</option>
-                <option value="otro">Otro</option>
+                <option value="tamaño">{t('variants.attrSize', 'Tamaño')}</option>
+                <option value="peso">{t('variants.attrWeight', 'Peso')}</option>
+                <option value="sabor">{t('variants.attrFlavor', 'Sabor')}</option>
+                <option value="color">{t('variants.attrColor', 'Color')}</option>
+                <option value="otro">{t('variants.attrOther', 'Otro')}</option>
               </select>
             </div>
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
           <button className="btn accent" disabled={!valid} onClick={() => onSave({ name, brand, cat, attrType })}>
-            <Icon name="check" size={13} /> Crear grupo
+            <Icon name="check" size={13} /> {t('variants.createGroup', 'Crear grupo')}
           </button>
         </div>
       </div>
@@ -432,6 +435,7 @@ function GroupModal({ onClose, onSave }) {
 
 // ── Modal: agregar variante a un grupo ───────────────────────────────────────
 function VariantModal({ group, onClose, onSave }) {
+  const { t } = useTranslation();
   const [label, setLabel]   = useState('');
   const [sku,   setSku]     = useState('');
   const [price, setPrice]   = useState('');
@@ -445,53 +449,53 @@ function VariantModal({ group, onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>Nueva variante — {group.name}</h3>
+          <h3>{t('variants.newVariantTitle', 'Nueva variante')} — {group.name}</h3>
           <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
         </div>
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="form-grid">
             <div className="field">
-              <label className="field-label">{ATTR_LABEL[group.attrType] || 'Variante'}</label>
+              <label className="field-label">{ATTR_LABEL[group.attrType] || t('variants.variant', 'Variante')}</label>
               <input className="field-input" placeholder={group.attrType === 'tamaño' ? 'Ej. 600ml' : group.attrType === 'peso' ? 'Ej. 1kg' : 'Ej. Original'}
                 value={label} onChange={e => setLabel(e.target.value)} />
             </div>
             <div className="field">
-              <label className="field-label">SKU / Código de barras</label>
+              <label className="field-label">{t('variants.skuBarcode', 'SKU / Código de barras')}</label>
               <input className="field-input mono" placeholder="7501XXXXXXXXX" value={sku} onChange={e => setSku(e.target.value)} />
             </div>
           </div>
           <div className="form-grid">
             <div className="field">
-              <label className="field-label">Precio de venta (Q)</label>
+              <label className="field-label">{t('variants.salePrice', 'Precio de venta (Q)')}</label>
               <input type="number" className="field-input mono" min="0" step="0.01" value={price} onChange={e => setPrice(e.target.value)} />
             </div>
             <div className="field">
-              <label className="field-label">Costo unitario (Q)</label>
+              <label className="field-label">{t('variants.unitCost', 'Costo unitario (Q)')}</label>
               <input type="number" className="field-input mono" min="0" step="0.01" value={cost} onChange={e => setCost(e.target.value)} />
             </div>
           </div>
           <div className="form-grid">
             <div className="field">
-              <label className="field-label">Stock inicial</label>
+              <label className="field-label">{t('variants.initialStock', 'Stock inicial')}</label>
               <input type="number" className="field-input mono" min="0" value={stock} onChange={e => setStock(e.target.value)} />
             </div>
             <div className="field">
-              <label className="field-label">Stock mínimo</label>
+              <label className="field-label">{t('variants.minStock', 'Stock mínimo')}</label>
               <input type="number" className="field-input mono" min="0" value={min} onChange={e => setMin(e.target.value)} />
             </div>
           </div>
           {parseFloat(price) > 0 && parseFloat(cost) > 0 && (
             <div style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent)', borderRadius: 'var(--r-md)', padding: '8px 12px', fontSize: 12 }}>
-              Margen: <strong>{Math.round(((parseFloat(price) - parseFloat(cost)) / parseFloat(price)) * 100)}%</strong>
-              <span className="muted" style={{ marginLeft: 8 }}>Utilidad: Q {(parseFloat(price) - parseFloat(cost)).toFixed(2)}</span>
+              {t('common.margin', 'Margen')}: <strong>{Math.round(((parseFloat(price) - parseFloat(cost)) / parseFloat(price)) * 100)}%</strong>
+              <span className="muted" style={{ marginLeft: 8 }}>{t('variants.profit', 'Utilidad')}: Q {(parseFloat(price) - parseFloat(cost)).toFixed(2)}</span>
             </div>
           )}
         </div>
         <div className="modal-foot">
-          <button className="btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
           <button className="btn accent" disabled={!valid}
             onClick={() => onSave({ label, sku, price: parseFloat(price), cost: parseFloat(cost), stock: parseInt(stock) || 0, min: parseInt(min) || 10 })}>
-            <Icon name="check" size={13} /> Agregar variante
+            <Icon name="check" size={13} /> {t('variants.addVariant', 'Agregar variante')}
           </button>
         </div>
       </div>

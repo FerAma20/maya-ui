@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { ACCOUNTING_PERIODS } from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 const Q       = v  => `Q ${Math.abs(v).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtDate = d  => new Date(d + 'T00:00').toLocaleDateString('es-GT', { day: '2-digit', month: 'short' });
@@ -86,6 +87,7 @@ function RecLine({ label, amount, bold, indent, section, highlight }) {
 // ── Panel de ítems ─────────────────────────────────────────────────────────
 
 function ItemPanel({ title, badge, items, matched, onToggle, emptyMsg }) {
+  const { t } = useTranslation();
   return (
     <div className="card" style={{ overflow: 'hidden' }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -97,10 +99,10 @@ function ItemPanel({ title, badge, items, matched, onToggle, emptyMsg }) {
           <thead>
             <tr>
               <th style={{ width: 32 }}></th>
-              <th>Fecha</th>
-              <th>Descripción / Ref.</th>
-              <th style={{ textAlign: 'right' }}>Débito</th>
-              <th style={{ textAlign: 'right' }}>Crédito</th>
+              <th>{t('common.date', 'Fecha')}</th>
+              <th>{t('bankrec.descRef', 'Descripción / Ref.')}</th>
+              <th style={{ textAlign: 'right' }}>{t('bankrec.debit', 'Débito')}</th>
+              <th style={{ textAlign: 'right' }}>{t('bankrec.credit', 'Crédito')}</th>
             </tr>
           </thead>
           <tbody>
@@ -147,6 +149,7 @@ function ItemPanel({ title, badge, items, matched, onToggle, emptyMsg }) {
 // ── Componente principal ───────────────────────────────────────────────────
 
 export default function BankReconciliation() {
+  const { t } = useTranslation();
   const [accountCode, setAccountCode] = useState('110102');
   const [periodId,    setPeriodId]    = useState(5);
   const [matchedBank, setMatchedBank] = useState(() => new Set(STATEMENTS['110102_5'].initBank));
@@ -198,8 +201,8 @@ export default function BankReconciliation() {
   if (!data) {
     return (
       <div className="page">
-        <div className="page-head"><div className="page-title">Conciliación Bancaria</div></div>
-        <p style={{ padding: 24, color: 'var(--muted)' }}>No hay datos para este período.</p>
+        <div className="page-head"><div className="page-title">{t('bankrec.title', 'Conciliación Bancaria')}</div></div>
+        <p style={{ padding: 24, color: 'var(--muted)' }}>{t('bankrec.noData', 'No hay datos para este período.')}</p>
       </div>
     );
   }
@@ -208,7 +211,7 @@ export default function BankReconciliation() {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="page-title">Conciliación Bancaria</div>
+          <div className="page-title">{t('bankrec.title', 'Conciliación Bancaria')}</div>
           <div className="page-sub">{account?.name} · {period?.name}</div>
         </div>
         <div className="page-head-actions">
@@ -219,7 +222,7 @@ export default function BankReconciliation() {
             {ACCOUNTING_PERIODS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <button className="btn-outline">
-            <Icon name="receipt" size={13} /> Imprimir
+            <Icon name="receipt" size={13} /> {t('common.print', 'Imprimir')}
           </button>
         </div>
       </div>
@@ -227,108 +230,108 @@ export default function BankReconciliation() {
       {/* KPIs */}
       <div className="stat-grid" style={{ marginBottom: 20 }}>
         <div className="stat-card">
-          <div className="label">Saldo extracto</div>
+          <div className="label">{t('bankrec.stmtBalance', 'Saldo extracto')}</div>
           <div className="value">{Q(data.stmtBalance)}</div>
-          <div className="sub muted">Cierre de período</div>
+          <div className="sub muted">{t('bankrec.periodClose', 'Cierre de período')}</div>
         </div>
         <div className="stat-card">
-          <div className="label">Saldo en libros</div>
+          <div className="label">{t('bankrec.bookBalance', 'Saldo en libros')}</div>
           <div className="value">{Q(account.bookBalance)}</div>
-          <div className="sub muted">Cuenta {accountCode}</div>
+          <div className="sub muted">{t('bankrec.account', 'Cuenta')} {accountCode}</div>
         </div>
         <div className="stat-card">
-          <div className="label">Diferencia ajustada</div>
+          <div className="label">{t('bankrec.adjustedDiff', 'Diferencia ajustada')}</div>
           <div className={`value ${rec?.balanced ? 'success' : 'danger'}`}>
             {rec ? Q(rec.diff) : '—'}
           </div>
           <div className={`sub ${rec?.balanced ? 'success' : 'danger'}`}>
-            {rec?.balanced ? '✓ Balance cuadrado' : '⚠ Pendiente de ajuste'}
+            {rec?.balanced ? t('bankrec.balanced', '✓ Balance cuadrado') : t('bankrec.pendingAdjustment', '⚠ Pendiente de ajuste')}
           </div>
         </div>
         <div className="stat-card">
-          <div className="label">Ítems conciliados</div>
+          <div className="label">{t('bankrec.reconciledItems', 'Ítems conciliados')}</div>
           <div className="value">{matchedTotal} / {totalItems}</div>
-          <div className="sub muted">{matchedBank.size} extracto · {matchedBook.size} libros</div>
+          <div className="sub muted">{matchedBank.size} {t('bankrec.statement', 'extracto')} · {matchedBook.size} {t('bankrec.books', 'libros')}</div>
         </div>
       </div>
 
       {/* Dos paneles: extracto | libros */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <ItemPanel
-          title="Extracto Bancario"
-          badge={`Apertura ${Q(data.openingBalance)}`}
+          title={t('bankrec.bankStatement', 'Extracto Bancario')}
+          badge={`${t('bankrec.opening', 'Apertura')} ${Q(data.openingBalance)}`}
           items={data.bankItems}
           matched={matchedBank}
           onToggle={toggleBank}
-          emptyMsg="Sin movimientos en extracto"
+          emptyMsg={t('bankrec.noStatementMovements', 'Sin movimientos en extracto')}
         />
         <ItemPanel
-          title="Movimientos en Libros"
-          badge={`Saldo ${Q(account.bookBalance)}`}
+          title={t('bankrec.bookMovements', 'Movimientos en Libros')}
+          badge={`${t('bankrec.balance', 'Saldo')} ${Q(account.bookBalance)}`}
           items={data.bookItems}
           matched={matchedBook}
           onToggle={toggleBook}
-          emptyMsg="Sin movimientos registrados en este período"
+          emptyMsg={t('bankrec.noBookMovements', 'Sin movimientos registrados en este período')}
         />
       </div>
 
       {/* Resumen de conciliación */}
       <div className="card">
         <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 13 }}>Resumen de Conciliación</span>
-          {rec?.balanced && <span className="pill success">Cuadrado</span>}
-          {rec && !rec.balanced && <span className="pill danger">Diferencia {Q(rec.diff)}</span>}
+          <span style={{ fontWeight: 700, fontSize: 13 }}>{t('bankrec.summary', 'Resumen de Conciliación')}</span>
+          {rec?.balanced && <span className="pill success">{t('bankrec.balanced2', 'Cuadrado')}</span>}
+          {rec && !rec.balanced && <span className="pill danger">{t('bankrec.difference', 'Diferencia')} {Q(rec.diff)}</span>}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
           {/* Columna banco */}
           <div style={{ padding: '16px 20px', borderRight: '1px solid var(--border)' }}>
-            <div className="rec-side-label">DESDE EL EXTRACTO BANCARIO</div>
-            <RecLine label="Saldo según extracto bancario" amount={data.stmtBalance} bold />
+            <div className="rec-side-label">{t('bankrec.fromStatement', 'DESDE EL EXTRACTO BANCARIO')}</div>
+            <RecLine label={t('bankrec.balancePerStatement', 'Saldo según extracto bancario')} amount={data.stmtBalance} bold />
 
             {rec?.unmBookDebits.length > 0 && (
               <>
-                <RecLine label="Más: Depósitos en tránsito" section />
+                <RecLine label={t('bankrec.plusDepositsInTransit', 'Más: Depósitos en tránsito')} section />
                 {rec.unmBookDebits.map(i => <RecLine key={i.id} label={i.desc} amount={i.amount} indent />)}
               </>
             )}
             {rec?.unmBookCredits.length > 0 && (
               <>
-                <RecLine label="Menos: Cheques pendientes" section />
+                <RecLine label={t('bankrec.lessOutstandingChecks', 'Menos: Cheques pendientes')} section />
                 {rec.unmBookCredits.map(i => <RecLine key={i.id} label={i.desc} amount={-i.amount} indent />)}
               </>
             )}
 
             <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
-            <RecLine label="Saldo ajustado del banco" amount={rec?.adjBank} bold />
+            <RecLine label={t('bankrec.adjustedBankBalance', 'Saldo ajustado del banco')} amount={rec?.adjBank} bold />
           </div>
 
           {/* Columna libros */}
           <div style={{ padding: '16px 20px' }}>
-            <div className="rec-side-label">DESDE LOS LIBROS CONTABLES</div>
-            <RecLine label="Saldo según libros contables" amount={account.bookBalance} bold />
+            <div className="rec-side-label">{t('bankrec.fromBooks', 'DESDE LOS LIBROS CONTABLES')}</div>
+            <RecLine label={t('bankrec.balancePerBooks', 'Saldo según libros contables')} amount={account.bookBalance} bold />
 
             {rec?.unmBankCredits.length > 0 && (
               <>
-                <RecLine label="Más: Créditos bancarios no registrados" section />
+                <RecLine label={t('bankrec.plusUnrecordedCredits', 'Más: Créditos bancarios no registrados')} section />
                 {rec.unmBankCredits.map(i => <RecLine key={i.id} label={i.desc} amount={i.amount} indent />)}
               </>
             )}
             {rec?.unmBankDebits.length > 0 && (
               <>
-                <RecLine label="Menos: Cargos bancarios no registrados" section />
+                <RecLine label={t('bankrec.lessUnrecordedCharges', 'Menos: Cargos bancarios no registrados')} section />
                 {rec.unmBankDebits.map(i => <RecLine key={i.id} label={i.desc} amount={-i.amount} indent />)}
               </>
             )}
 
             <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
-            <RecLine label="Saldo ajustado en libros" amount={rec?.adjBook} bold />
+            <RecLine label={t('bankrec.adjustedBookBalance', 'Saldo ajustado en libros')} amount={rec?.adjBook} bold />
           </div>
         </div>
 
         {/* Diferencia final */}
         <div className={`rec-diff-row ${rec?.balanced ? 'balanced' : 'unbalanced'}`}>
-          <span>DIFERENCIA</span>
+          <span>{t('bankrec.difference', 'DIFERENCIA')}</span>
           <span className="mono">
             {rec
               ? rec.balanced

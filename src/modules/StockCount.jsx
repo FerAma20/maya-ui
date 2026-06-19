@@ -1,6 +1,7 @@
 // ERP MAYA — Conteo Físico de Inventario
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
+import { useTranslation } from 'react-i18next';
 
 const Q = v => `Q ${v.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -83,6 +84,7 @@ function sessionDiscrepancies(lines) {
 }
 
 export default function StockCount({ pushToast }) {
+  const { t } = useTranslation();
   const [sessions, setSessions]   = useState(INIT_SESSIONS);
   const [tab, setTab]             = useState('active');
   const [selected, setSelected]   = useState(null);
@@ -164,12 +166,12 @@ export default function StockCount({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Conteo Físico de Inventario</h1>
+          <h1 className="page-title">{t('stockcount.title', 'Conteo Físico de Inventario')}</h1>
           <div className="page-subtitle">Sesiones de conteo · verificación de stock · ajustes por diferencia</div>
         </div>
         <div className="page-head-actions">
           <button className="btn accent" onClick={() => setNewModal(true)}>
-            <Icon name="plus" size={12} /> Nueva sesión
+            <Icon name="plus" size={12} /> {t('stockcount.newCount', 'Nueva sesión')}
           </button>
         </div>
       </div>
@@ -201,10 +203,10 @@ export default function StockCount({ pushToast }) {
       {/* Tabs */}
       <div className="tabs">
         <button className={`tab ${tab === 'active' ? 'active' : ''}`} onClick={() => setTab('active')}>
-          En curso {active.length > 0 && <span className="count">{active.length}</span>}
+          {t('stockcount.tabs.active', 'En progreso')} {active.length > 0 && <span className="count">{active.length}</span>}
         </button>
         <button className={`tab ${tab === 'history' ? 'active' : ''}`} onClick={() => setTab('history')}>
-          Historial
+          {t('stockcount.tabs.history', 'Historial')}
         </button>
       </div>
 
@@ -214,7 +216,7 @@ export default function StockCount({ pushToast }) {
             <Icon name="box" size={28} style={{ color: 'var(--muted)', marginBottom: 12 }} />
             <div style={{ fontWeight: 600, marginBottom: 4 }}>Sin sesiones activas</div>
             <div className="muted" style={{ fontSize: 13, marginBottom: 16 }}>Crea una nueva sesión para iniciar un conteo físico</div>
-            <button className="btn accent" onClick={() => setNewModal(true)}><Icon name="plus" size={12} /> Nueva sesión</button>
+            <button className="btn accent" onClick={() => setNewModal(true)}><Icon name="plus" size={12} /> {t('stockcount.newCount', 'Nueva sesión')}</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -266,14 +268,14 @@ export default function StockCount({ pushToast }) {
             <thead>
               <tr>
                 <th>Sesión</th>
-                <th>Sucursal</th>
-                <th>Categoría</th>
+                <th>{t('common.branch', 'Sucursal')}</th>
+                <th>{t('common.category', 'Categoría')}</th>
                 <th>Responsable</th>
-                <th>Fecha</th>
+                <th>{t('common.date', 'Fecha')}</th>
                 <th style={{ textAlign: 'right' }}>Productos</th>
                 <th style={{ textAlign: 'right' }}>Diferencias</th>
                 <th style={{ textAlign: 'right' }}>Uds. ajustadas</th>
-                <th>Estado</th>
+                <th>{t('common.status', 'Estado')}</th>
               </tr>
             </thead>
             <tbody>
@@ -335,7 +337,7 @@ export default function StockCount({ pushToast }) {
               {/* Filtros de líneas */}
               {selected.status !== 'completed' && (
                 <div style={{ display: 'flex', gap: 6 }}>
-                  {[['all', 'Todos'], ['pending', 'Pendientes'], ['diff', 'Con diferencia']].map(([v, l]) => (
+                  {[['all', t('common.all', 'Todos')], ['pending', 'Pendientes'], ['diff', 'Con diferencia']].map(([v, l]) => (
                     <button key={v} className={`chip ${lineFilter === v ? 'active' : ''}`} onClick={() => setLineFilter(v)}>{l}</button>
                   ))}
                 </div>
@@ -346,14 +348,14 @@ export default function StockCount({ pushToast }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)', position: 'sticky', top: 0 }}>
-                      {['Producto', 'Cat.', 'Sistema', 'Contado', 'Diferencia', 'Notas'].map((h, i) => (
+                      {[t('common.product', 'Producto'), 'Cat.', 'Sistema', 'Contado', 'Diferencia', t('common.notes', 'Notas')].map((h, i) => (
                         <th key={h} style={{ padding: '7px 10px', textAlign: i >= 2 && i <= 4 ? 'center' : 'left', fontSize: 10, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {visibleLines.length === 0 ? (
-                      <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'var(--muted)' }}>Sin productos en este filtro</td></tr>
+                      <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'var(--muted)' }}>{t('common.noResults', 'Sin resultados')}</td></tr>
                     ) : visibleLines.map(line => {
                       const diff = line.countedQty !== null ? line.countedQty - line.systemQty : null;
                       const hasDiff = diff !== null && diff !== 0;
@@ -405,7 +407,7 @@ export default function StockCount({ pushToast }) {
                               <input
                                 value={line.notes}
                                 onChange={e => updateNote(selected.id, line.sku, e.target.value)}
-                                placeholder="Observación…"
+                                placeholder={t('common.observations', 'Observaciones')}
                                 style={{
                                   width: '100%', border: '1px solid var(--border)',
                                   borderRadius: 'var(--r-sm)', padding: '4px 8px',
@@ -473,7 +475,7 @@ export default function StockCount({ pushToast }) {
                 )}
                 {selected.status === 'review' && (
                   <>
-                    <button className="btn ghost" onClick={() => setSelected(null)}>Cancelar</button>
+                    <button className="btn ghost" onClick={() => setSelected(null)}>{t('common.cancel', 'Cancelar')}</button>
                     <button className="btn accent" onClick={() => applyAdjustments(selected.id)}>
                       <Icon name="check" size={13} /> Aplicar ajustes al inventario
                     </button>
@@ -495,6 +497,7 @@ export default function StockCount({ pushToast }) {
 
 // ── Modal: nueva sesión de conteo ─────────────────────────────────────────────
 function NewSessionModal({ onClose, onSave }) {
+  const { t } = useTranslation();
   const [date,        setDate]        = useState('2026-05-24');
   const [branch,      setBranch]      = useState('Zona 10');
   const [category,    setCategory]    = useState('all');
@@ -508,7 +511,7 @@ function NewSessionModal({ onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>Nueva sesión de conteo</h3>
+          <h3>{t('stockcount.newCount', 'Nueva sesión de conteo')}</h3>
           <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
         </div>
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -518,7 +521,7 @@ function NewSessionModal({ onClose, onSave }) {
               <input type="date" className="field-input" value={date} onChange={e => setDate(e.target.value)} />
             </div>
             <div className="field">
-              <label className="field-label">Sucursal</label>
+              <label className="field-label">{t('common.branch', 'Sucursal')}</label>
               <select className="field-input" value={branch} onChange={e => setBranch(e.target.value)}>
                 {['Zona 10', 'Centro', 'Mixco', 'Antigua', 'Escuintla'].map(b => (
                   <option key={b} value={b}>{b}</option>
@@ -527,7 +530,7 @@ function NewSessionModal({ onClose, onSave }) {
             </div>
           </div>
           <div className="field">
-            <label className="field-label">Categoría a contar</label>
+            <label className="field-label">{t('common.category', 'Categoría')} a contar</label>
             <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
               {Object.entries(CAT_LABEL).map(([v, l]) => (
                 <option key={v} value={v}>{l}</option>
@@ -540,13 +543,13 @@ function NewSessionModal({ onClose, onSave }) {
               value={responsible} onChange={e => setResponsible(e.target.value)} />
           </div>
           <div className="field">
-            <label className="field-label">Observaciones (opcional)</label>
+            <label className="field-label">{t('common.observations', 'Observaciones')} ({t('common.optional', 'Opcional')})</label>
             <input className="field-input" placeholder="Ej. Conteo mensual, revisión de caducados…"
               value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
           <button className="btn accent" disabled={!valid}
             onClick={() => onSave({ date, branch, category, categoryLabel: CAT_LABEL[category], responsible, notes })}>
             <Icon name="check" size={13} /> Iniciar sesión

@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { CLIENTS, CLIENT_PAYMENTS, Q } from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 // Simulated invoices per client (aging buckets: current, 1-30, 31-60, 61-90, 90+)
 const CXC_INVOICES = [
@@ -49,6 +50,7 @@ const STATUS_CLASS = { open: 'info', partial: 'warning', overdue: 'danger', paid
 const PAY_METHODS = ['efectivo', 'transferencia', 'cheque', 'tarjeta'];
 
 export default function CxC({ pushToast }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState('aging');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -139,7 +141,7 @@ export default function CxC({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Cuentas por Cobrar</h1>
+          <h1 className="page-title">{t('cxc.title', 'Cuentas por Cobrar')}</h1>
           <div className="page-subtitle">Cartera de crédito · antigüedad · cobros</div>
         </div>
       </div>
@@ -195,13 +197,13 @@ export default function CxC({ pushToast }) {
             <div className="tbl-wrap"><table className="tbl">
               <thead>
                 <tr>
-                  <th>Cliente</th>
+                  <th>{t('common.client', 'Cliente')}</th>
                   <th style={{ textAlign: 'right' }}>Por vencer</th>
                   <th style={{ textAlign: 'right' }}>1–30 días</th>
                   <th style={{ textAlign: 'right' }}>31–60 días</th>
                   <th style={{ textAlign: 'right' }}>61–90 días</th>
                   <th style={{ textAlign: 'right' }}>90+ días</th>
-                  <th style={{ textAlign: 'right' }}>Total</th>
+                  <th style={{ textAlign: 'right' }}>{t('common.total', 'Total')}</th>
                   <th>Límite</th>
                 </tr>
               </thead>
@@ -252,14 +254,14 @@ export default function CxC({ pushToast }) {
           <div className="filterbar">
             <div className="search-wrap" style={{ flex: 1, maxWidth: 320 }}>
               <Icon name="search" className="icon" size={13} />
-              <input className="search-input" placeholder="Buscar cliente o documento…" value={search} onChange={e => setSearch(e.target.value)} />
+              <input className="search-input" placeholder={t('cxc.searchPlaceholder', 'Buscar cliente o documento…')} value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <select className="input" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="all">Todos los estados</option>
+              <option value="all">{t('common.all', 'Todos')} los estados</option>
               <option value="open">Abiertos</option>
               <option value="partial">Parciales</option>
               <option value="overdue">Vencidos</option>
-              <option value="paid">Pagados</option>
+              <option value="paid">{t('common.completed', 'Pagados')}</option>
             </select>
           </div>
 
@@ -268,13 +270,13 @@ export default function CxC({ pushToast }) {
               <thead>
                 <tr>
                   <th>Documento</th>
-                  <th>Cliente</th>
-                  <th>Fecha</th>
+                  <th>{t('common.client', 'Cliente')}</th>
+                  <th>{t('common.date', 'Fecha')}</th>
                   <th>Vencimiento</th>
-                  <th style={{ textAlign: 'right' }}>Monto</th>
+                  <th style={{ textAlign: 'right' }}>{t('common.amount', 'Monto')}</th>
                   <th style={{ textAlign: 'right' }}>Pendiente</th>
                   <th>Antigüedad</th>
-                  <th>Estado</th>
+                  <th>{t('common.status', 'Estado')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -318,12 +320,12 @@ export default function CxC({ pushToast }) {
           <div className="tbl-wrap"><table className="tbl">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Cliente</th>
-                <th>Referencia</th>
+                <th>{t('common.date', 'Fecha')}</th>
+                <th>{t('common.client', 'Cliente')}</th>
+                <th>{t('common.reference', 'Referencia')}</th>
                 <th>Método</th>
-                <th style={{ textAlign: 'right' }}>Monto</th>
-                <th>Notas</th>
+                <th style={{ textAlign: 'right' }}>{t('common.amount', 'Monto')}</th>
+                <th>{t('common.notes', 'Notas')}</th>
               </tr>
             </thead>
             <tbody>
@@ -354,11 +356,11 @@ export default function CxC({ pushToast }) {
               <button className="icon-btn" onClick={() => setSelectedInv(null)}><Icon name="close" /></button>
             </div>
             <div className="drawer-body detail-grid">
-              <Row label="Cliente" value={selectedInv.clientName} />
+              <Row label={t('common.client', 'Cliente')} value={selectedInv.clientName} />
               <Row label="Ticket de origen" value={selectedInv.ref} mono />
               <Row label="Fecha emisión" value={selectedInv.date} />
               <Row label="Fecha vencimiento" value={selectedInv.due} />
-              <Row label="Monto total" value={Q(selectedInv.amount)} />
+              <Row label={t('common.amount', 'Monto total')} value={Q(selectedInv.amount)} />
               <Row label="Pagado" value={Q(selectedInv.paid)} />
               <Row label="Pendiente" value={Q(selectedInv.outstanding)} bold />
               <Row label="Antigüedad" value={selectedInv.daysOverdue > 0 ? `${selectedInv.daysOverdue} días vencido` : 'Al día'} />
@@ -397,6 +399,7 @@ function Row({ label, value, mono, bold }) {
 }
 
 function PayModal({ invoice, onClose, onSave }) {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState(invoice.outstanding.toString());
   const [method, setMethod] = useState('efectivo');
   const [reference, setReference] = useState('');
@@ -416,7 +419,7 @@ function PayModal({ invoice, onClose, onSave }) {
             <div className="mono" style={{ fontSize: 13, padding: '6px 0' }}>{invoice.id} — {invoice.clientName}</div>
           </div>
           <div className="field">
-            <label className="field-label">Saldo pendiente</label>
+            <label className="field-label">{t('clients.payment.pendingBalance', 'Saldo pendiente')}</label>
             <div style={{ fontWeight: 700, color: 'var(--danger)', padding: '6px 0' }}>{Q(invoice.outstanding)}</div>
           </div>
           <div className="field">
@@ -426,20 +429,20 @@ function PayModal({ invoice, onClose, onSave }) {
               onChange={e => setAmount(e.target.value)} />
           </div>
           <div className="field">
-            <label className="field-label">Método de pago</label>
+            <label className="field-label">{t('clients.payment.method', 'Método de pago')}</label>
             <select className="field-input" value={method} onChange={e => setMethod(e.target.value)}>
               {PAY_METHODS.map(m => <option key={m} value={m} style={{ textTransform: 'capitalize' }}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
             </select>
           </div>
           {method !== 'efectivo' && (
             <div className="field">
-              <label className="field-label">Referencia / No. cheque / transferencia</label>
+              <label className="field-label">{t('clients.payment.reference', 'Referencia / No. cheque / transferencia')}</label>
               <input className="field-input" value={reference} onChange={e => setReference(e.target.value)} placeholder="Ej. TRF-48912" />
             </div>
           )}
         </div>
         <div className="modal-foot">
-          <button className="btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
           <button
             className="btn"
             disabled={!valid}

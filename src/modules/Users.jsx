@@ -1,0 +1,716 @@
+// ERP MAYA — Usuarios & Roles (ES module)
+import React, { useState, useMemo } from 'react';
+import Icon from '../components/Icon.jsx';
+import * as MAYA from '../data/mock.js';
+import { MODULES_PERM, ACTIONS, initPerms, permsToMatrix } from '../lib/permissions.js';
+import { useTranslation } from 'react-i18next';
+
+const initUserForm = () => ({ name: '', email: '', role: '', branch: '', password: '' });
+const initRoleForm = () => ({ name: '', desc: '' });
+
+function userInitials(name) {
+  return name.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
+}
+
+export default function Users({ pushToast }) {
+  const { t } = useTranslation();
+  const { USERS, ROLES, BRANCHES } = MAYA;
+
+  const [tab, setTab] = useState('usuarios');
+
+  // ── Usuarios state ───────────────────────────────────────────────────────
+  const [users, setUsers] = useState(USERS);
+  const [search, setSearch] = useState('');
+  const [filterRole, setFilterRole] = useState('');
+  const [filterBranch, setFilterBranch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [userForm, setUserForm] = useState(initUserForm());
+  const [userErrors, setUserErrors] = useState({});
+  const [selected, setSelected] = useState([]);
+
+  // ── Roles state ──────────────────────────────────────────────────────────
+  const [roles, setRoles] = useState(ROLES);
+  const [selectedRole, setSelectedRole] = useState(ROLES[0]);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [editingRole, setEditingRole] = useState(null);
+  const [roleForm, setRoleForm] = useState(initRoleForm());
+  const [rolePerms, setRolePerms] = useState(initPerms);
+
+  // ── Usuarios: filtrado ───────────────────────────────────────────────────
+  const filteredUsers = useMemo(() => {
+    const q = search.toLowerCase();
+    return users.filter(u =>
+      (!q || u.name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q)) &&
+      (!filterRole   || u.role   === filterRole) &&
+      (!filterBranch || u.branch === filterBranch) &&
+      (!filterStatus || u.status === filterStatus)
+    );
+  }, [users, search, filterRole, filterBranch, filterStatus]);
+
+  const stats = useMemo(() => ({
+    total:    users.length,
+    active:   users.filter(u => u.status === 'active').length,
+    inactive: users.filter(u => u.status === 'inactive').length,
+    online:   users.filter(u => u.last === 'En línea').length,
+  }), [users]);
+
+  const roleList   = [...new Set(users.map(u => u.role))].sort();
+  const branchList = [...new Set(users.map(u => u.branch))].sort();
+
+  // ── Usuarios: acciones ───────────────────────────────────────────────────
+  const openCreateUser = () => {
+    setEditingUser(null);
+    setUserForm(initUserForm());
+    setUserErrors({});
+    setShowUserModal(true);
+  };
+
+  const openEditUser = (u) => {
+    setEditingUser(u);
+    setUserForm({ name: u.name, email: u.email || '', role: u.role, branch: u.branch, password: '' });
+    setUserErrors({});
+    setShowUserModal(true);
+  };
+
+  const toggleUserStatus = (id) => {
+    setUsers(prev => prev.map(u =>
+      u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
+    ));
+    pushToast('Estado de usuario actualizado', 'success');
+  };
+
+  const validateUserForm = () => {
+    const e = {};
+    if (!userForm.name.trim())  e.name  = 'Requerido';
+    if (!userForm.email.trim()) e.email = 'Requerido';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userForm.email)) e.email = 'Correo inválido';
+    if (!userForm.role)   e.role   = 'Selecciona un rol';
+    if (!userForm.branch) e.branch = 'Selecciona una sucursal';
+    if (!editingUser && !userForm.password) e.password = 'Requerida para usuarios nuevos';
+    return e;
+  };
+
+  const saveUser = () => {
+    const e = validateUserForm();
+    if (Object.keys(e).length) { setUserErrors(e); return; }
+    if (editingUser) {
+      setUsers(prev => prev.map(u =>
+        u.id === editingUser.id ? { ...u, ...userForm } : u
+      ));
+      pushToast('Usuario actualizado', 'success');
+    } else {
+      const newUser = {
+        id: 'u' + Date.now(),
+        name: userForm.name,
+        email: userForm.email,
+        role: userForm.role,
+        branch: userForm.branch,
+        status: 'active',
+        last: 'Nunca',
+      };
+      setUsers(prev => [...prev, newUser]);
+      pushToast('Usuario creado', 'success');
+    }
+    setShowUserModal(false);
+  };
+
+  const setUF = (field, val) => {
+    setUserForm(f => ({ ...f, [field]: val }));
+    if (userErrors[field]) setUserErrors(e => ({ ...e, [field]: '' }));
+  };
+
+  const toggleSelect = (id) =>
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const toggleAll = () =>
+    setSelected(prev => prev.length === filteredUsers.length ? [] : filteredUsers.map(u => u.id));
+
+  // ── Roles: acciones ──────────────────────────────────────────────────────
+  const openCreateRole = () => {
+    setEditingRole(null);
+    setRoleForm(initRoleForm());
+    setRolePerms(initPerms());
+    setShowRoleModal(true);
+  };
+
+  const openEditRole = (r) => {
+    setEditingRole(r);
+    setRoleForm({ name: r.name, desc: r.desc });
+    setRolePerms(permsToMatrix(r.perms));
+    setShowRoleModal(true);
+  };
+
+  const togglePerm = (mod, acc) =>
+    setRolePerms(p => ({ ...p, [mod]: { ...p[mod], [acc]: !p[mod][acc] } }));
+
+  const saveRole = () => {
+    if (!roleForm.name.trim()) return;
+    if (editingRole) {
+      setRoles(prev => prev.map(r =>
+        r.id === editingRole.id ? { ...r, name: roleForm.name, desc: roleForm.desc } : r
+      ));
+      if (selectedRole?.id === editingRole.id)
+        setSelectedRole(r => ({ ...r, name: roleForm.name, desc: roleForm.desc }));
+      pushToast('Rol actualizado', 'success');
+    } else {
+      const newRole = {
+        id: 'r' + Date.now(),
+        name: roleForm.name,
+        desc: roleForm.desc,
+        perms: [],
+        users: 0,
+      };
+      setRoles(prev => [...prev, newRole]);
+      pushToast('Rol creado', 'success');
+    }
+    setShowRoleModal(false);
+  };
+
+  const matrixForRole = selectedRole ? permsToMatrix(selectedRole.perms) : initPerms();
+
+  return (
+    <div className="page">
+      {/* Cabecera */}
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">{t('users.title', 'Usuarios & Roles')}</h1>
+          <div className="page-subtitle">{t('users.subtitle', 'Gestión de accesos · Roles y permisos del sistema')}</div>
+        </div>
+        <div className="page-head-actions">
+          {tab === 'usuarios' && (
+            <>
+              <button className="btn"><Icon name="download" />{t('common.export', 'Exportar')}</button>
+              <button className="btn accent" onClick={openCreateUser}>
+                <Icon name="plus" />{t('users.newUser', 'Nuevo usuario')}
+              </button>
+            </>
+          )}
+          {tab === 'roles' && (
+            <button className="btn accent" onClick={openCreateRole}>
+              <Icon name="plus" />{t('users.newRole', 'Nuevo rol')}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        <div className={`tab ${tab === 'usuarios' ? 'active' : ''}`} onClick={() => setTab('usuarios')}>
+          {t('users.tabs.users', 'Usuarios')} <span className="count">{users.length}</span>
+        </div>
+        <div className={`tab ${tab === 'roles' ? 'active' : ''}`} onClick={() => setTab('roles')}>
+          {t('users.tabs.roles', 'Roles & permisos')} <span className="count">{roles.length}</span>
+        </div>
+      </div>
+
+      {/* ── TAB: USUARIOS ─────────────────────────────────────────────────── */}
+      {tab === 'usuarios' && (
+        <>
+          {/* Stats */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+            {[
+              { label: t('users.stats.total', 'Total usuarios'),    value: stats.total,    color: '' },
+              { label: t('users.stats.active', 'Activos'),          value: stats.active,   color: 'var(--success)' },
+              { label: t('users.stats.inactive', 'Inactivos'),      value: stats.inactive, color: 'var(--muted)' },
+              { label: t('users.stats.online', 'En línea ahora'),   value: stats.online,   color: 'var(--accent)' },
+            ].map(s => (
+              <div key={s.label} className="card" style={{ flex: 1 }}>
+                <div className="card-body" style={{ padding: '12px 16px' }}>
+                  <div className="muted" style={{ fontSize: 11, marginBottom: 4 }}>{s.label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: s.color || 'var(--text)' }}>{s.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Filtros */}
+          <div className="filterbar">
+            <div style={{ position: 'relative', width: 280 }}>
+              <Icon name="search" size={12} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+              <input
+                className="input"
+                style={{ width: '100%', paddingLeft: 26 }}
+                placeholder={t('users.searchPlaceholder', 'Buscar usuario o rol…')}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <select className="input" value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+              <option value="">{t('users.allRoles', 'Todos los roles')}</option>
+              {roleList.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <select className="input" value={filterBranch} onChange={e => setFilterBranch(e.target.value)}>
+              <option value="">{t('users.allBranches', 'Todas las sucursales')}</option>
+              {branchList.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <select className="input" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="">{t('users.allStatuses', 'Todos los estados')}</option>
+              <option value="active">{t('users.activeOnly', 'Activos')}</option>
+              <option value="inactive">{t('users.inactiveOnly', 'Inactivos')}</option>
+            </select>
+            <div className="grow"></div>
+            <span className="muted mono" style={{ fontSize: 11 }}>{filteredUsers.length} {t('users.results', 'resultados')}</span>
+            {(search || filterRole || filterBranch || filterStatus) && (
+              <button className="btn sm" onClick={() => { setSearch(''); setFilterRole(''); setFilterBranch(''); setFilterStatus(''); }}>
+                <Icon name="x" size={12} />{t('users.clearFilters', 'Limpiar')}
+              </button>
+            )}
+          </div>
+
+          {/* Tabla */}
+          <div className="card">
+            {selected.length > 0 && (
+              <div style={{ padding: '8px 16px', background: 'var(--accent-soft)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-ink)' }}>
+                  {selected.length} {t('users.selected', 'seleccionado')}{selected.length > 1 ? 's' : ''}
+                </span>
+                <button className="btn sm ghost" onClick={() => setSelected([])}>{t('users.deselect', 'Deseleccionar')}</button>
+                <button className="btn sm danger" style={{ marginLeft: 'auto' }}>
+                  <Icon name="trash" size={12} />{t('users.deactivateSelected', 'Desactivar seleccionados')}
+                </button>
+              </div>
+            )}
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th style={{ width: 36 }}>
+                    <input
+                      type="checkbox"
+                      checked={selected.length === filteredUsers.length && filteredUsers.length > 0}
+                      onChange={toggleAll}
+                    />
+                  </th>
+                  <th>{t('common.user', 'Usuario')}</th>
+                  <th>{t('users.role', 'Rol')}</th>
+                  <th>{t('common.branch', 'Sucursal')}</th>
+                  <th>{t('users.lastAccess', 'Último acceso')}</th>
+                  <th>{t('common.status', 'Estado')}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7}>
+                      <div className="empty" style={{ padding: '32px 0' }}>
+                        <Icon name="users" size={22} style={{ opacity: 0.25, marginBottom: 8 }} />
+                        <div>{t('users.noMatch', 'Sin usuarios que coincidan con los filtros')}</div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredUsers.map(u => (
+                  <tr key={u.id} style={{ opacity: u.status === 'inactive' ? 0.55 : 1 }}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(u.id)}
+                        onChange={() => toggleSelect(u.id)}
+                      />
+                    </td>
+                    <td>
+                      <div className="row gap-8">
+                        <div
+                          className="avatar"
+                          style={{
+                            width: 28, height: 28, fontSize: 10.5,
+                            background: u.status === 'active' ? 'var(--accent-soft)' : 'var(--surface-3)',
+                            color: u.status === 'active' ? 'var(--accent-ink)' : 'var(--muted)',
+                          }}
+                        >
+                          {userInitials(u.name)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{u.name}</div>
+                          <div className="muted code" style={{ fontSize: 10.5 }}>
+                            {(u.email || u.name.toLowerCase().replace(/[^a-z\s]/g, '').split(' ').join('.').slice(0, 16) + '@erpmaya.gt')}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <RolePill role={u.role} />
+                    </td>
+                    <td style={{ fontSize: 12.5 }}>{u.branch}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {u.last === 'En línea' && (
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block', flexShrink: 0 }} />
+                        )}
+                        <span className="muted" style={{ fontSize: 12 }}>{u.last}</span>
+                      </div>
+                    </td>
+                    <td>
+                      {u.status === 'active'
+                        ? <span className="pill success"><span className="dot" />{t('common.active', 'Activo')}</span>
+                        : <span className="pill"><span className="dot" style={{ background: 'var(--muted)' }} />{t('common.inactive', 'Inactivo')}</span>
+                      }
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 2 }}>
+                        <button className="icon-btn" title={t('users.resetPassword', 'Restablecer contraseña')} onClick={() => pushToast('Correo de restablecimiento enviado', 'success')}>
+                          <Icon name="lock" />
+                        </button>
+                        <button className="icon-btn" title={t('users.editUser', 'Editar usuario')} onClick={() => openEditUser(u)}>
+                          <Icon name="edit" />
+                        </button>
+                        <button
+                          className="icon-btn"
+                          title={u.status === 'active' ? t('users.deactivateUser', 'Desactivar usuario') : t('users.activateUser', 'Activar usuario')}
+                          onClick={() => toggleUserStatus(u.id)}
+                        >
+                          <Icon name={u.status === 'active' ? 'x' : 'check'} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {/* ── TAB: ROLES & PERMISOS ─────────────────────────────────────────── */}
+      {tab === 'roles' && (
+        <div className="grid-2">
+          {/* Lista de roles */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="card">
+              <div className="card-head">
+                <h3>{t('users.definedRoles', 'Roles definidos')}</h3>
+                <button className="btn sm accent" onClick={openCreateRole}>
+                  <Icon name="plus" />{t('users.newRole', 'Nuevo rol')}
+                </button>
+              </div>
+              <div className="card-body flush">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>{t('users.role', 'Rol')}</th>
+                      <th>{t('common.description', 'Descripción')}</th>
+                      <th className="num">{t('users.usersCount', 'Usuarios')}</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roles.map(r => (
+                      <tr
+                        key={r.id}
+                        onClick={() => setSelectedRole(r)}
+                        style={{
+                          cursor: 'pointer',
+                          background: selectedRole?.id === r.id ? 'var(--accent-soft)' : undefined,
+                        }}
+                      >
+                        <td>
+                          <div className="row gap-8">
+                            <Icon name="shield" size={13} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+                            <span style={{ fontWeight: 600 }}>{r.name}</span>
+                          </div>
+                        </td>
+                        <td className="muted" style={{ fontSize: 12 }}>{r.desc}</td>
+                        <td className="num"><span className="pill">{r.users}</span></td>
+                        <td>
+                          <button
+                            className="icon-btn"
+                            title={t('users.editRole', 'Editar rol')}
+                            onClick={e => { e.stopPropagation(); openEditRole(r); }}
+                          >
+                            <Icon name="edit" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Usuarios con el rol seleccionado */}
+            {selectedRole && (
+              <div className="card">
+                <div className="card-head">
+                  <h3>{t('users.usersWithRole', 'Usuarios con rol')} · {selectedRole.name}</h3>
+                </div>
+                <div className="card-body flush">
+                  {users.filter(u => u.role === selectedRole.name).length === 0 ? (
+                    <div className="empty" style={{ padding: 20 }}>{t('users.noAssignedUsers', 'Sin usuarios asignados')}</div>
+                  ) : (
+                    <table className="tbl">
+                      <tbody>
+                        {users.filter(u => u.role === selectedRole.name).map(u => (
+                          <tr key={u.id}>
+                            <td>
+                              <div className="row gap-8">
+                                <div className="avatar" style={{ width: 24, height: 24, fontSize: 9.5 }}>
+                                  {userInitials(u.name)}
+                                </div>
+                                <span style={{ fontWeight: 500, fontSize: 12.5 }}>{u.name}</span>
+                              </div>
+                            </td>
+                            <td className="muted" style={{ fontSize: 11.5 }}>{u.branch}</td>
+                            <td>
+                              {u.status === 'active'
+                                ? <span className="pill success" style={{ fontSize: 9.5 }}><span className="dot" />{t('common.active', 'Activo')}</span>
+                                : <span className="pill" style={{ fontSize: 9.5 }}><span className="dot" style={{ background: 'var(--muted)' }} />{t('common.inactive', 'Inactivo')}</span>
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Matriz de permisos del rol seleccionado */}
+          <div className="card" style={{ alignSelf: 'start' }}>
+            <div className="card-head">
+              <h3>
+                {t('users.permissions', 'Permisos')} · {selectedRole?.name || '—'}
+                {selectedRole?.perms.includes('*') && (
+                  <span className="pill accent" style={{ marginLeft: 8, fontSize: 10 }}>{t('users.fullAccess', 'Acceso total')}</span>
+                )}
+              </h3>
+            </div>
+            {selectedRole ? (
+              <div className="card-body flush">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th style={{ minWidth: 160 }}>{t('users.module', 'Módulo')}</th>
+                      {ACTIONS.map(a => (
+                        <th key={a} className="center" style={{ textTransform: 'capitalize', fontSize: 11 }}>{a}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MODULES_PERM.map(mod => {
+                      const p = matrixForRole[mod];
+                      return (
+                        <tr key={mod}>
+                          <td style={{ fontSize: 12.5, fontWeight: 500 }}>{mod}</td>
+                          {ACTIONS.map(acc => (
+                            <td key={acc} className="center">
+                              {p[acc]
+                                ? <Icon name="check" size={13} style={{ color: 'var(--success)' }} />
+                                : <Icon name="x"     size={11} style={{ color: 'var(--border-strong)' }} />
+                              }
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="empty card-body">{t('users.selectRoleToView', 'Selecciona un rol para ver sus permisos')}</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: Crear / Editar Usuario ────────────────────────────────── */}
+      {showUserModal && (
+        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
+          <div className="modal" style={{ width: 520 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>{editingUser ? `${t('common.edit', 'Editar')} · ${editingUser.name}` : t('users.newUser', 'Nuevo usuario')}</h3>
+              <button className="icon-btn" onClick={() => setShowUserModal(false)}>
+                <Icon name="x" />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="field" style={{ gridColumn: '1 / -1' }}>
+                  <label>{t('users.form.fullName', 'Nombre completo *')}</label>
+                  <input
+                    type="text"
+                    placeholder={t('users.form.fullNamePlaceholder', 'Ej. María García')}
+                    value={userForm.name}
+                    onChange={e => setUF('name', e.target.value)}
+                    autoFocus
+                  />
+                  {userErrors.name && <span className="login-error">{userErrors.name}</span>}
+                </div>
+                <div className="field" style={{ gridColumn: '1 / -1' }}>
+                  <label>{t('common.email', 'Correo electrónico *')}</label>
+                  <input
+                    type="email"
+                    placeholder={t('users.form.emailPlaceholder', 'usuario@empresa.com')}
+                    value={userForm.email}
+                    onChange={e => setUF('email', e.target.value)}
+                  />
+                  {userErrors.email && <span className="login-error">{userErrors.email}</span>}
+                </div>
+                <div className="field">
+                  <label>{t('users.role', 'Rol *')}</label>
+                  <select value={userForm.role} onChange={e => setUF('role', e.target.value)}>
+                    <option value="">{t('users.form.selectRole', 'Seleccionar…')}</option>
+                    {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+                  </select>
+                  {userErrors.role && <span className="login-error">{userErrors.role}</span>}
+                </div>
+                <div className="field">
+                  <label>{t('common.branch', 'Sucursal *')}</label>
+                  <select value={userForm.branch} onChange={e => setUF('branch', e.target.value)}>
+                    <option value="">{t('users.form.selectBranch', 'Seleccionar…')}</option>
+                    {BRANCHES.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                  </select>
+                  {userErrors.branch && <span className="login-error">{userErrors.branch}</span>}
+                </div>
+                {!editingUser && (
+                  <div className="field" style={{ gridColumn: '1 / -1' }}>
+                    <label>{t('users.form.tempPassword', 'Contraseña temporal *')}</label>
+                    <input
+                      type="password"
+                      placeholder={t('users.form.tempPasswordPlaceholder', 'Mínimo 8 caracteres')}
+                      value={userForm.password}
+                      onChange={e => setUF('password', e.target.value)}
+                    />
+                    {userErrors.password && <span className="login-error">{userErrors.password}</span>}
+                  </div>
+                )}
+              </div>
+              {userForm.role && (
+                <div style={{
+                  marginTop: 14, padding: '10px 14px',
+                  background: 'var(--surface-2)', borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <Icon name="shield" size={13} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600 }}>{userForm.role}</div>
+                    <div className="muted" style={{ fontSize: 11 }}>
+                      {roles.find(r => r.name === userForm.role)?.desc || ''}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-foot">
+              <button className="btn" onClick={() => setShowUserModal(false)}>{t('common.cancel', 'Cancelar')}</button>
+              <button className="btn accent" onClick={saveUser}>
+                <Icon name="check" size={13} />
+                {editingUser ? t('users.saveChanges', 'Guardar cambios') : t('users.newUser', 'Crear usuario')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: Crear / Editar Rol ─────────────────────────────────────── */}
+      {showRoleModal && (
+        <div className="modal-overlay" onClick={() => setShowRoleModal(false)}>
+          <div className="modal" style={{ width: 600 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>{editingRole ? `${t('users.editRole', 'Editar rol')} · ${editingRole.name}` : t('users.newRole', 'Nuevo rol')}</h3>
+              <button className="icon-btn" onClick={() => setShowRoleModal(false)}>
+                <Icon name="x" />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div className="field">
+                  <label>{t('users.form.roleName', 'Nombre del rol *')}</label>
+                  <input
+                    type="text"
+                    value={roleForm.name}
+                    onChange={e => setRoleForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder={t('users.form.roleNamePlaceholder', 'Ej. Supervisor de ventas')}
+                    autoFocus
+                  />
+                </div>
+                <div className="field">
+                  <label>{t('common.description', 'Descripción')}</label>
+                  <input
+                    type="text"
+                    value={roleForm.desc}
+                    onChange={e => setRoleForm(f => ({ ...f, desc: e.target.value }))}
+                    placeholder={t('users.form.roleDescPlaceholder', 'Resumen de responsabilidades')}
+                  />
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>
+                {t('users.permissionsMatrix', 'Matriz de permisos')}
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th style={{ minWidth: 170 }}>{t('users.module', 'Módulo')}</th>
+                      {ACTIONS.map(a => (
+                        <th key={a} className="center" style={{ textTransform: 'capitalize' }}>{a}</th>
+                      ))}
+                      <th className="center" style={{ fontSize: 10 }}>{t('users.all', 'Todo')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MODULES_PERM.map(mod => {
+                      const p = rolePerms[mod];
+                      const allOn = ACTIONS.every(a => p[a]);
+                      return (
+                        <tr key={mod}>
+                          <td style={{ fontWeight: 500, fontSize: 12 }}>{mod}</td>
+                          {ACTIONS.map(acc => (
+                            <td key={acc} className="center">
+                              <input
+                                type="checkbox"
+                                checked={p[acc]}
+                                onChange={() => togglePerm(mod, acc)}
+                                style={{ accentColor: 'var(--accent)', width: 14, height: 14, cursor: 'pointer' }}
+                              />
+                            </td>
+                          ))}
+                          <td className="center">
+                            <input
+                              type="checkbox"
+                              checked={allOn}
+                              onChange={() => {
+                                const val = !allOn;
+                                setRolePerms(prev => ({ ...prev, [mod]: Object.fromEntries(ACTIONS.map(a => [a, val])) }));
+                              }}
+                              style={{ accentColor: 'var(--accent)', width: 14, height: 14, cursor: 'pointer' }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button className="btn" onClick={() => setShowRoleModal(false)}>{t('common.cancel', 'Cancelar')}</button>
+              <button
+                className="btn accent"
+                disabled={!roleForm.name.trim()}
+                onClick={saveRole}
+              >
+                <Icon name="check" size={13} />
+                {editingRole ? t('users.saveChanges', 'Guardar cambios') : t('users.newRole', 'Crear rol')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RolePill({ role }) {
+  const map = {
+    'Administrador': 'danger',
+    'Encargado':     'warning',
+    'Cajero':        'accent',
+    'Inventario':    'info',
+    'Contador':      '',
+  };
+  const cls = map[role] || '';
+  return <span className={`pill ${cls}`}>{role}</span>;
+}

@@ -3,7 +3,9 @@ import Icon from '../components/Icon.jsx';
 import * as MAYA from '../data/mock.js';
 // ERP MAYA — Inventory module
 import React, { useState as useStateInv, useMemo as useMemoInv } from 'react';
+import { useTranslation } from 'react-i18next';
 function InventoryModule({ pushToast }) {
+  const { t } = useTranslation();
   const { Q, Qs, PRODUCTS, CATEGORIES, STOCK_MOVEMENTS, LOW_STOCK, EXPIRING_SOON, SUPPLIERS } = MAYA;
   const [tab, setTab] = useStateInv('productos');
   const [cat, setCat] = useStateInv('todos');
@@ -32,13 +34,13 @@ function InventoryModule({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Inventario</h1>
+          <h1 className="page-title">{t('inventory.title', 'Inventario')}</h1>
           <div className="page-subtitle">{PRODUCTS.length} SKUs activos · {CATEGORIES.length - 1} categorías · Valor cost. <span className="mono">{Qs(totalValueCost)}</span></div>
         </div>
         <div className="page-head-actions">
-          <button className="btn"><Icon name="upload"/>Importar</button>
-          <button className="btn"><Icon name="download"/>Exportar</button>
-          <button className="btn accent" onClick={() => setShowNew(true)}><Icon name="plus"/>Nuevo producto</button>
+          <button className="btn"><Icon name="upload"/>{t('common.import', 'Importar')}</button>
+          <button className="btn"><Icon name="download"/>{t('common.export', 'Exportar')}</button>
+          <button className="btn accent" onClick={() => setShowNew(true)}><Icon name="plus"/>{t('inventory.newProduct', 'Nuevo producto')}</button>
         </div>
       </div>
 
@@ -69,16 +71,16 @@ function InventoryModule({ pushToast }) {
       {/* Tabs */}
       <div className="tabs">
         <div className={`tab ${tab==='productos'?'active':''}`} onClick={() => setTab('productos')}>
-          Productos <span className="count">{PRODUCTS.length}</span>
+          {t('inventory.tabs.products', 'Productos')} <span className="count">{PRODUCTS.length}</span>
         </div>
         <div className={`tab ${tab==='kardex'?'active':''}`} onClick={() => setTab('kardex')}>
-          Kárdex / Movimientos <span className="count">{STOCK_MOVEMENTS.length}</span>
+          {t('inventory.tabs.movements', 'Kárdex / Movimientos')} <span className="count">{STOCK_MOVEMENTS.length}</span>
         </div>
         <div className={`tab ${tab==='lotes'?'active':''}`} onClick={() => setTab('lotes')}>
-          Lotes &amp; vencimientos <span className="count">{EXPIRING_SOON.length}</span>
+          {t('inventory.tabs.lots', 'Lotes & vencimientos')} <span className="count">{EXPIRING_SOON.length}</span>
         </div>
         <div className={`tab ${tab==='alertas'?'active':''}`} onClick={() => setTab('alertas')}>
-          Alertas <span className="count" style={{color:'var(--danger)'}}>{LOW_STOCK.length}</span>
+          {t('inventory.tabs.alerts', 'Alertas')} <span className="count" style={{color:'var(--danger)'}}>{LOW_STOCK.length}</span>
         </div>
         <div className={`tab ${tab==='ajustes'?'active':''}`} onClick={() => setTab('ajustes')}>
           Ajustes &amp; transferencias
@@ -93,21 +95,24 @@ function InventoryModule({ pushToast }) {
           <div className="filterbar">
             <div style={{position:'relative', width:280}}>
               <Icon name="search" size={12} style={{position:'absolute', left:8, top:'50%', transform:'translateY(-50%)', color:'var(--muted)'}}/>
-              <input className="input" style={{width:'100%', paddingLeft:26}} placeholder="Buscar SKU, código de barras o nombre…" value={search} onChange={e=>setSearch(e.target.value)}/>
+              <input className="input" style={{width:'100%', paddingLeft:26}} placeholder={t('inventory.searchPlaceholder', 'Buscar SKU, código de barras o nombre…')} value={search} onChange={e=>setSearch(e.target.value)}/>
             </div>
             <select className="input" value={cat} onChange={e=>setCat(e.target.value)}>
               {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <div className="row gap-6">
               {[
-                ['all','Todos'],['ok','Stock OK'],['low','Stock bajo'],['out','Agotados']
+                ['all', t('common.all', 'Todos')],
+                ['ok', 'Stock OK'],
+                ['low', 'Stock bajo'],
+                ['out', 'Agotados']
               ].map(([id, lbl]) => (
                 <button key={id} className={`chip ${stockFilter===id?'active':''}`} onClick={()=>setStockFilter(id)}>{lbl}</button>
               ))}
             </div>
             <div className="grow"></div>
             <span className="muted mono" style={{fontSize:11}}>{filtered.length} resultados</span>
-            <button className="btn sm"><Icon name="filter" size={12}/>Más filtros</button>
+            <button className="btn sm"><Icon name="filter" size={12}/>{t('common.filter', 'Filtrar')}</button>
           </div>
 
           <div className="card">
@@ -116,16 +121,16 @@ function InventoryModule({ pushToast }) {
                 <thead>
                   <tr>
                     <th style={{width:24}}><input type="checkbox"/></th>
-                    <th>SKU / Código</th>
-                    <th>Producto</th>
-                    <th>Categoría</th>
-                    <th className="num">Costo</th>
-                    <th className="num">Precio</th>
-                    <th className="num">Margen</th>
-                    <th className="num">Stock</th>
-                    <th className="num">Mín</th>
-                    <th>Lote</th>
-                    <th>Vence</th>
+                    <th>{t('inventory.headers.sku', 'SKU / Código')}</th>
+                    <th>{t('inventory.headers.product', 'Producto')}</th>
+                    <th>{t('inventory.headers.category', 'Categoría')}</th>
+                    <th className="num">{t('inventory.headers.cost', 'Costo')}</th>
+                    <th className="num">{t('inventory.headers.price', 'Precio')}</th>
+                    <th className="num">{t('inventory.headers.margin', 'Margen')}</th>
+                    <th className="num">{t('inventory.headers.stock', 'Stock')}</th>
+                    <th className="num">{t('inventory.headers.min', 'Mín')}</th>
+                    <th>{t('inventory.headers.lot', 'Lote')}</th>
+                    <th>{t('inventory.headers.expires', 'Vence')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -171,7 +176,7 @@ function InventoryModule({ pushToast }) {
       {tab === 'kardex' && (
         <>
           <div className="filterbar">
-            <input className="input" placeholder="Buscar producto, SKU o ref…" style={{width:280}}/>
+            <input className="input" placeholder={t('inventory.searchMovements', 'Buscar producto, SKU o ref…')} style={{width:280}}/>
             <select className="input">
               <option>Todos los movimientos</option>
               <option>Ventas</option>
@@ -185,19 +190,19 @@ function InventoryModule({ pushToast }) {
             </select>
             <div className="grow"></div>
             <button className="btn sm"><Icon name="calendar" size={12}/>Mayo 2026</button>
-            <button className="btn sm"><Icon name="download" size={12}/>Exportar</button>
+            <button className="btn sm"><Icon name="download" size={12}/>{t('inventory.exportMovements', 'Exportar')}</button>
           </div>
           <div className="card">
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Tipo</th>
-                  <th>SKU</th>
-                  <th>Producto</th>
-                  <th className="num">Cantidad</th>
-                  <th>Referencia</th>
-                  <th>Usuario</th>
+                  <th>{t('inventory.headers.date', 'Fecha')}</th>
+                  <th>{t('inventory.headers.type', 'Tipo')}</th>
+                  <th>{t('inventory.headers.sku', 'SKU / Código')}</th>
+                  <th>{t('inventory.headers.product', 'Producto')}</th>
+                  <th className="num">{t('inventory.headers.quantity', 'Cantidad')}</th>
+                  <th>{t('inventory.headers.reference', 'Referencia')}</th>
+                  <th>{t('inventory.headers.user', 'Usuario')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -228,28 +233,28 @@ function InventoryModule({ pushToast }) {
       {tab === 'lotes' && (
         <>
           <div className="filterbar">
-            <input className="input" placeholder="Buscar lote o producto…" style={{width:280}}/>
+            <input className="input" placeholder={t('inventory.searchLots', 'Buscar lote o producto…')} style={{width:280}}/>
             <div className="row gap-6">
-              <button className="chip active">Todos</button>
+              <button className="chip active">{t('common.all', 'Todos')}</button>
               <button className="chip">&lt; 7 días</button>
               <button className="chip">&lt; 30 días</button>
               <button className="chip">&lt; 90 días</button>
               <button className="chip">Vencidos</button>
             </div>
             <div className="grow"></div>
-            <button className="btn sm accent"><Icon name="tag" size={12}/>Crear promoción para vencimientos</button>
+            <button className="btn sm accent"><Icon name="tag" size={12}/>{t('inventory.createPromoExpiring', 'Crear promoción para vencimientos')}</button>
           </div>
           <div className="card">
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Lote</th>
-                  <th>Producto</th>
-                  <th>Sucursal</th>
-                  <th className="num">Stock</th>
-                  <th>Vence</th>
-                  <th>Días</th>
-                  <th>Estado</th>
+                  <th>{t('inventory.headers.lot', 'Lote')}</th>
+                  <th>{t('inventory.headers.product', 'Producto')}</th>
+                  <th>{t('inventory.headers.branch', 'Sucursal')}</th>
+                  <th className="num">{t('inventory.headers.stock', 'Stock')}</th>
+                  <th>{t('inventory.headers.expires', 'Vence')}</th>
+                  <th>{t('inventory.headers.days', 'Días')}</th>
+                  <th>{t('inventory.headers.status', 'Estado')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -289,13 +294,13 @@ function InventoryModule({ pushToast }) {
         <>
           <div className="alert" style={{marginBottom:12}}>
             <Icon name="alert" size={14}/>
-            <span><strong>{LOW_STOCK.length} productos</strong> están por debajo del stock mínimo y requieren reorden. Sugerencia: generar órdenes de compra automáticas con los proveedores asignados.</span>
+            <span><strong>{LOW_STOCK.length} productos</strong> {t('inventory.lowStockWarning', 'están por debajo del stock mínimo y requieren reorden.')} Sugerencia: generar órdenes de compra automáticas con los proveedores asignados.</span>
             <button className="btn sm accent" style={{marginLeft:'auto'}}>Generar OCs automáticas</button>
           </div>
 
           <div className="card">
             <div className="card-head">
-              <h3>Productos bajo stock mínimo</h3>
+              <h3>{t('inventory.lowStockCard', 'Productos bajo stock mínimo')}</h3>
               <span className="muted mono" style={{fontSize:11}}>{LOW_STOCK.length} de {PRODUCTS.length} SKUs</span>
             </div>
             <div className="card-body flush">
@@ -303,12 +308,12 @@ function InventoryModule({ pushToast }) {
                 <thead>
                   <tr>
                     <th><input type="checkbox"/></th>
-                    <th>SKU</th>
-                    <th>Producto</th>
+                    <th>{t('inventory.headers.sku', 'SKU / Código')}</th>
+                    <th>{t('inventory.headers.product', 'Producto')}</th>
                     <th className="num">Stock actual</th>
                     <th className="num">Stock mínimo</th>
-                    <th className="num">Sugerido</th>
-                    <th>Proveedor</th>
+                    <th className="num">{t('inventory.headers.suggested', 'Sugerido')}</th>
+                    <th>{t('inventory.headers.supplier', 'Proveedor')}</th>
                     <th>Cobertura</th>
                     <th></th>
                   </tr>
@@ -347,11 +352,11 @@ function InventoryModule({ pushToast }) {
       {tab === 'ajustes' && (
         <div className="grid-2">
           <div className="card">
-            <div className="card-head"><h3>Nuevo ajuste de inventario</h3></div>
+            <div className="card-head"><h3>{t('inventory.adjustment.title', 'Nuevo ajuste de inventario')}</h3></div>
             <div className="card-body" style={{display:'flex', flexDirection:'column', gap:10}}>
-              <div className="field"><label>Producto</label><input placeholder="Buscar por SKU o nombre…"/></div>
+              <div className="field"><label>{t('inventory.adjustment.product', 'Producto')}</label><input placeholder="Buscar por SKU o nombre…"/></div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
-                <div className="field"><label>Tipo</label>
+                <div className="field"><label>{t('common.type', 'Tipo')}</label>
                   <select>
                     <option>Merma / Pérdida</option>
                     <option>Rotura / Daño</option>
@@ -360,22 +365,22 @@ function InventoryModule({ pushToast }) {
                     <option>Devolución cliente</option>
                   </select>
                 </div>
-                <div className="field"><label>Cantidad</label><input type="number" placeholder="0"/></div>
+                <div className="field"><label>{t('inventory.adjustment.quantity', 'Cantidad')}</label><input type="number" placeholder="0"/></div>
               </div>
-              <div className="field"><label>Sucursal</label>
+              <div className="field"><label>{t('common.branch', 'Sucursal')}</label>
                 <select>{MAYA.BRANCHES.map(b => <option key={b.id}>{b.name}</option>)}</select>
               </div>
               <div className="field"><label>Justificación</label>
-                <textarea rows="3" placeholder="Detalle de la razón del ajuste…"></textarea>
+                <textarea rows="3" placeholder={t('inventory.adjustment.reason', 'Detalle de la razón del ajuste…')}></textarea>
               </div>
               <div className="row gap-8" style={{marginTop:6}}>
                 <button className="btn accent"><Icon name="check"/>Registrar ajuste</button>
-                <button className="btn">Cancelar</button>
+                <button className="btn">{t('common.cancel', 'Cancelar')}</button>
               </div>
             </div>
           </div>
           <div className="card">
-            <div className="card-head"><h3>Nueva transferencia entre sucursales</h3></div>
+            <div className="card-head"><h3>{t('inventory.transfer.title', 'Nueva transferencia entre sucursales')}</h3></div>
             <div className="card-body" style={{display:'flex', flexDirection:'column', gap:10}}>
               <div style={{display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:8, alignItems:'end'}}>
                 <div className="field"><label>Desde</label>
@@ -386,15 +391,15 @@ function InventoryModule({ pushToast }) {
                   <select>{MAYA.BRANCHES.map(b => <option key={b.id}>{b.name}</option>)}</select>
                 </div>
               </div>
-              <div className="field"><label>Productos</label>
+              <div className="field"><label>{t('common.product', 'Producto')}</label>
                 <div style={{border:'1px dashed var(--border)', borderRadius:'var(--r-md)', padding:18, textAlign:'center', color:'var(--muted)', fontSize:12}}>
                   Arrastra productos aquí o usa el escáner
                 </div>
               </div>
-              <div className="field"><label>Transportista / chofer</label><input placeholder="Nombre del responsable"/></div>
+              <div className="field"><label>{t('inventory.transfer.carrier', 'Transportista / chofer')}</label><input placeholder={t('inventory.transfer.carrierPlaceholder', 'Nombre del responsable')}/></div>
               <div className="row gap-8" style={{marginTop:6}}>
-                <button className="btn accent"><Icon name="truck"/>Crear transferencia</button>
-                <button className="btn">Guardar borrador</button>
+                <button className="btn accent"><Icon name="truck"/>{t('inventory.transfer.create', 'Crear transferencia')}</button>
+                <button className="btn">{t('common.saveDraft', 'Guardar borrador')}</button>
               </div>
             </div>
           </div>
@@ -432,9 +437,9 @@ function InventoryModule({ pushToast }) {
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>SKU</th>
-                    <th>Producto</th>
-                    <th className="num">Stock</th>
+                    <th>{t('inventory.headers.sku', 'SKU / Código')}</th>
+                    <th>{t('inventory.headers.product', 'Producto')}</th>
+                    <th className="num">{t('inventory.headers.stock', 'Stock')}</th>
                     <th className="num">Costo base</th>
                     <th className="num">Costo prom.</th>
                     <th className="num">Variación</th>
@@ -490,16 +495,16 @@ function InventoryModule({ pushToast }) {
                   <div className="delta muted">Mín {selected.min} · {selected.unit}</div>
                 </div>
                 <div className="stat">
-                  <div className="label">Precio</div>
+                  <div className="label">{t('inventory.headers.price', 'Precio')}</div>
                   <div className="val mono">{Q(selected.price)}</div>
                   <div className="delta up">Margen {((selected.price-selected.cost)/selected.price*100).toFixed(1)}%</div>
                 </div>
               </div>
 
               <div className="card" style={{marginBottom:12}}>
-                <div className="card-head"><h3>Datos generales</h3><button className="btn sm ghost"><Icon name="edit" size={11}/>Editar</button></div>
+                <div className="card-head"><h3>{t('inventory.generalData', 'Datos generales')}</h3><button className="btn sm ghost"><Icon name="edit" size={11}/>{t('common.edit', 'Editar')}</button></div>
                 <div className="card-body" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px 14px', fontSize:12.5}}>
-                  <div><div className="muted" style={{fontSize:11}}>Categoría</div><div>{CATEGORIES.find(c=>c.id===selected.cat)?.name}</div></div>
+                  <div><div className="muted" style={{fontSize:11}}>{t('inventory.headers.category', 'Categoría')}</div><div>{CATEGORIES.find(c=>c.id===selected.cat)?.name}</div></div>
                   <div><div className="muted" style={{fontSize:11}}>Unidad</div><div>{selected.unit}</div></div>
                   <div><div className="muted" style={{fontSize:11}}>Costo unitario</div><div className="mono">{Q(selected.cost)}</div></div>
                   <div><div className="muted" style={{fontSize:11}}>Precio venta</div><div className="mono">{Q(selected.price)}</div></div>
@@ -512,7 +517,7 @@ function InventoryModule({ pushToast }) {
                 <div className="card-head"><h3>Stock por sucursal</h3></div>
                 <div className="card-body flush">
                   <table className="tbl">
-                    <thead><tr><th>Sucursal</th><th className="num">Stock</th><th className="num">Mín</th><th>Estado</th></tr></thead>
+                    <thead><tr><th>{t('inventory.headers.branch', 'Sucursal')}</th><th className="num">{t('inventory.headers.stock', 'Stock')}</th><th className="num">{t('inventory.headers.min', 'Mín')}</th><th>{t('inventory.headers.status', 'Estado')}</th></tr></thead>
                     <tbody>
                       {MAYA.BRANCHES.map((b, i) => {
                         const s = Math.max(0, Math.floor(selected.stock * (0.1 + 0.25 * Math.random() + i*0.05)));
@@ -533,8 +538,8 @@ function InventoryModule({ pushToast }) {
               </div>
             </div>
             <div className="drawer-foot">
-              <button className="btn"><Icon name="trash"/>Eliminar</button>
-              <button className="btn accent"><Icon name="edit"/>Editar producto</button>
+              <button className="btn"><Icon name="trash"/>{t('common.delete', 'Eliminar')}</button>
+              <button className="btn accent"><Icon name="edit"/>{t('inventory.editProduct', 'Editar producto')}</button>
             </div>
           </div>
         </>
@@ -545,19 +550,19 @@ function InventoryModule({ pushToast }) {
         <div className="modal-overlay" onClick={() => setShowNew(false)}>
           <div className="modal" style={{width:640}} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>Nuevo producto</h3>
+              <h3>{t('inventory.newProduct', 'Nuevo producto')}</h3>
               <button className="icon-btn" onClick={() => setShowNew(false)}><Icon name="x"/></button>
             </div>
             <div className="modal-body" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px 14px'}}>
               <div className="field" style={{gridColumn:'1 / -1'}}><label>Nombre del producto</label><input placeholder="Ej. Coca-Cola 600ml"/></div>
               <div className="field"><label>Código de barras / SKU</label><input placeholder="7501..." /></div>
-              <div className="field"><label>Categoría</label>
+              <div className="field"><label>{t('inventory.headers.category', 'Categoría')}</label>
                 <select>{CATEGORIES.filter(c=>c.id!=='todos').map(c => <option key={c.id}>{c.name}</option>)}</select>
               </div>
               <div className="field"><label>Unidad de medida</label>
                 <select><option>Unidad</option><option>Paquete</option><option>Kg</option><option>Libra</option><option>Litro</option></select>
               </div>
-              <div className="field"><label>Proveedor principal</label>
+              <div className="field"><label>{t('inventory.headers.supplier', 'Proveedor')}</label>
                 <select>{SUPPLIERS.map(s => <option key={s.id}>{s.name}</option>)}</select>
               </div>
               <div className="field"><label>Costo unitario (Q)</label><input type="number" placeholder="0.00"/></div>
@@ -565,7 +570,7 @@ function InventoryModule({ pushToast }) {
               <div className="field"><label>Stock inicial</label><input type="number" placeholder="0"/></div>
               <div className="field"><label>Stock mínimo</label><input type="number" placeholder="0"/></div>
               <div className="field" style={{gridColumn:'1 / -1'}}>
-                <label>Descripción / Notas</label>
+                <label>{t('common.description', 'Descripción')} / Notas</label>
                 <textarea rows="2" placeholder="Detalles, presentación, observaciones…"></textarea>
               </div>
               <div className="row gap-8" style={{gridColumn:'1 / -1'}}>
@@ -578,9 +583,9 @@ function InventoryModule({ pushToast }) {
               </div>
             </div>
             <div className="modal-foot">
-              <button className="btn" onClick={() => setShowNew(false)}>Cancelar</button>
+              <button className="btn" onClick={() => setShowNew(false)}>{t('common.cancel', 'Cancelar')}</button>
               <button className="btn accent" onClick={() => { setShowNew(false); pushToast && pushToast('Producto creado', 'success'); }}>
-                <Icon name="check"/>Crear producto
+                <Icon name="check"/>{t('inventory.newProduct', 'Nuevo producto')}
               </button>
             </div>
           </div>

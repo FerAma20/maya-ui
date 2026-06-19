@@ -1,5 +1,7 @@
 // ERP MAYA — Login screen (ES module)
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ROLES } from '../data/mock.js';
 
 const DEMO_COMPANIES = {
   'FERRETERIA-01': { name: 'Ferretería El Constructor', type: 'Ferretería', tier: 'PRO' },
@@ -8,22 +10,23 @@ const DEMO_COMPANIES = {
   'TIENDA-DEMO':   { name: 'Tienda Demo ERP MAYA',      type: 'Demo',       tier: 'DEMO' },
 };
 
-function validate(form) {
+function validate(form, t) {
   const errors = {};
   if (!form.companyCode.trim())
-    errors.companyCode = 'Ingresa el código de tu empresa';
+    errors.companyCode = t('login.errors.companyRequired');
   if (!form.email.trim())
-    errors.email = 'Ingresa tu correo electrónico';
+    errors.email = t('login.errors.emailRequired');
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-    errors.email = 'Correo electrónico inválido';
+    errors.email = t('login.errors.emailInvalid');
   if (!form.password)
-    errors.password = 'Ingresa tu contraseña';
+    errors.password = t('login.errors.passwordRequired');
   else if (form.password.length < 6)
-    errors.password = 'Mínimo 6 caracteres';
+    errors.password = t('login.errors.passwordShort');
   return errors;
 }
 
 export default function Login({ onLogin }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ companyCode: '', email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [showPass, setShowPass] = useState(false);
@@ -49,7 +52,7 @@ export default function Login({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const errs = validate(form);
+    const errs = validate(form, t);
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setLoading(true);
@@ -62,13 +65,13 @@ export default function Login({ onLogin }) {
     const company = DEMO_COMPANIES[code];
 
     if (!company) {
-      setErrors({ companyCode: 'Código de empresa no encontrado' });
+      setErrors({ companyCode: t('login.errors.companyNotFound') });
       setLoading(false);
       return;
     }
     // Contraseña mock: cualquier contraseña válida funciona en demo
     if (form.password.length < 6) {
-      setErrors({ password: 'Contraseña incorrecta' });
+      setErrors({ password: t('login.errors.passwordWrong') });
       setLoading(false);
       return;
     }
@@ -77,12 +80,17 @@ export default function Login({ onLogin }) {
     const displayName = nameParts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
     const initials = nameParts.map(p => p[0]?.toUpperCase() || '').join('').slice(0, 2);
 
+    const roleName = 'Administrador';
+    const roleData = ROLES.find(r => r.name === roleName);
+    const perms = roleData?.perms || ['*'];
+
     onLogin({
       user: {
         name: displayName || 'Usuario',
         initials: initials || 'US',
         email: form.email,
-        role: 'Administrador',
+        role: roleName,
+        perms,
         branch: 'Sucursal Central',
       },
       company: {
@@ -143,17 +151,15 @@ export default function Login({ onLogin }) {
       <div className="login-form-panel">
         <div className="login-card">
           <div className="login-card-head">
-            <h1 className="login-title">Iniciar sesión</h1>
-            <p className="login-desc">
-              Ingresa el código de tu empresa, correo y contraseña.
-            </p>
+            <h1 className="login-title">{t('login.title')}</h1>
+            <p className="login-desc">{t('login.description')}</p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit} noValidate>
             {/* Código de empresa */}
             <div className={`login-field ${errors.companyCode ? 'has-error' : ''}`}>
               <label htmlFor="companyCode" className="login-label">
-                Código de empresa
+                {t('login.companyCode')}
               </label>
               <div className="login-input-wrap">
                 <span className="login-input-icon">
@@ -164,7 +170,7 @@ export default function Login({ onLogin }) {
                   id="companyCode"
                   type="text"
                   className="login-input mono-input"
-                  placeholder="Ej. FERRETERIA-01"
+                  placeholder={t('login.companyCodePlaceholder')}
                   value={form.companyCode}
                   onChange={e => set('companyCode', e.target.value)}
                   autoComplete="organization"
@@ -187,7 +193,7 @@ export default function Login({ onLogin }) {
             {/* Correo */}
             <div className={`login-field ${errors.email ? 'has-error' : ''}`}>
               <label htmlFor="email" className="login-label">
-                Correo electrónico
+                {t('login.email')}
               </label>
               <div className="login-input-wrap">
                 <span className="login-input-icon">
@@ -197,7 +203,7 @@ export default function Login({ onLogin }) {
                   id="email"
                   type="email"
                   className="login-input"
-                  placeholder="usuario@empresa.com"
+                  placeholder={t('login.emailPlaceholder')}
                   value={form.email}
                   onChange={e => set('email', e.target.value)}
                   autoComplete="email"
@@ -211,9 +217,9 @@ export default function Login({ onLogin }) {
             {/* Contraseña */}
             <div className={`login-field ${errors.password ? 'has-error' : ''}`}>
               <div className="login-label-row">
-                <label htmlFor="password" className="login-label">Contraseña</label>
+                <label htmlFor="password" className="login-label">{t('login.password')}</label>
                 <button type="button" className="login-forgot">
-                  ¿Olvidaste tu contraseña?
+                  {t('login.forgotPassword')}
                 </button>
               </div>
               <div className="login-input-wrap">
@@ -224,7 +230,7 @@ export default function Login({ onLogin }) {
                   id="password"
                   type={showPass ? 'text' : 'password'}
                   className="login-input"
-                  placeholder="••••••••"
+                  placeholder={t('login.passwordPlaceholder')}
                   value={form.password}
                   onChange={e => set('password', e.target.value)}
                   autoComplete="current-password"
@@ -234,7 +240,7 @@ export default function Login({ onLogin }) {
                   className="login-eye"
                   onClick={() => setShowPass(s => !s)}
                   tabIndex={-1}
-                  aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-label={showPass ? t('login.hidePassword') : t('login.showPassword')}
                 >
                   {showPass ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
@@ -256,16 +262,16 @@ export default function Login({ onLogin }) {
               {loading ? (
                 <>
                   <span className="login-spinner" />
-                  Verificando…
+                  {t('login.submitting')}
                 </>
               ) : (
-                'Ingresar al sistema'
+                t('login.submit')
               )}
             </button>
           </form>
 
           <div className="login-demo-hint">
-            <span className="login-demo-label">Accesos demo</span>
+            <span className="login-demo-label">{t('login.demoAccess')}</span>
             <div className="login-demo-codes">
               {Object.entries(DEMO_COMPANIES).map(([code, co]) => (
                 <button

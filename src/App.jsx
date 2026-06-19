@@ -1,5 +1,8 @@
 // ERP MAYA — App shell (ES module)
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { canView } from './lib/permissions.js';
 import Icon from './components/Icon.jsx';
 import {
   useTweaks,
@@ -10,7 +13,7 @@ import {
 } from './components/TweaksPanel.jsx';
 
 import { useNotifications, NotificationsPanel } from './components/NotificationsPanel.jsx';
-import Login from './modules/Login.jsx';
+import GlobalSearch from './components/GlobalSearch.jsx';
 import Dashboard from './modules/Dashboard.jsx';
 import POS from './modules/POS.jsx';
 import Billing from './modules/Billing.jsx';
@@ -42,6 +45,7 @@ import Promotions from './modules/Promotions.jsx';
 import Presupuestos from './modules/Presupuestos.jsx';
 import Loyalty from './modules/Loyalty.jsx';
 import FEL from './modules/FEL.jsx';
+import Users from './modules/Users.jsx';
 
 const NAV = [
   {
@@ -108,6 +112,41 @@ const NAV = [
   },
 ];
 
+const MODULE_MAP = {
+  dashboard:    Dashboard,
+  pos:          POS,
+  billing:      Billing,
+  inventory:    Inventory,
+  purchases:    Purchases,
+  reports:      Reports,
+  maintenance:  Maintenance,
+  users:        Users,
+  cash:         CashRegister,
+  config:       Config,
+  accounting:   Accounting,
+  transfers:    Transfers,
+  clients:      Clients,
+  cxc:          CxC,
+  cxp:          CxP,
+  audit:        Audit,
+  returns:      Returns,
+  variants:     Variants,
+  stockcount:   StockCount,
+  ledger:       Ledger,
+  financials:   FinancialStatements,
+  banks:        Banks,
+  bankrec:      BankReconciliation,
+  uom:          UOM,
+  costcenters:  CostCenters,
+  quotes:       Quotes,
+  payroll:      Payroll,
+  fixedassets:  FixedAssets,
+  promotions:   Promotions,
+  presupuestos: Presupuestos,
+  loyalty:      Loyalty,
+  fel:          FEL,
+};
+
 const TWEAK_DEFAULTS = {
   theme: 'light',
   accent: 'teal',
@@ -116,20 +155,33 @@ const TWEAK_DEFAULTS = {
   showSparklines: true,
 };
 
-export default function App() {
-  const [session, setSession] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem('maya_session');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
-  const [route, setRoute] = useState('dashboard');
+export default function App({ session, onLogout }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { t, i18n } = useTranslation();
+  const route = location.pathname.slice(1) || 'dashboard';
+
   const [toasts, setToasts] = useState([]);
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [collapsed, setCollapsed] = useState({});
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [navTooltip, setNavTooltip] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+
+  const toggleLang = () => i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es');
+
+  // Atajo ⌘K / Ctrl+K para abrir búsqueda global
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(s => !s);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // Aplicar tema/accent/style al <html>
   useEffect(() => {
@@ -144,22 +196,13 @@ export default function App() {
     if (sec) setCollapsed(prev => ({ ...prev, [sec.section]: false }));
   }, [route]);
 
-  const handleLogin = (sess) => {
-    sessionStorage.setItem('maya_session', JSON.stringify(sess));
-    setSession(sess);
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem('maya_session');
-    setSession(null);
-    setRoute('dashboard');
-  };
-
-  if (!session) {
-    return <Login onLogin={handleLogin} />;
-  }
-
   const branch = session.user.branch;
+  const perms = session.user.perms || ['*'];
+
+  const visibleNav = NAV.map(sec => ({
+    ...sec,
+    items: sec.items.filter(it => canView(it.id, perms)),
+  })).filter(sec => sec.items.length > 0);
 
   const pushToast = (msg, kind = '') => {
     const id = Date.now() + Math.random();
@@ -167,39 +210,12 @@ export default function App() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
   };
 
-  let module;
-  if (route === 'dashboard') module = <Dashboard pushToast={pushToast} />;
-  else if (route === 'pos') module = <POS pushToast={pushToast} />;
-  else if (route === 'billing') module = <Billing pushToast={pushToast} />;
-  else if (route === 'inventory') module = <Inventory pushToast={pushToast} />;
-  else if (route === 'purchases') module = <Purchases pushToast={pushToast} />;
-  else if (route === 'reports') module = <Reports />;
-  else if (route === 'maintenance' || route === 'users') module = <Maintenance />;
-  else if (route === 'cash') module = <CashRegister pushToast={pushToast} />;
-  else if (route === 'config') module = <Config pushToast={pushToast} />;
-  else if (route === 'accounting') module = <Accounting pushToast={pushToast} />;
-  else if (route === 'transfers') module = <Transfers pushToast={pushToast} />;
-  else if (route === 'clients') module = <Clients pushToast={pushToast} />;
-  else if (route === 'cxc') module = <CxC pushToast={pushToast} />;
-  else if (route === 'cxp')   module = <CxP pushToast={pushToast} />;
-  else if (route === 'audit')   module = <Audit />;
-  else if (route === 'returns')  module = <Returns pushToast={pushToast} />;
-  else if (route === 'variants')   module = <Variants pushToast={pushToast} />;
-  else if (route === 'stockcount') module = <StockCount pushToast={pushToast} />;
-  else if (route === 'ledger')      module = <Ledger />;
-  else if (route === 'financials')  module = <FinancialStatements />;
-  else if (route === 'banks')        module = <Banks pushToast={pushToast} />;
-  else if (route === 'bankrec')     module = <BankReconciliation />;
-  else if (route === 'uom')          module = <UOM pushToast={pushToast} />;
-  else if (route === 'costcenters')  module = <CostCenters pushToast={pushToast} />;
-  else if (route === 'quotes')       module = <Quotes pushToast={pushToast} />;
-  else if (route === 'payroll')      module = <Payroll pushToast={pushToast} />;
-  else if (route === 'fixedassets')  module = <FixedAssets pushToast={pushToast} />;
-  else if (route === 'promotions')    module = <Promotions pushToast={pushToast} />;
-  else if (route === 'presupuestos')  module = <Presupuestos pushToast={pushToast} />;
-  else if (route === 'loyalty')       module = <Loyalty pushToast={pushToast} />;
-  else if (route === 'fel')           module = <FEL pushToast={pushToast} />;
-  else module = <div className="page">Módulo en construcción</div>;
+  const ModuleComponent = MODULE_MAP[route];
+  const module = !ModuleComponent
+    ? <div className="page">{t('shell.underConstruction')}</div>
+    : !canView(route, perms)
+    ? <AccessDenied />
+    : <ModuleComponent pushToast={pushToast} />;
 
   const currentNav = NAV.flatMap((s) => s.items).find((i) => i.id === route);
 
@@ -237,7 +253,7 @@ export default function App() {
         </div>
 
         <div className="sidebar-nav">
-          {NAV.map((sec) => {
+          {visibleNav.map((sec) => {
             const isCollapsed = !!collapsed[sec.section];
             return (
               <div key={sec.section}>
@@ -246,7 +262,7 @@ export default function App() {
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
                   onClick={() => setCollapsed(prev => ({ ...prev, [sec.section]: !prev[sec.section] }))}
                 >
-                  <span className="nav-section-label">{sec.section}</span>
+                  <span className="nav-section-label">{t(`nav.sections.${sec.section}`, sec.section)}</span>
                   <Icon
                     name="chevronDown"
                     size={10}
@@ -258,7 +274,7 @@ export default function App() {
                   <div
                     key={it.id}
                     className={`nav-item ${route === it.id ? 'active' : ''}`}
-                    onClick={() => setRoute(it.id)}
+                    onClick={() => navigate('/' + it.id)}
                     onMouseEnter={sidebarCollapsed ? (e) => {
                       const r = e.currentTarget.getBoundingClientRect();
                       setNavTooltip({ label: it.label.replace(/&amp;/g, '&'), y: r.top + r.height / 2 });
@@ -266,7 +282,7 @@ export default function App() {
                     onMouseLeave={sidebarCollapsed ? () => setNavTooltip(null) : undefined}
                   >
                     <Icon name={it.icon} size={14} className="icon" />
-                    <span className="nav-item-label" dangerouslySetInnerHTML={{ __html: it.label }} />
+                    <span className="nav-item-label">{t(`nav.${it.id}`, it.label.replace(/&amp;/g, '&'))}</span>
                     {it.alert && <span className="badge alert">{it.alert}</span>}
                     {it.badge && !it.alert && <span className="badge">{it.badge}</span>}
                     {it.kbd && route !== it.id && <span className="badge mono">{it.kbd}</span>}
@@ -283,7 +299,7 @@ export default function App() {
             <div className="nm">{session.user.name}</div>
             <div className="rl">{session.user.role} · {branch}</div>
           </div>
-          <button className="icon-btn" title="Cerrar sesión" onClick={handleLogout}>
+          <button className="icon-btn" title={t('common.logout')} onClick={onLogout}>
             <Icon name="lock" />
           </button>
         </div>
@@ -297,30 +313,37 @@ export default function App() {
             <span>ERP Maya</span>
             <span className="sep">/</span>
             <span className="cur">
-              {currentNav?.label.replace(/&amp;/g, '&') || 'Módulo'}
+              {currentNav ? t(`nav.${currentNav.id}`, currentNav.label.replace(/&amp;/g, '&')) : 'Módulo'}
             </span>
           </div>
-          <div className="topbar-search">
+          <div className="topbar-search" role="button" tabIndex={0} onClick={() => setShowSearch(true)} onKeyDown={e => e.key === 'Enter' && setShowSearch(true)}>
             <Icon name="search" className="icon" />
-            <input placeholder="Buscar productos, tickets, clientes…" />
+            <span style={{ flex: 1, color: 'var(--muted)', fontSize: 13 }}>{t('shell.searchPlaceholder')}</span>
             <span className="kbd">⌘K</span>
           </div>
           <div className="topbar-spacer"></div>
           <div className="topbar-actions">
             <span className="pill success" style={{ marginRight: 4 }}>
               <span className="dot" />
-              SAT-FEL en línea
+              {t('shell.satOnline')}
             </span>
+            <button
+              className="btn"
+              title={t('common.language')}
+              onClick={toggleLang}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 11, minWidth: 36 }}
+            >
+              {i18n.language === 'es' ? 'ES' : 'EN'}
+            </button>
             <NotificationsPanel
               notifications={notifications}
               unreadCount={unreadCount}
               onMarkRead={markRead}
               onMarkAllRead={markAllRead}
-              onNavigate={setRoute}
             />
             <button
               className="icon-btn"
-              title="Tema"
+              title={t('common.theme')}
               onClick={() => setTweak('theme', tweaks.theme === 'dark' ? 'light' : 'dark')}
             >
               <Icon name={tweaks.theme === 'dark' ? 'eye' : 'moon'} />
@@ -328,7 +351,7 @@ export default function App() {
             <div className="topbar-divider"></div>
             <button className="btn">
               <Icon name="plus" size={12} />
-              Crear
+              {t('shell.create')}
             </button>
           </div>
         </header>
@@ -358,6 +381,17 @@ export default function App() {
         }}>
           {navTooltip.label}
         </div>
+      )}
+
+      {/* Búsqueda global */}
+      {showSearch && (
+        <GlobalSearch
+          navItems={visibleNav.flatMap(s =>
+            s.items.map(i => ({ ...i, label: i.label.replace(/&amp;/g, '&'), section: s.section }))
+          )}
+          onClose={() => setShowSearch(false)}
+          onNavigate={(route) => navigate('/' + route)}
+        />
       )}
 
       {/* Toasts */}
@@ -407,13 +441,28 @@ export default function App() {
             />
           </TweakSection>
           <TweakSection label="Atajos">
-            <TweakButton label="→ Dashboard" onClick={() => setRoute('dashboard')} />
-            <TweakButton label="→ Punto de venta" onClick={() => setRoute('pos')} />
-            <TweakButton label="→ Inventario" onClick={() => setRoute('inventory')} />
-            <TweakButton label="→ Reportería" onClick={() => setRoute('reports')} />
+            <TweakButton label="→ Dashboard" onClick={() => navigate('/dashboard')} />
+            <TweakButton label="→ Punto de venta" onClick={() => navigate('/pos')} />
+            <TweakButton label="→ Inventario" onClick={() => navigate('/inventory')} />
+            <TweakButton label="→ Reportería" onClick={() => navigate('/reports')} />
           </TweakSection>
         </TweaksPanel>
       )}
+    </div>
+  );
+}
+
+function AccessDenied() {
+  const { t } = useTranslation();
+  return (
+    <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <div style={{ textAlign: 'center' }}>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border-strong)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 16 }}>
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{t('shell.accessDenied')}</div>
+        <div className="muted" style={{ fontSize: 13 }}>{t('shell.accessDeniedDesc')}</div>
+      </div>
     </div>
   );
 }

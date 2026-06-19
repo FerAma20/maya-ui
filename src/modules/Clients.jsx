@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import * as MAYA from '../data/mock.js';
+import { useTranslation } from 'react-i18next';
 
 const TYPE_LABEL = { CF: 'CF', minorista: 'Minorista', mayorista: 'Mayorista', exento: 'Exento' };
 const STATUS_LABEL = { active: 'Activo', inactive: 'Inactivo', blocked: 'Bloqueado' };
@@ -16,6 +17,7 @@ function initials(name) {
 
 // ── Formulario Nuevo / Editar cliente ────────────────────────────────────────
 function ClientForm({ initial = {}, onSave, onCancel }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: '',
     nit: 'CF',
@@ -41,50 +43,50 @@ function ClientForm({ initial = {}, onSave, onCancel }) {
     <form className="drawer-body" onSubmit={handleSubmit}>
       <div className="form-grid">
         <div className="field span-2">
-          <label className="field-label">Nombre / Razón social *</label>
+          <label className="field-label">{t('clients.form.name', 'Nombre / Razón social *')}</label>
           <input className="field-input" value={form.name} onChange={e => set('name', e.target.value)} required />
         </div>
         <div className="field">
-          <label className="field-label">NIT</label>
-          <input className="field-input mono" placeholder="CF" value={form.nit} onChange={e => set('nit', e.target.value)} />
+          <label className="field-label">{t('clients.form.nit', 'NIT')}</label>
+          <input className="field-input mono" placeholder={t('clients.form.nitPlaceholder', 'CF')} value={form.nit} onChange={e => set('nit', e.target.value)} />
         </div>
         <div className="field">
-          <label className="field-label">Tipo de cliente</label>
+          <label className="field-label">{t('clients.form.type', 'Tipo de cliente')}</label>
           <select className="field-input" value={form.clientType} onChange={e => set('clientType', e.target.value)}>
-            <option value="CF">CF (Consumidor Final)</option>
-            <option value="minorista">Minorista</option>
-            <option value="mayorista">Mayorista</option>
-            <option value="exento">Exento de IVA</option>
+            <option value="CF">{t('clients.form.types.cf', 'CF (Consumidor Final)')}</option>
+            <option value="minorista">{t('clients.form.types.retail', 'Minorista')}</option>
+            <option value="mayorista">{t('clients.form.types.wholesale', 'Mayorista')}</option>
+            <option value="exento">{t('clients.form.types.exempt', 'Exento de IVA')}</option>
           </select>
         </div>
         <div className="field span-2">
-          <label className="field-label">Dirección</label>
+          <label className="field-label">{t('clients.form.address', 'Dirección')}</label>
           <input className="field-input" value={form.address} onChange={e => set('address', e.target.value)} />
         </div>
         <div className="field">
-          <label className="field-label">Teléfono</label>
+          <label className="field-label">{t('clients.form.phone', 'Teléfono')}</label>
           <input className="field-input" value={form.phone} onChange={e => set('phone', e.target.value)} />
         </div>
         <div className="field">
-          <label className="field-label">Correo electrónico</label>
+          <label className="field-label">{t('clients.form.email', 'Correo electrónico')}</label>
           <input className="field-input" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
         </div>
         <div className="field">
-          <label className="field-label">Límite de crédito (Q)</label>
+          <label className="field-label">{t('clients.form.creditLimit', 'Límite de crédito (Q)')}</label>
           <input className="field-input mono" type="number" min="0" step="0.01" value={form.creditLimit} onChange={e => set('creditLimit', e.target.value)} />
         </div>
         <div className="field">
-          <label className="field-label">Plazo de pago (días)</label>
+          <label className="field-label">{t('clients.form.paymentTerms', 'Plazo de pago (días)')}</label>
           <input className="field-input mono" type="number" min="0" value={form.paymentTerms} onChange={e => set('paymentTerms', e.target.value)} />
         </div>
         <div className="field span-2">
-          <label className="field-label">Notas internas</label>
+          <label className="field-label">{t('clients.form.internalNotes', 'Notas internas')}</label>
           <textarea className="field-input" rows={3} value={form.notes} onChange={e => set('notes', e.target.value)} />
         </div>
       </div>
       <div className="drawer-footer">
-        <button type="button" className="btn" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn accent"><Icon name="check" size={12} />Guardar</button>
+        <button type="button" className="btn" onClick={onCancel}>{t('common.cancel', 'Cancelar')}</button>
+        <button type="submit" className="btn accent"><Icon name="check" size={12} />{t('common.save', 'Guardar')}</button>
       </div>
     </form>
   );
@@ -92,6 +94,7 @@ function ClientForm({ initial = {}, onSave, onCancel }) {
 
 // ── Modal: Registrar pago ────────────────────────────────────────────────────
 function PaymentModal({ client, onSave, onClose }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ amount: '', paymentMethod: 'efectivo', reference: '', notes: '' });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -106,7 +109,7 @@ function PaymentModal({ client, onSave, onClose }) {
       <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
           <div>
-            <div className="modal-title">Registrar pago</div>
+            <div className="modal-title">{t('clients.payment.title', 'Registrar pago')}</div>
             <div className="muted" style={{ fontSize: 12 }}>{client.name}</div>
           </div>
           <button className="icon-btn" onClick={onClose}><Icon name="x" /></button>
@@ -114,35 +117,35 @@ function PaymentModal({ client, onSave, onClose }) {
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <div className="info-row" style={{ marginBottom: 16 }}>
-              <span className="muted">Saldo pendiente</span>
+              <span className="muted">{t('clients.payment.pendingBalance', 'Saldo pendiente')}</span>
               <span className="mono" style={{ color: 'var(--danger)', fontWeight: 600 }}>{fmt(client.balance)}</span>
             </div>
             <div className="field" style={{ marginBottom: 12 }}>
-              <label className="field-label">Monto del pago (Q) *</label>
+              <label className="field-label">{t('clients.payment.amount', 'Monto del pago (Q) *')}</label>
               <input className="field-input mono" type="number" min="0.01" step="0.01" value={form.amount}
                 onChange={e => set('amount', e.target.value)} required autoFocus />
             </div>
             <div className="field" style={{ marginBottom: 12 }}>
-              <label className="field-label">Forma de pago</label>
+              <label className="field-label">{t('clients.payment.method', 'Forma de pago')}</label>
               <select className="field-input" value={form.paymentMethod} onChange={e => set('paymentMethod', e.target.value)}>
-                <option value="efectivo">Efectivo</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="cheque">Cheque</option>
-                <option value="tarjeta">Tarjeta</option>
+                <option value="efectivo">{t('clients.payment.methods.cash', 'Efectivo')}</option>
+                <option value="transferencia">{t('clients.payment.methods.transfer', 'Transferencia')}</option>
+                <option value="cheque">{t('clients.payment.methods.check', 'Cheque')}</option>
+                <option value="tarjeta">{t('clients.payment.methods.card', 'Tarjeta')}</option>
               </select>
             </div>
             <div className="field" style={{ marginBottom: 12 }}>
-              <label className="field-label">Referencia / No. cheque</label>
+              <label className="field-label">{t('clients.payment.reference', 'Referencia / No. cheque')}</label>
               <input className="field-input" value={form.reference} onChange={e => set('reference', e.target.value)} />
             </div>
             <div className="field">
-              <label className="field-label">Notas</label>
+              <label className="field-label">{t('clients.payment.notes', 'Notas')}</label>
               <input className="field-input" value={form.notes} onChange={e => set('notes', e.target.value)} />
             </div>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn accent"><Icon name="cash" size={12} />Registrar pago</button>
+            <button type="button" className="btn" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
+            <button type="submit" className="btn accent"><Icon name="cash" size={12} />{t('clients.payment.submit', 'Registrar pago')}</button>
           </div>
         </form>
       </div>
@@ -152,6 +155,7 @@ function PaymentModal({ client, onSave, onClose }) {
 
 // ── Panel de detalle de cliente ──────────────────────────────────────────────
 function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState('info');
   const clientPayments = payments.filter(p => p.clientId === client.id);
   const available = client.creditLimit - client.balance;
@@ -174,18 +178,18 @@ function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
         <div style={{ display: 'flex', gap: 8 }}>
           {client.balance > 0 && (
             <button className="btn" onClick={onPayment}>
-              <Icon name="cash" size={12} />Pago
+              <Icon name="cash" size={12} />{t('clients.payment.title', 'Pago')}
             </button>
           )}
-          <button className="btn" onClick={onEdit}><Icon name="edit" size={12} />Editar</button>
+          <button className="btn" onClick={onEdit}><Icon name="edit" size={12} />{t('common.edit', 'Editar')}</button>
           <button className="icon-btn" onClick={onClose}><Icon name="x" /></button>
         </div>
       </div>
 
       <div className="tabs" style={{ padding: '0 20px' }}>
-        <div className={`tab ${tab === 'info' ? 'active' : ''}`} onClick={() => setTab('info')}>Información</div>
+        <div className={`tab ${tab === 'info' ? 'active' : ''}`} onClick={() => setTab('info')}>{t('clients.drawer.tabs.info', 'Información')}</div>
         <div className={`tab ${tab === 'cxc' ? 'active' : ''}`} onClick={() => setTab('cxc')}>
-          CxC / Pagos <span className="count">{clientPayments.length}</span>
+          {t('clients.drawer.tabs.cxc', 'CxC / Pagos')} <span className="count">{clientPayments.length}</span>
         </div>
       </div>
 
@@ -195,7 +199,7 @@ function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
           {client.clientType !== 'CF' && (
             <div className="stat-card" style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span className="label"><Icon name="card" size={11} />Crédito disponible</span>
+                <span className="label"><Icon name="card" size={11} />{t('clients.drawer.availableCredit', 'Crédito disponible')}</span>
                 <span className={`pill ${usedPct > 90 ? 'danger' : usedPct > 70 ? 'warning' : 'success'}`} style={{ fontSize: 10 }}>
                   {usedPct.toFixed(0)}% usado
                 </span>
@@ -208,7 +212,7 @@ function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
                 <div style={{ height: '100%', width: `${usedPct}%`, background: usedPct > 90 ? 'var(--danger)' : usedPct > 70 ? 'var(--warning)' : 'var(--accent)', borderRadius: 3, transition: 'width .3s' }} />
               </div>
               {client.paymentTerms > 0 && (
-                <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>Plazo: {client.paymentTerms} días</div>
+                <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>{t('clients.drawer.paymentTerms', 'Plazo: {{days}} días', { days: client.paymentTerms })}</div>
               )}
             </div>
           )}
@@ -216,34 +220,34 @@ function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
           <div className="detail-grid">
             {client.address && (
               <div className="detail-row">
-                <span className="detail-label">Dirección</span>
+                <span className="detail-label">{t('clients.drawer.labels.address', 'Dirección')}</span>
                 <span>{client.address}</span>
               </div>
             )}
             {client.phone && (
               <div className="detail-row">
-                <span className="detail-label">Teléfono</span>
+                <span className="detail-label">{t('clients.drawer.labels.phone', 'Teléfono')}</span>
                 <span className="mono">{client.phone}</span>
               </div>
             )}
             {client.email && (
               <div className="detail-row">
-                <span className="detail-label">Correo</span>
+                <span className="detail-label">{t('clients.drawer.labels.email', 'Correo')}</span>
                 <span>{client.email}</span>
               </div>
             )}
             <div className="detail-row">
-              <span className="detail-label">Tipo</span>
+              <span className="detail-label">{t('clients.drawer.labels.type', 'Tipo')}</span>
               <span>{TYPE_LABEL[client.clientType]}</span>
             </div>
             <div className="detail-row">
-              <span className="detail-label">Saldo pendiente</span>
+              <span className="detail-label">{t('clients.drawer.labels.pendingBalance', 'Saldo pendiente')}</span>
               <span className="mono" style={{ color: client.balance > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 600 }}>
                 {fmt(client.balance)}
               </span>
             </div>
             <div className="detail-row">
-              <span className="detail-label">Cliente desde</span>
+              <span className="detail-label">{t('clients.drawer.labels.since', 'Cliente desde')}</span>
               <span className="mono">{client.createdAt}</span>
             </div>
           </div>
@@ -255,16 +259,16 @@ function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
           {clientPayments.length === 0 ? (
             <div className="empty" style={{ padding: '40px 20px' }}>
               <Icon name="cash" size={24} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <div>Sin pagos registrados</div>
+              <div>{t('clients.drawer.noPayments', 'Sin pagos registrados')}</div>
             </div>
           ) : (
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Forma de pago</th>
-                  <th>Referencia</th>
-                  <th className="right">Monto</th>
+                  <th>{t('clients.drawer.paymentHeaders.date', 'Fecha')}</th>
+                  <th>{t('clients.drawer.paymentHeaders.method', 'Forma de pago')}</th>
+                  <th>{t('clients.drawer.paymentHeaders.reference', 'Referencia')}</th>
+                  <th className="right">{t('clients.drawer.paymentHeaders.amount', 'Monto')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -287,6 +291,7 @@ function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
 
 // ── Módulo principal ─────────────────────────────────────────────────────────
 export default function Clients({ pushToast }) {
+  const { t } = useTranslation();
   const { CLIENTS, CLIENT_PAYMENTS } = MAYA;
   const [tab, setTab] = useState('lista');
   const [search, setSearch] = useState('');
@@ -349,12 +354,12 @@ export default function Clients({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Clientes</h1>
-          <div className="page-subtitle">{clients.length} clientes registrados · CxC total <span className="mono">{fmt(totalBalance)}</span></div>
+          <h1 className="page-title">{t('clients.title', 'Clientes')}</h1>
+          <div className="page-subtitle">{t('clients.subtitle', '{{count}} clientes registrados · CxC total', { count: clients.length })} <span className="mono">{fmt(totalBalance)}</span></div>
         </div>
         <div className="page-head-actions">
           <button className="btn accent" onClick={() => setShowNew(true)}>
-            <Icon name="plus" size={12} />Nuevo cliente
+            <Icon name="plus" size={12} />{t('clients.newClient', 'Nuevo cliente')}
           </button>
         </div>
       </div>
@@ -362,12 +367,12 @@ export default function Clients({ pushToast }) {
       {/* Stats */}
       <div className="stat-grid">
         <div className="stat">
-          <div className="label"><Icon name="users" size={11} />Total clientes</div>
+          <div className="label"><Icon name="users" size={11} />{t('clients.kpis.total', 'Total clientes')}</div>
           <div className="val mono">{clients.length}</div>
-          <div className="delta muted">{clients.filter(c => c.status === 'active').length} activos</div>
+          <div className="delta muted">{clients.filter(c => c.status === 'active').length} {t('common.active', 'activos').toLowerCase()}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="card" size={11} />Saldo CxC total</div>
+          <div className="label"><Icon name="card" size={11} />{t('clients.kpis.balance', 'Saldo CxC total')}</div>
           <div className="val mono" style={{ color: totalBalance > 0 ? 'var(--danger)' : undefined }}>{fmt(totalBalance)}</div>
           <div className="delta muted">{cxcClients.length} clientes con saldo</div>
         </div>
@@ -381,7 +386,7 @@ export default function Clients({ pushToast }) {
           <div className="val mono" style={{ color: clients.filter(c => c.status === 'blocked').length > 0 ? 'var(--danger)' : undefined }}>
             {clients.filter(c => c.status === 'blocked').length}
           </div>
-          <div className="delta muted">{clients.filter(c => c.status === 'inactive').length} inactivos</div>
+          <div className="delta muted">{clients.filter(c => c.status === 'inactive').length} {t('common.inactive', 'inactivos').toLowerCase()}</div>
         </div>
       </div>
 
@@ -403,7 +408,7 @@ export default function Clients({ pushToast }) {
               <Icon name="search" className="icon" size={13} />
               <input
                 className="search-input"
-                placeholder="Buscar por nombre o NIT…"
+                placeholder={t('clients.searchPlaceholder', 'Buscar por nombre o NIT…')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -417,8 +422,8 @@ export default function Clients({ pushToast }) {
             </select>
             <select className="field-input" style={{ width: 'auto' }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
               <option value="all">Todos los estados</option>
-              <option value="active">Activos</option>
-              <option value="inactive">Inactivos</option>
+              <option value="active">{t('common.active', 'Activos')}</option>
+              <option value="inactive">{t('common.inactive', 'Inactivos')}</option>
               <option value="blocked">Bloqueados</option>
             </select>
             <span className="muted" style={{ fontSize: 12 }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
@@ -428,18 +433,18 @@ export default function Clients({ pushToast }) {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Cliente</th>
+                  <th>{t('common.client', 'Cliente')}</th>
                   <th>NIT</th>
-                  <th>Tipo</th>
+                  <th>{t('common.type', 'Tipo')}</th>
                   <th>Contacto</th>
                   <th className="right">Límite crédito</th>
-                  <th className="right">Saldo pendiente</th>
-                  <th>Estado</th>
+                  <th className="right">{t('clients.drawer.labels.pendingBalance', 'Saldo pendiente')}</th>
+                  <th>{t('common.status', 'Estado')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={7} className="empty">Sin resultados</td></tr>
+                  <tr><td colSpan={7} className="empty">{t('common.noResults', 'Sin resultados')}</td></tr>
                 ) : filtered.map(c => (
                   <tr key={c.id} className="clickable" onClick={() => { setSelected(c); setEditing(false); }}>
                     <td>
@@ -469,13 +474,13 @@ export default function Clients({ pushToast }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Cliente</th>
-                <th>Tipo</th>
+                <th>{t('common.client', 'Cliente')}</th>
+                <th>{t('common.type', 'Tipo')}</th>
                 <th className="right">Límite crédito</th>
-                <th className="right">Saldo pendiente</th>
+                <th className="right">{t('clients.drawer.labels.pendingBalance', 'Saldo pendiente')}</th>
                 <th className="right">% utilizado</th>
                 <th>Plazo</th>
-                <th>Acciones</th>
+                <th>{t('common.actions', 'Acciones')}</th>
               </tr>
             </thead>
             <tbody>
@@ -503,7 +508,7 @@ export default function Clients({ pushToast }) {
                     <td>
                       <button className="btn" style={{ fontSize: 11, padding: '3px 10px' }}
                         onClick={e => { e.stopPropagation(); setSelected(c); setShowPayment(true); }}>
-                        <Icon name="cash" size={11} />Pago
+                        <Icon name="cash" size={11} />{t('clients.payment.title', 'Pago')}
                       </button>
                     </td>
                   </tr>
@@ -531,7 +536,7 @@ export default function Clients({ pushToast }) {
         <div className="drawer-overlay">
           <div className="drawer">
             <div className="drawer-head">
-              <div className="drawer-title">Editar cliente</div>
+              <div className="drawer-title">{t('inventory.editProduct', 'Editar cliente')}</div>
               <button className="icon-btn" onClick={() => setEditing(false)}><Icon name="x" /></button>
             </div>
             <ClientForm
@@ -548,7 +553,7 @@ export default function Clients({ pushToast }) {
         <div className="modal-backdrop" onClick={() => setShowNew(false)}>
           <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <div className="modal-title">Nuevo cliente</div>
+              <div className="modal-title">{t('clients.newClient', 'Nuevo cliente')}</div>
               <button className="icon-btn" onClick={() => setShowNew(false)}><Icon name="x" /></button>
             </div>
             <ClientForm onSave={handleSaveNew} onCancel={() => setShowNew(false)} />

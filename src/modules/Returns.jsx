@@ -1,6 +1,7 @@
 // ERP MAYA — Devoluciones · Notas de Crédito FEL
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
+import { useTranslation } from 'react-i18next';
 
 const Q = v => `Q ${v.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -141,6 +142,7 @@ const FEL_CLASS  = { autorizada: 'success', pendiente: 'warning', rechazada: 'da
 const PAY_METHODS = ['efectivo', 'transferencia', 'cheque'];
 
 export default function Returns({ pushToast }) {
+  const { t } = useTranslation();
   const [notes, setNotes]           = useState(INIT_NOTES);
   const [search, setSearch]         = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -178,19 +180,19 @@ export default function Returns({ pushToast }) {
     setNotes(prev => prev.map(n =>
       n.id === noteId ? { ...n, felStatus: 'autorizada', felUuid: 'retry-' + Date.now() } : n
     ));
-    pushToast('NC re-enviada — autorizada por SAT', 'success');
+    pushToast(t('returns.retrySent', 'NC re-enviada — autorizada por SAT'), 'success');
   }
 
   return (
     <div className="page">
       <div className="page-head">
         <div>
-          <h1 className="page-title">Devoluciones · Notas de Crédito</h1>
-          <div className="page-subtitle">Anulaciones, devoluciones y ajustes post-venta · FEL Guatemala</div>
+          <h1 className="page-title">{t('returns.title', 'Devoluciones')} · {t('returns.creditNotes', 'Notas de Crédito')}</h1>
+          <div className="page-subtitle">{t('returns.subtitle', 'Anulaciones, devoluciones y ajustes post-venta · FEL Guatemala')}</div>
         </div>
         <div className="page-head-actions">
           <button className="btn accent" onClick={() => setCreateModal(true)}>
-            <Icon name="plus" size={12} /> Nueva nota de crédito
+            <Icon name="plus" size={12} /> {t('returns.newReturn', 'Nueva nota de crédito')}
           </button>
         </div>
       </div>
@@ -198,25 +200,27 @@ export default function Returns({ pushToast }) {
       {/* Stats */}
       <div className="stat-grid">
         <div className="stat">
-          <div className="label"><Icon name="return" size={11} />NCs emitidas mayo</div>
+          <div className="label"><Icon name="return" size={11} />{t('returns.issuedMayo', 'NCs emitidas mayo')}</div>
           <div className="val mono">{mayo.length}</div>
-          <div className="delta muted">{notes.length} en total</div>
+          <div className="delta muted">{notes.length} {t('returns.inTotal', 'en total')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="cash" size={11} />Monto devuelto mayo</div>
+          <div className="label"><Icon name="cash" size={11} />{t('returns.amountMayo', 'Monto devuelto mayo')}</div>
           <div className="val mono" style={{ color: 'var(--danger)' }}>−{Q(totalMayo)}</div>
-          <div className="delta muted">IVA crédito: −{Q(totalMayo * 0.12 / 1.12)}</div>
+          <div className="delta muted">{t('returns.ivaCredit', 'IVA crédito')}: −{Q(totalMayo * 0.12 / 1.12)}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="clock" size={11} />Pendientes FEL</div>
+          <div className="label"><Icon name="clock" size={11} />{t('returns.pendingFel', 'Pendientes FEL')}</div>
           <div className="val mono" style={{ color: pending > 0 ? 'var(--warning)' : undefined }}>{pending}</div>
-          <div className="delta muted">Esperando respuesta SAT</div>
+          <div className="delta muted">{t('returns.waitingSat', 'Esperando respuesta SAT')}</div>
         </div>
         <div className="stat">
-          <div className="label"><Icon name="check" size={11} />Autorizadas SAT</div>
+          <div className="label"><Icon name="check" size={11} />{t('returns.authorizedSat', 'Autorizadas SAT')}</div>
           <div className="val mono" style={{ color: 'var(--success)' }}>{authorized}</div>
           <div className="delta muted" style={{ color: rejected > 0 ? 'var(--danger)' : undefined }}>
-            {rejected > 0 ? `${rejected} rechazadas — requieren atención` : 'Sin rechazos'}
+            {rejected > 0
+              ? t('returns.rejectedNeedAttention', '{{count}} rechazadas — requieren atención', { count: rejected })
+              : t('returns.noRejections', 'Sin rechazos')}
           </div>
         </div>
       </div>
@@ -227,22 +231,22 @@ export default function Returns({ pushToast }) {
           <Icon name="search" className="icon" size={13} />
           <input
             className="search-input"
-            placeholder="Buscar NC, ticket, cliente…"
+            placeholder={t('returns.searchPlaceholder', 'Buscar NC, ticket, cliente…')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
         <select className="input" value={filterType} onChange={e => setFilterType(e.target.value)}>
-          <option value="all">Todos los tipos</option>
-          <option value="anulacion">Anulación total</option>
-          <option value="devolucion">Devolución</option>
-          <option value="descuento">Descuento post-venta</option>
+          <option value="all">{t('returns.allTypes', 'Todos los tipos')}</option>
+          <option value="anulacion">{t('returns.typeAnulacion', 'Anulación total')}</option>
+          <option value="devolucion">{t('returns.typeDevolucion', 'Devolución')}</option>
+          <option value="descuento">{t('returns.typeDescuento', 'Descuento post-venta')}</option>
         </select>
         <select className="input" value={filterFel} onChange={e => setFilterFel(e.target.value)}>
-          <option value="all">Todo estado FEL</option>
-          <option value="autorizada">Autorizadas</option>
-          <option value="pendiente">Pendientes</option>
-          <option value="rechazada">Rechazadas</option>
+          <option value="all">{t('returns.allFelStatus', 'Todo estado FEL')}</option>
+          <option value="autorizada">{t('returns.felAuthorized', 'Autorizadas')}</option>
+          <option value="pendiente">{t('returns.felPending', 'Pendientes')}</option>
+          <option value="rechazada">{t('returns.felRejected', 'Rechazadas')}</option>
         </select>
       </div>
 
@@ -251,20 +255,20 @@ export default function Returns({ pushToast }) {
         <div className="tbl-wrap"><table className="tbl">
           <thead>
             <tr>
-              <th>Nota de Crédito</th>
-              <th>Ticket origen</th>
-              <th>Cliente</th>
-              <th>Fecha</th>
-              <th>Tipo</th>
-              <th style={{ textAlign: 'right' }}>Monto</th>
-              <th>Cajero</th>
-              <th>Estado FEL</th>
+              <th>{t('returns.creditNote', 'Nota de Crédito')}</th>
+              <th>{t('returns.originTicket', 'Ticket origen')}</th>
+              <th>{t('common.client', 'Cliente')}</th>
+              <th>{t('common.date', 'Fecha')}</th>
+              <th>{t('common.type', 'Tipo')}</th>
+              <th style={{ textAlign: 'right' }}>{t('common.amount', 'Monto')}</th>
+              <th>{t('returns.cashierHeader', 'Cajero')}</th>
+              <th>{t('returns.felStatus', 'Estado FEL')}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={9} className="empty">Sin notas de crédito con los filtros aplicados</td></tr>
+              <tr><td colSpan={9} className="empty">{t('returns.noResults', 'Sin notas de crédito con los filtros aplicados')}</td></tr>
             ) : filtered.map(n => (
               <tr key={n.id} style={{ cursor: 'pointer' }} onClick={() => setSelected(n)}>
                 <td><span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{n.id}</span></td>
@@ -292,7 +296,7 @@ export default function Returns({ pushToast }) {
                   {n.felStatus === 'rechazada' && (
                     <button className="btn" style={{ fontSize: 11, padding: '3px 8px', color: 'var(--warning)', borderColor: 'var(--warning)' }}
                       onClick={() => retryFel(n.id)}>
-                      Reintentar
+                      {t('returns.retry', 'Reintentar')}
                     </button>
                   )}
                 </td>
@@ -316,20 +320,20 @@ export default function Returns({ pushToast }) {
             <div className="drawer-body" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {/* Info principal */}
               <div className="detail-grid">
-                <Row label="NC"             value={selected.id} mono />
-                <Row label="Ticket origen"  value={selected.ticketId} mono />
-                <Row label="Cliente"        value={`${selected.clientName} · NIT ${selected.clientNit}`} />
-                <Row label="Fecha"          value={selected.date} />
-                <Row label="Cajero"         value={`${selected.cashier} · ${selected.branch}`} />
-                <Row label="Tipo"           value={TYPE_LABEL[selected.type]} />
-                <Row label="Motivo"         value={selected.reason} />
-                <Row label="Monto NC"       value={`−${Q(selected.amount)}`} bold />
-                <Row label="IVA débito"     value={`−${Q(selected.amount * 0.12 / 1.12)}`} />
+                <Row label={t('returns.creditNote', 'NC')}             value={selected.id} mono />
+                <Row label={t('returns.originTicket', 'Ticket origen')}  value={selected.ticketId} mono />
+                <Row label={t('common.client', 'Cliente')}        value={`${selected.clientName} · NIT ${selected.clientNit}`} />
+                <Row label={t('common.date', 'Fecha')}          value={selected.date} />
+                <Row label={t('returns.cashierHeader', 'Cajero')}         value={`${selected.cashier} · ${selected.branch}`} />
+                <Row label={t('common.type', 'Tipo')}           value={TYPE_LABEL[selected.type]} />
+                <Row label={t('returns.reason', 'Motivo')}           value={selected.reason} />
+                <Row label={t('returns.ncAmount', 'Monto NC')}       value={`−${Q(selected.amount)}`} bold />
+                <Row label={t('returns.ivaDebit', 'IVA débito')}     value={`−${Q(selected.amount * 0.12 / 1.12)}`} />
               </div>
 
               {/* Estado FEL */}
               <div style={{ marginTop: 16, marginBottom: 8 }}>
-                <div className="detail-label" style={{ marginBottom: 8 }}>Estado FEL</div>
+                <div className="detail-label" style={{ marginBottom: 8 }}>{t('returns.felStatus', 'Estado FEL')}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className={`pill ${FEL_CLASS[selected.felStatus]}`}>
                     {FEL_LABEL[selected.felStatus]}
@@ -342,22 +346,22 @@ export default function Returns({ pushToast }) {
                 )}
                 {selected.felError && (
                   <div style={{ marginTop: 6, fontSize: 12, color: 'var(--danger)' }}>
-                    Error SAT: {selected.felError}
+                    {t('returns.satError', 'Error SAT')}: {selected.felError}
                   </div>
                 )}
               </div>
 
               {/* Items */}
               <div style={{ marginTop: 12 }}>
-                <div className="detail-label" style={{ marginBottom: 8 }}>Artículos</div>
+                <div className="detail-label" style={{ marginBottom: 8 }}>{t('returns.items', 'Artículos')}</div>
                 <div className="tbl-wrap" style={{ borderRadius: 'var(--r-md)' }}>
                   <table className="tbl">
                     <thead>
                       <tr>
-                        <th>Producto</th>
-                        <th style={{ textAlign: 'right' }}>Cant.</th>
-                        <th style={{ textAlign: 'right' }}>P. Unit.</th>
-                        <th style={{ textAlign: 'right' }}>Total</th>
+                        <th>{t('common.product', 'Producto')}</th>
+                        <th style={{ textAlign: 'right' }}>{t('returns.qty', 'Cant.')}</th>
+                        <th style={{ textAlign: 'right' }}>{t('returns.unitPrice', 'P. Unit.')}</th>
+                        <th style={{ textAlign: 'right' }}>{t('common.total', 'Total')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -378,7 +382,7 @@ export default function Returns({ pushToast }) {
                 <div style={{ marginTop: 16 }}>
                   <button className="btn" style={{ width: '100%', justifyContent: 'center', color: 'var(--warning)', borderColor: 'var(--warning)' }}
                     onClick={() => { retryFel(selected.id); setSelected(null); }}>
-                    <Icon name="return" size={13} /> Reintentar envío FEL
+                    <Icon name="return" size={13} /> {t('returns.retryFel', 'Reintentar envío FEL')}
                   </button>
                 </div>
               )}
@@ -408,6 +412,7 @@ function Row({ label, value, mono, bold }) {
 }
 
 function CreateModal({ onClose, onSave }) {
+  const { t } = useTranslation();
   const [ticketId,    setTicketId]    = useState('');
   const [clientName,  setClientName]  = useState('Consumidor Final');
   const [clientNit,   setClientNit]   = useState('CF');
@@ -435,30 +440,30 @@ function CreateModal({ onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>Nueva nota de crédito</h3>
+          <h3>{t('returns.newReturn', 'Nueva nota de crédito')}</h3>
           <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
         </div>
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Tipo */}
           <div className="field">
-            <label className="field-label">Tipo de nota de crédito</label>
+            <label className="field-label">{t('returns.ncType', 'Tipo de nota de crédito')}</label>
             <select className="field-input" value={type} onChange={e => setType(e.target.value)}>
-              <option value="anulacion">Anulación total</option>
-              <option value="devolucion">Devolución de productos</option>
-              <option value="descuento">Descuento post-venta</option>
+              <option value="anulacion">{t('returns.typeAnulacion', 'Anulación total')}</option>
+              <option value="devolucion">{t('returns.typeDevolucionProducts', 'Devolución de productos')}</option>
+              <option value="descuento">{t('returns.typeDescuento', 'Descuento post-venta')}</option>
             </select>
           </div>
 
           {/* Ticket */}
           <div className="form-grid">
             <div className="field">
-              <label className="field-label">Ticket / Factura origen</label>
+              <label className="field-label">{t('returns.originTicketLabel', 'Ticket / Factura origen')}</label>
               <input className="field-input mono" placeholder="T-2026-XXXXX"
                 value={ticketId} onChange={e => setTicketId(e.target.value)} />
             </div>
             <div className="field">
-              <label className="field-label">Cajero</label>
-              <input className="field-input" placeholder="Nombre del cajero"
+              <label className="field-label">{t('returns.cashierHeader', 'Cajero')}</label>
+              <input className="field-input" placeholder={t('returns.cashierPlaceholder', 'Nombre del cajero')}
                 value={cashier} onChange={e => setCashier(e.target.value)} />
             </div>
           </div>
@@ -466,7 +471,7 @@ function CreateModal({ onClose, onSave }) {
           {/* Cliente */}
           <div className="form-grid">
             <div className="field">
-              <label className="field-label">Cliente</label>
+              <label className="field-label">{t('common.client', 'Cliente')}</label>
               <input className="field-input" value={clientName} onChange={e => setClientName(e.target.value)} />
             </div>
             <div className="field">
@@ -477,21 +482,21 @@ function CreateModal({ onClose, onSave }) {
 
           {/* Motivo */}
           <div className="field">
-            <label className="field-label">Motivo de la devolución</label>
-            <input className="field-input" placeholder="Describa el motivo…"
+            <label className="field-label">{t('returns.reason', 'Motivo de la devolución')}</label>
+            <input className="field-input" placeholder={t('returns.reasonPlaceholder', 'Describa el motivo…')}
               value={reason} onChange={e => setReason(e.target.value)} />
           </div>
 
           {/* Items (para anulacion / devolucion) */}
           {type !== 'descuento' && (
             <div className="field">
-              <label className="field-label">Artículos a devolver</label>
+              <label className="field-label">{t('returns.itemsToReturn', 'Artículos a devolver')}</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 90px auto', gap: 6, marginBottom: 6 }}>
-                <input className="field-input" placeholder="Nombre del producto"
+                <input className="field-input" placeholder={t('returns.productName', 'Nombre del producto')}
                   value={itemName} onChange={e => setItemName(e.target.value)} />
-                <input className="field-input mono" type="number" min="1" placeholder="Cant."
+                <input className="field-input mono" type="number" min="1" placeholder={t('returns.qty', 'Cant.')}
                   value={itemQty} onChange={e => setItemQty(e.target.value)} />
-                <input className="field-input mono" type="number" min="0" step="0.01" placeholder="P. Unit."
+                <input className="field-input mono" type="number" min="0" step="0.01" placeholder={t('returns.unitPrice', 'P. Unit.')}
                   value={itemPrice} onChange={e => setItemPrice(e.target.value)} />
                 <button className="btn" style={{ padding: '0 10px' }} onClick={addItem}>
                   <Icon name="plus" size={12} />
@@ -502,9 +507,9 @@ function CreateModal({ onClose, onSave }) {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                        <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 500, color: 'var(--muted)', fontSize: 10 }}>Producto</th>
-                        <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 500, color: 'var(--muted)', fontSize: 10 }}>Cant.</th>
-                        <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 500, color: 'var(--muted)', fontSize: 10 }}>Total</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 500, color: 'var(--muted)', fontSize: 10 }}>{t('common.product', 'Producto')}</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 500, color: 'var(--muted)', fontSize: 10 }}>{t('returns.qty', 'Cant.')}</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 500, color: 'var(--muted)', fontSize: 10 }}>{t('common.total', 'Total')}</th>
                         <th style={{ width: 28 }}></th>
                       </tr>
                     </thead>
@@ -528,7 +533,7 @@ function CreateModal({ onClose, onSave }) {
               )}
               {items.length > 0 && (
                 <div style={{ textAlign: 'right', fontSize: 13, fontWeight: 700, marginTop: 6 }}>
-                  Total: −Q {totalItems.toFixed(2)}
+                  {t('common.total', 'Total')}: −Q {totalItems.toFixed(2)}
                 </div>
               )}
             </div>
@@ -537,7 +542,7 @@ function CreateModal({ onClose, onSave }) {
           {/* Monto (solo para descuento) */}
           {type === 'descuento' && (
             <div className="field">
-              <label className="field-label">Monto del descuento (Q)</label>
+              <label className="field-label">{t('returns.discountAmount', 'Monto del descuento (Q)')}</label>
               <input type="number" className="field-input mono" min="0.01" step="0.01"
                 value={amount} onChange={e => setAmount(e.target.value)} />
             </div>
@@ -546,16 +551,16 @@ function CreateModal({ onClose, onSave }) {
           {finalAmount > 0 && (
             <div style={{ background: 'var(--danger-soft)', border: '1px solid var(--danger)', borderRadius: 'var(--r-md)', padding: '10px 14px', fontSize: 13 }}>
               <span style={{ color: 'var(--danger)', fontWeight: 700 }}>
-                Nota de crédito: −Q {finalAmount.toFixed(2)}
+                {t('returns.creditNote', 'Nota de crédito')}: −Q {finalAmount.toFixed(2)}
               </span>
               <span className="muted" style={{ marginLeft: 10, fontSize: 12 }}>
-                IVA: −Q {(finalAmount * 0.12 / 1.12).toFixed(2)}
+                {t('common.iva', 'IVA')}: −Q {(finalAmount * 0.12 / 1.12).toFixed(2)}
               </span>
             </div>
           )}
         </div>
         <div className="modal-foot">
-          <button className="btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
           <button className="btn accent" disabled={!valid}
             onClick={() => onSave({
               ticketId, clientName, clientNit, type, reason,
@@ -564,7 +569,7 @@ function CreateModal({ onClose, onSave }) {
                 : items,
               cashier: cashier || 'Sistema', branch,
             })}>
-            <Icon name="check" size={13} /> Emitir y enviar a FEL
+            <Icon name="check" size={13} /> {t('returns.submitFel', 'Emitir y enviar a FEL')}
           </button>
         </div>
       </div>

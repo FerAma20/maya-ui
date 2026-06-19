@@ -1,6 +1,7 @@
 // ERP MAYA — Fidelización / Puntos
 import React, { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
+import { useTranslation } from 'react-i18next';
 
 const Q  = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const Qs = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -61,6 +62,7 @@ const TYPE_META = {
 
 // ── Componente ─────────────────────────────────────────────────────────────
 export default function Loyalty({ pushToast }) {
+  const { t } = useTranslation();
   const [tab, setTab]       = useState('resumen');
   const [search, setSearch] = useState('');
   const [tierFiltro, setTierFiltro] = useState('todos');
@@ -97,17 +99,17 @@ export default function Loyalty({ pushToast }) {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="page-title">Fidelización · Programa de Puntos</div>
+          <div className="page-title">{t('loyalty.title', 'Programa de Fidelización')} · Programa de Puntos</div>
           <div className="muted" style={{fontSize:12}}>
             {CONFIG.puntosXQ10} punto por cada Q10 · Valor de canje Q{CONFIG.valorPunto.toFixed(2)} / punto
           </div>
         </div>
         <div className="row gap-8">
           <button className="btn" onClick={() => pushToast?.('Exportando…', '')}>
-            <Icon name="download" size={13}/>Exportar
+            <Icon name="download" size={13}/>{t('common.export', 'Exportar')}
           </button>
           <button className="btn accent" onClick={() => pushToast?.('Redirigiendo a Clientes…', '')}>
-            <Icon name="plus" size={13}/>Nuevo miembro
+            <Icon name="plus" size={13}/>{t('loyalty.tabs.members', 'Nuevo miembro')}
           </button>
         </div>
       </div>
@@ -115,12 +117,12 @@ export default function Loyalty({ pushToast }) {
       <div className="tabs" style={{marginBottom:20}}>
         {[
           { id:'resumen',    label:'Resumen' },
-          { id:'clientes',   label:'Clientes' },
+          { id:'clientes',   label:t('loyalty.tabs.members', 'Miembros') },
           { id:'movimientos',label:'Movimientos' },
           { id:'config',     label:'Configuración' },
-        ].map(t => (
-          <button key={t.id} className={`tab ${tab===t.id?'active':''}`} onClick={() => setTab(t.id)}>
-            {t.label}
+        ].map(tabItem => (
+          <button key={tabItem.id} className={`tab ${tab===tabItem.id?'active':''}`} onClick={() => setTab(tabItem.id)}>
+            {tabItem.label}
           </button>
         ))}
       </div>
@@ -155,14 +157,14 @@ export default function Loyalty({ pushToast }) {
           <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:20}}>
             <div className="card" style={{padding:16}}>
               <div style={{fontWeight:600, fontSize:13, marginBottom:14}}>Distribución por nivel</div>
-              {TIERS.map(t => {
-                const count = MEMBERS.filter(m => tierOf(m.points).id === t.id).length;
+              {TIERS.map(tierItem => {
+                const count = MEMBERS.filter(m => tierOf(m.points).id === tierItem.id).length;
                 const pct   = totalMembers > 0 ? (count / totalMembers) * 100 : 0;
                 return (
-                  <div key={t.id} style={{marginBottom:10}}>
+                  <div key={tierItem.id} style={{marginBottom:10}}>
                     <div style={{display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4}}>
                       <span style={{display:'flex', alignItems:'center', gap:6}}>
-                        <span className={`pill ${t.pill}`} style={{fontSize:10}}>{t.icon} {t.nombre}</span>
+                        <span className={`pill ${tierItem.pill}`} style={{fontSize:10}}>{tierItem.icon} {tierItem.nombre}</span>
                       </span>
                       <span className="muted" style={{fontFamily:'var(--font-mono)', fontSize:11}}>{count} miembros · {pct.toFixed(0)}%</span>
                     </div>
@@ -207,12 +209,12 @@ export default function Loyalty({ pushToast }) {
               <Icon name="search" size={13} style={{position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:'var(--muted)'}}/>
               <input
                 style={{width:'100%', paddingLeft:30, border:'1px solid var(--border)', borderRadius:'var(--r-md)', padding:'6px 10px 6px 30px', background:'var(--surface)', color:'var(--text)', fontSize:13}}
-                placeholder="Buscar por nombre o NIT…"
+                placeholder={t('clients.searchPlaceholder', 'Buscar por nombre o NIT…')}
                 value={search} onChange={e => setSearch(e.target.value)}
               />
             </div>
             <div style={{display:'flex', gap:4}}>
-              {[{v:'todos',l:'Todos'},...TIERS.map(t=>({v:t.id,l:t.nombre}))].map(o => (
+              {[{v:'todos',l:t('common.all', 'Todos')},...TIERS.map(tierItem=>({v:tierItem.id,l:tierItem.nombre}))].map(o => (
                 <button key={o.v} className={`btn ${tierFiltro===o.v?'accent':''}`} style={{fontSize:11}}
                   onClick={() => setTierFiltro(o.v)}>{o.l}</button>
               ))}
@@ -223,7 +225,7 @@ export default function Loyalty({ pushToast }) {
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Cliente</th>
+                  <th>{t('common.client', 'Cliente')}</th>
                   <th>Nivel</th>
                   <th className="num">Puntos actuales</th>
                   <th className="num">Total acumulado</th>
@@ -235,7 +237,7 @@ export default function Loyalty({ pushToast }) {
               <tbody>
                 {filteredMembers.map(m => {
                   const tier = tierOf(m.points);
-                  const next = TIERS.find(t => t.min > tier.min);
+                  const next = TIERS.find(tierItem => tierItem.min > tier.min);
                   const pctNext = next ? Math.min((m.points / next.min) * 100, 100) : 100;
                   return (
                     <tr key={m.id} className="clickable" onClick={() => setDrawer(m)}>
@@ -269,7 +271,7 @@ export default function Loyalty({ pushToast }) {
                   );
                 })}
                 {filteredMembers.length === 0 && (
-                  <tr><td colSpan={7} className="empty">Sin resultados</td></tr>
+                  <tr><td colSpan={7} className="empty">{t('common.noResults', 'Sin resultados')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -281,7 +283,7 @@ export default function Loyalty({ pushToast }) {
       {tab === 'movimientos' && (
         <div>
           <div style={{display:'flex', gap:4, marginBottom:14}}>
-            {[{v:'todos',l:'Todos'},...Object.entries(TYPE_META).map(([v,m])=>({v,l:m.label}))].map(o => (
+            {[{v:'todos',l:t('common.all', 'Todos')},...Object.entries(TYPE_META).map(([v,m])=>({v,l:m.label}))].map(o => (
               <button key={o.v} className={`btn ${txnFiltro===o.v?'accent':''}`} style={{fontSize:11}}
                 onClick={() => setTxnFiltro(o.v)}>{o.l}</button>
             ))}
@@ -292,12 +294,12 @@ export default function Loyalty({ pushToast }) {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Tipo</th>
+                  <th>{t('common.client', 'Cliente')}</th>
+                  <th>{t('common.type', 'Tipo')}</th>
                   <th className="num">Puntos</th>
                   <th className="num">Valor Q</th>
-                  <th>Referencia</th>
-                  <th>Fecha</th>
+                  <th>{t('common.reference', 'Referencia')}</th>
+                  <th>{t('common.date', 'Fecha')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -343,7 +345,7 @@ export default function Loyalty({ pushToast }) {
               <input type="number" defaultValue={CONFIG.expiracionMeses} style={{fontFamily:'var(--font-mono)'}}/>
             </div>
             <button className="btn accent" style={{width:'100%'}} onClick={() => pushToast?.('Configuración guardada', 'success')}>
-              <Icon name="check" size={13}/>Guardar cambios
+              <Icon name="check" size={13}/>{t('common.save', 'Guardar')} cambios
             </button>
           </div>
 
@@ -359,12 +361,12 @@ export default function Loyalty({ pushToast }) {
                 </tr>
               </thead>
               <tbody>
-                {TIERS.map(t => (
-                  <tr key={t.id}>
-                    <td><span className={`pill ${t.pill}`} style={{fontSize:10}}>{t.icon} {t.nombre}</span></td>
-                    <td className="num">{t.min.toLocaleString('es-GT')} pts</td>
-                    <td className="num">{t.max === Infinity ? '∞' : t.max.toLocaleString('es-GT') + ' pts'}</td>
-                    <td className="num" style={{fontWeight:600}}>{t.bonus}×</td>
+                {TIERS.map(tierItem => (
+                  <tr key={tierItem.id}>
+                    <td><span className={`pill ${tierItem.pill}`} style={{fontSize:10}}>{tierItem.icon} {tierItem.nombre}</span></td>
+                    <td className="num">{tierItem.min.toLocaleString('es-GT')} pts</td>
+                    <td className="num">{tierItem.max === Infinity ? '∞' : tierItem.max.toLocaleString('es-GT') + ' pts'}</td>
+                    <td className="num" style={{fontWeight:600}}>{tierItem.bonus}×</td>
                   </tr>
                 ))}
               </tbody>
@@ -416,9 +418,9 @@ export default function Loyalty({ pushToast }) {
             <div className="drawer-body" style={{padding:20}}>
               {(() => {
                 const tier = tierOf(drawer.points);
-                const next = TIERS.find(t => t.min > tier.min);
+                const next = TIERS.find(tierItem => tierItem.min > tier.min);
                 const pctNext = next ? Math.min((drawer.points / next.min) * 100, 100) : 100;
-                const memberTxns = TXNS.filter(t => t.memberId === drawer.id);
+                const memberTxns = TXNS.filter(tx => tx.memberId === drawer.id);
                 return (
                   <>
                     <div style={{textAlign:'center', marginBottom:20}}>
@@ -528,12 +530,12 @@ export default function Loyalty({ pushToast }) {
               )}
             </div>
             <div className="modal-foot">
-              <button className="btn" onClick={() => setShowAjuste(null)}>Cancelar</button>
+              <button className="btn" onClick={() => setShowAjuste(null)}>{t('common.cancel', 'Cancelar')}</button>
               <button className="btn accent" onClick={() => {
                 pushToast?.(`Ajuste de ${ajustePts} pts aplicado a ${showAjuste.nombre}`, 'success');
                 setShowAjuste(null);
               }}>
-                <Icon name="check" size={13}/>Aplicar ajuste
+                <Icon name="check" size={13}/>{t('common.apply', 'Aplicar')} ajuste
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 // ERP MAYA — Cotizaciones a clientes + RFQ a proveedores
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon.jsx';
 
 const Q       = v  => `Q ${Number(v).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -239,6 +240,7 @@ const INIT_RFQ = [
 const EMPTY_ITEM = () => ({ id: Date.now(), name: '', qty: 1, uom: 'UN', unitPrice: 0, discount: 0 });
 
 function CreateModal({ onSave, onClose }) {
+  const { t } = useTranslation();
   const [client,    setClient]    = useState({ name: '', nit: '', email: '', contact: '' });
   const [validDays, setValidDays] = useState(15);
   const [notes,     setNotes]     = useState('');
@@ -269,46 +271,46 @@ function CreateModal({ onSave, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" style={{ width: 680, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <span className="modal-title">Nueva Cotización</span>
+          <span className="modal-title">{t('quotes.newQuote', 'Nueva Cotización')}</span>
           <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
         </div>
 
         <div className="modal-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>CLIENTE</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>{t('common.client', 'CLIENTE').toUpperCase()}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div className="field-group">
-                <label className="field-label">Nombre / Empresa *</label>
-                <input className="field-input" value={client.name} onChange={e => setC('name', e.target.value)} placeholder="Empresa o persona" />
+                <label className="field-label">{t('quotes.clientName', 'Nombre / Empresa *')}</label>
+                <input className="field-input" value={client.name} onChange={e => setC('name', e.target.value)} placeholder={t('quotes.clientNamePlaceholder', 'Empresa o persona')} />
               </div>
               <div className="field-group">
                 <label className="field-label">NIT</label>
                 <input className="field-input" value={client.nit} onChange={e => setC('nit', e.target.value)} placeholder="0000000-0" />
               </div>
               <div className="field-group">
-                <label className="field-label">Correo electrónico</label>
+                <label className="field-label">{t('common.email', 'Correo electrónico')}</label>
                 <input className="field-input" type="email" value={client.email} onChange={e => setC('email', e.target.value)} placeholder="correo@empresa.gt" />
               </div>
               <div className="field-group">
-                <label className="field-label">Contacto</label>
-                <input className="field-input" value={client.contact} onChange={e => setC('contact', e.target.value)} placeholder="Nombre del contacto" />
+                <label className="field-label">{t('quotes.contact', 'Contacto')}</label>
+                <input className="field-input" value={client.contact} onChange={e => setC('contact', e.target.value)} placeholder={t('quotes.contactPlaceholder', 'Nombre del contacto')} />
               </div>
             </div>
           </div>
 
           <div className="field-group" style={{ maxWidth: 220 }}>
-            <label className="field-label">Validez (días)</label>
+            <label className="field-label">{t('quotes.validityDays', 'Validez (días)')}</label>
             <input className="field-input" type="number" min="1" max="90" value={validDays}
               onChange={e => setValidDays(Number(e.target.value))} />
-            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Vence: {fmtDate(validUntil)}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{t('quotes.expires', 'Vence')}: {fmtDate(validUntil)}</div>
           </div>
 
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>PRODUCTOS / SERVICIOS</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>{t('quotes.productsServices', 'PRODUCTOS / SERVICIOS')}</div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Descripción', 'Cant.', 'UOM', 'P. unitario', 'Desc %', 'Total', ''].map((h, i) => (
+                  {[t('common.description', 'Descripción'), t('quotes.qty', 'Cant.'), 'UOM', t('quotes.unitPrice', 'P. unitario'), t('common.discount', 'Desc %'), t('common.total', 'Total'), ''].map((h, i) => (
                     <th key={i} style={{ padding: '4px 6px', textAlign: i >= 3 && i <= 4 ? 'center' : i === 5 ? 'right' : 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 11,
                       width: [undefined, 60, 60, 100, 60, 100, 28][i] }}>{h}</th>
                   ))}
@@ -319,7 +321,7 @@ function CreateModal({ onSave, onClose }) {
                   <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '4px 6px' }}>
                       <input className="field-input" style={{ padding: '3px 6px' }} value={item.name}
-                        onChange={e => setItem(item.id, 'name', e.target.value)} placeholder="Producto o servicio" />
+                        onChange={e => setItem(item.id, 'name', e.target.value)} placeholder={t('quotes.productOrService', 'Producto o servicio')} />
                     </td>
                     <td style={{ padding: '4px 6px' }}>
                       <input className="field-input" type="number" min="1" style={{ padding: '3px 6px', textAlign: 'center', width: '100%' }}
@@ -350,31 +352,31 @@ function CreateModal({ onSave, onClose }) {
               </tbody>
             </table>
             <button className="btn-ghost" style={{ marginTop: 8 }} onClick={addItem}>
-              <Icon name="plus" size={12} /> Agregar línea
+              <Icon name="plus" size={12} /> {t('quotes.addLine', 'Agregar línea')}
             </button>
           </div>
 
           <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: '12px 16px', alignSelf: 'flex-end', minWidth: 260 }}>
-            {[['Subtotal (sin IVA)', Q(subtotal)], ['IVA (12%)', Q(iva)]].map(([l, v]) => (
+            {[[t('quotes.subtotalNoIva', 'Subtotal (sin IVA)'), Q(subtotal)], [t('common.iva', 'IVA') + ' (12%)', Q(iva)]].map(([l, v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 6, color: 'var(--text-2)' }}>
                 <span>{l}</span><span className="mono">{v}</span>
               </div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-              <span>TOTAL</span><span className="mono">{Q(total)}</span>
+              <span>{t('common.total', 'TOTAL').toUpperCase()}</span><span className="mono">{Q(total)}</span>
             </div>
           </div>
 
           <div className="field-group">
-            <label className="field-label">Notas / condiciones</label>
+            <label className="field-label">{t('quotes.notesConditions', 'Notas / condiciones')}</label>
             <textarea className="field-input" rows={2} style={{ resize: 'none' }} value={notes}
-              onChange={e => setNotes(e.target.value)} placeholder="Condiciones de pago, entrega, observaciones…" />
+              onChange={e => setNotes(e.target.value)} placeholder={t('quotes.notesPlaceholder', 'Condiciones de pago, entrega, observaciones…')} />
           </div>
         </div>
 
         <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="btn" disabled={!canSave} onClick={handleSave}>Crear cotización</button>
+          <button className="btn-ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
+          <button className="btn" disabled={!canSave} onClick={handleSave}>{t('quotes.createQuote', 'Crear cotización')}</button>
         </div>
       </div>
     </div>
@@ -386,6 +388,7 @@ function CreateModal({ onSave, onClose }) {
 const EMPTY_RITEM = () => ({ id: Date.now(), name: '', qty: 1, uom: 'UN' });
 
 function CreateRFQModal({ onSave, onClose }) {
+  const { t } = useTranslation();
   const [supplier, setSupplier] = useState({ name: '', nit: '', email: '', contact: '' });
   const [deadline, setDeadline] = useState('');
   const [notes,    setNotes]    = useState('');
@@ -413,46 +416,46 @@ function CreateRFQModal({ onSave, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" style={{ width: 620, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <span className="modal-title">Nueva Solicitud de Cotización (RFQ)</span>
+          <span className="modal-title">{t('quotes.newRFQ', 'Nueva Solicitud de Cotización (RFQ)')}</span>
           <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
         </div>
 
         <div className="modal-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>PROVEEDOR</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>{t('common.supplier', 'PROVEEDOR').toUpperCase()}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div className="field-group">
-                <label className="field-label">Nombre / Empresa *</label>
-                <input className="field-input" value={supplier.name} onChange={e => setS('name', e.target.value)} placeholder="Empresa proveedora" />
+                <label className="field-label">{t('quotes.supplierName', 'Nombre / Empresa *')}</label>
+                <input className="field-input" value={supplier.name} onChange={e => setS('name', e.target.value)} placeholder={t('quotes.supplierNamePlaceholder', 'Empresa proveedora')} />
               </div>
               <div className="field-group">
                 <label className="field-label">NIT</label>
                 <input className="field-input" value={supplier.nit} onChange={e => setS('nit', e.target.value)} placeholder="0000000-0" />
               </div>
               <div className="field-group">
-                <label className="field-label">Correo electrónico</label>
+                <label className="field-label">{t('common.email', 'Correo electrónico')}</label>
                 <input className="field-input" type="email" value={supplier.email} onChange={e => setS('email', e.target.value)} placeholder="ventas@proveedor.gt" />
               </div>
               <div className="field-group">
-                <label className="field-label">Contacto</label>
-                <input className="field-input" value={supplier.contact} onChange={e => setS('contact', e.target.value)} placeholder="Nombre del contacto" />
+                <label className="field-label">{t('quotes.contact', 'Contacto')}</label>
+                <input className="field-input" value={supplier.contact} onChange={e => setS('contact', e.target.value)} placeholder={t('quotes.contactPlaceholder', 'Nombre del contacto')} />
               </div>
             </div>
           </div>
 
           <div className="field-group" style={{ maxWidth: 220 }}>
-            <label className="field-label">Responder antes de</label>
+            <label className="field-label">{t('quotes.respondBefore', 'Responder antes de')}</label>
             <input className="field-input" type="date" value={deadline} min={today}
               onChange={e => setDeadline(e.target.value)} />
           </div>
 
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>PRODUCTOS SOLICITADOS</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>{t('quotes.requestedProducts', 'PRODUCTOS SOLICITADOS')}</div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '4px 6px', textAlign: 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>Descripción</th>
-                  <th style={{ padding: '4px 6px', textAlign: 'center', width: 80, fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>Cantidad</th>
+                  <th style={{ padding: '4px 6px', textAlign: 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>{t('common.description', 'Descripción')}</th>
+                  <th style={{ padding: '4px 6px', textAlign: 'center', width: 80, fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>{t('common.quantity', 'Cantidad')}</th>
                   <th style={{ padding: '4px 6px', textAlign: 'center', width: 70, fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>UOM</th>
                   <th style={{ width: 28 }}></th>
                 </tr>
@@ -462,7 +465,7 @@ function CreateRFQModal({ onSave, onClose }) {
                   <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '4px 6px' }}>
                       <input className="field-input" style={{ padding: '3px 6px' }} value={item.name}
-                        onChange={e => setItem(item.id, 'name', e.target.value)} placeholder="Producto o insumo" />
+                        onChange={e => setItem(item.id, 'name', e.target.value)} placeholder={t('quotes.productOrInput', 'Producto o insumo')} />
                     </td>
                     <td style={{ padding: '4px 6px' }}>
                       <input className="field-input" type="number" min="1" style={{ padding: '3px 6px', textAlign: 'center', width: '100%' }}
@@ -482,20 +485,20 @@ function CreateRFQModal({ onSave, onClose }) {
               </tbody>
             </table>
             <button className="btn-ghost" style={{ marginTop: 8 }} onClick={addItem}>
-              <Icon name="plus" size={12} /> Agregar producto
+              <Icon name="plus" size={12} /> {t('quotes.addProduct', 'Agregar producto')}
             </button>
           </div>
 
           <div className="field-group">
-            <label className="field-label">Notas / especificaciones</label>
+            <label className="field-label">{t('quotes.notesSpecs', 'Notas / especificaciones')}</label>
             <textarea className="field-input" rows={2} style={{ resize: 'none' }} value={notes}
-              onChange={e => setNotes(e.target.value)} placeholder="Especificaciones técnicas, condiciones deseadas, observaciones…" />
+              onChange={e => setNotes(e.target.value)} placeholder={t('quotes.notesSpecsPlaceholder', 'Especificaciones técnicas, condiciones deseadas, observaciones…')} />
           </div>
         </div>
 
         <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="btn" disabled={!canSave} onClick={handleSave}>Crear solicitud</button>
+          <button className="btn-ghost" onClick={onClose}>{t('common.cancel', 'Cancelar')}</button>
+          <button className="btn" disabled={!canSave} onClick={handleSave}>{t('quotes.createRequest', 'Crear solicitud')}</button>
         </div>
       </div>
     </div>
@@ -505,6 +508,7 @@ function CreateRFQModal({ onSave, onClose }) {
 // ── Componente principal ───────────────────────────────────────────────────────
 
 export default function Quotes({ pushToast }) {
+  const { t } = useTranslation();
   const [quoteType, setQuoteType] = useState('cliente');
 
   // — cotizaciones a clientes —
@@ -588,15 +592,15 @@ export default function Quotes({ pushToast }) {
       {/* Cabecera con selector de tipo */}
       <div className="page-head">
         <div>
-          <div className="page-title">Cotizaciones</div>
+          <div className="page-title">{t('quotes.title', 'Cotizaciones')}</div>
           <div className="page-sub">
-            {quoteType === 'cliente' ? 'Pre-ventas y propuestas comerciales a clientes' : 'Solicitudes de cotización a proveedores (RFQ)'}
+            {quoteType === 'cliente' ? t('quotes.subtitleClient', 'Pre-ventas y propuestas comerciales a clientes') : t('quotes.subtitleSupplier', 'Solicitudes de cotización a proveedores (RFQ)')}
           </div>
         </div>
         <div className="page-head-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Selector de tipo */}
           <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: 3, gap: 2 }}>
-            {[['cliente', 'A clientes'], ['proveedor', 'A proveedores']].map(([val, lbl]) => (
+            {[['cliente', t('quotes.toClients', 'A clientes')], ['proveedor', t('quotes.toSuppliers', 'A proveedores')]].map(([val, lbl]) => (
               <button key={val} onClick={() => switchType(val)}
                 style={{ padding: '5px 14px', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 500, fontFamily: 'inherit',
                   borderRadius: 'calc(var(--r-md) - 2px)',
@@ -611,11 +615,11 @@ export default function Quotes({ pushToast }) {
           </div>
           {quoteType === 'cliente' ? (
             <button className="btn" onClick={() => setShowCreate(true)}>
-              <Icon name="plus" size={12} /> Nueva cotización
+              <Icon name="plus" size={12} /> {t('quotes.newQuote', 'Nueva cotización')}
             </button>
           ) : (
             <button className="btn" onClick={() => setShowCreateRfq(true)}>
-              <Icon name="plus" size={12} /> Nueva solicitud
+              <Icon name="plus" size={12} /> {t('quotes.newRequest', 'Nueva solicitud')}
             </button>
           )}
         </div>
@@ -626,34 +630,34 @@ export default function Quotes({ pushToast }) {
         <>
           <div className="stat-grid" style={{ marginBottom: 20 }}>
             <div className="stat-card">
-              <div className="label">En pipeline</div>
+              <div className="label">{t('quotes.inPipeline', 'En pipeline')}</div>
               <div className="value">{pipeline.length}</div>
-              <div className="sub muted">{Q(pipelineAmt)} en proceso</div>
+              <div className="sub muted">{Q(pipelineAmt)} {t('quotes.inProcess', 'en proceso')}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Aprobadas</div>
+              <div className="label">{t('common.approved', 'Aprobadas')}</div>
               <div className="value success">{quotes.filter(q => q.status === 'aprobada').length}</div>
-              <div className="sub success">{Q(approvedAmt)} listas para facturar</div>
+              <div className="sub success">{Q(approvedAmt)} {t('quotes.readyToInvoice', 'listas para facturar')}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Convertidas</div>
+              <div className="label">{t('quotes.converted', 'Convertidas')}</div>
               <div className="value">{quotes.filter(q => q.status === 'convertida').length}</div>
-              <div className="sub muted">Este mes</div>
+              <div className="sub muted">{t('quotes.thisMonth', 'Este mes')}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Vencidas / Rechazadas</div>
+              <div className="label">{t('quotes.expiredRejected', 'Vencidas / Rechazadas')}</div>
               <div className="value danger">{quotes.filter(q => ['vencida', 'rechazada'].includes(q.status)).length}</div>
-              <div className="sub muted">Requieren seguimiento</div>
+              <div className="sub muted">{t('quotes.requireFollowup', 'Requieren seguimiento')}</div>
             </div>
           </div>
 
           <div className="filterbar" style={{ marginBottom: 12 }}>
             <div className="field-wrap search-wrap">
               <Icon name="search" className="field-icon" size={13} />
-              <input className="field-input" placeholder="Buscar cotización o cliente…" value={search} onChange={e => setSearch(e.target.value)} />
+              <input className="field-input" placeholder={t('quotes.searchPlaceholder', 'Buscar cotización o cliente…')} value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <select className="field-input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-              <option value="">Todos los estados</option>
+              <option value="">{t('quotes.allStatuses', 'Todos los estados')}</option>
               {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
@@ -663,13 +667,13 @@ export default function Quotes({ pushToast }) {
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>Cotización</th>
-                    <th>Cliente</th>
-                    <th>Fecha</th>
-                    <th>Válida hasta</th>
-                    <th style={{ textAlign: 'center' }}>Ítems</th>
-                    <th style={{ textAlign: 'right' }}>Total (c/IVA)</th>
-                    <th>Estado</th>
+                    <th>{t('quotes.quoteNo', 'Cotización')}</th>
+                    <th>{t('common.client', 'Cliente')}</th>
+                    <th>{t('common.date', 'Fecha')}</th>
+                    <th>{t('quotes.validUntil', 'Válida hasta')}</th>
+                    <th style={{ textAlign: 'center' }}>{t('quotes.items', 'Ítems')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('quotes.totalWithIva', 'Total (c/IVA)')}</th>
+                    <th>{t('common.status', 'Estado')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -689,12 +693,12 @@ export default function Quotes({ pushToast }) {
                         <td style={{ textAlign: 'center' }}>{q.items.length}</td>
                         <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{Q(total)}</td>
                         <td><span className={`pill ${STATUS_CLASS[q.status]}`}>{STATUS_LABEL[q.status]}</span></td>
-                        <td><button className="btn-ghost" onClick={e => { e.stopPropagation(); openDrawer(q); }}>Ver</button></td>
+                        <td><button className="btn-ghost" onClick={e => { e.stopPropagation(); openDrawer(q); }}>{t('common.view', 'Ver')}</button></td>
                       </tr>
                     );
                   })}
                   {filtered.length === 0 && (
-                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}>Sin cotizaciones</td></tr>
+                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}>{t('quotes.noQuotes', 'Sin cotizaciones')}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -708,34 +712,34 @@ export default function Quotes({ pushToast }) {
         <>
           <div className="stat-grid" style={{ marginBottom: 20 }}>
             <div className="stat-card">
-              <div className="label">En proceso</div>
+              <div className="label">{t('quotes.rfqInProcess', 'En proceso')}</div>
               <div className="value">{rfqInProcess.length}</div>
-              <div className="sub muted">Solicitadas + recibidas</div>
+              <div className="sub muted">{t('quotes.rfqRequestedReceived', 'Solicitadas + recibidas')}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Pendientes respuesta</div>
+              <div className="label">{t('quotes.rfqPendingResponse', 'Pendientes respuesta')}</div>
               <div className="value warning">{rfqPending.length}</div>
-              <div className="sub muted">Esperando al proveedor</div>
+              <div className="sub muted">{t('quotes.rfqWaitingSupplier', 'Esperando al proveedor')}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Aprobadas</div>
+              <div className="label">{t('common.approved', 'Aprobadas')}</div>
               <div className="value success">{rfqApproved.length}</div>
-              <div className="sub muted">Listas para generar OC</div>
+              <div className="sub muted">{t('quotes.rfqReadyForPO', 'Listas para generar OC')}</div>
             </div>
             <div className="stat-card">
-              <div className="label">Convertidas a OC</div>
+              <div className="label">{t('quotes.rfqConvertedToPO', 'Convertidas a OC')}</div>
               <div className="value">{rfqs.filter(r => r.status === 'convertida').length}</div>
-              <div className="sub muted">Este mes</div>
+              <div className="sub muted">{t('quotes.thisMonth', 'Este mes')}</div>
             </div>
           </div>
 
           <div className="filterbar" style={{ marginBottom: 12 }}>
             <div className="field-wrap search-wrap">
               <Icon name="search" className="field-icon" size={13} />
-              <input className="field-input" placeholder="Buscar RFQ o proveedor…" value={rfqSearch} onChange={e => setRfqSearch(e.target.value)} />
+              <input className="field-input" placeholder={t('quotes.rfqSearchPlaceholder', 'Buscar RFQ o proveedor…')} value={rfqSearch} onChange={e => setRfqSearch(e.target.value)} />
             </div>
             <select className="field-input" value={rfqFilter} onChange={e => setRfqFilter(e.target.value)}>
-              <option value="">Todos los estados</option>
+              <option value="">{t('quotes.allStatuses', 'Todos los estados')}</option>
               {Object.entries(RFQ_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
@@ -745,14 +749,14 @@ export default function Quotes({ pushToast }) {
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th>Solicitud</th>
-                    <th>Proveedor</th>
-                    <th>Fecha</th>
-                    <th>Resp. antes</th>
-                    <th>T. entrega</th>
-                    <th>Plazo pago</th>
-                    <th style={{ textAlign: 'right' }}>Total (c/IVA)</th>
-                    <th>Estado</th>
+                    <th>{t('quotes.rfqNo', 'Solicitud')}</th>
+                    <th>{t('common.supplier', 'Proveedor')}</th>
+                    <th>{t('common.date', 'Fecha')}</th>
+                    <th>{t('quotes.respondBefore', 'Resp. antes')}</th>
+                    <th>{t('quotes.leadTime', 'T. entrega')}</th>
+                    <th>{t('quotes.paymentTerm', 'Plazo pago')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('quotes.totalWithIva', 'Total (c/IVA)')}</th>
+                    <th>{t('common.status', 'Estado')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -775,15 +779,15 @@ export default function Quotes({ pushToast }) {
                         <td style={{ fontSize: 12.5 }}>{r.leadTime}</td>
                         <td style={{ fontSize: 12.5 }}>{r.paymentTerms}</td>
                         <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 600, color: hasPrices ? 'var(--text)' : 'var(--muted)' }}>
-                          {hasPrices ? Q(total) : 'Pendiente'}
+                          {hasPrices ? Q(total) : t('quotes.pending', 'Pendiente')}
                         </td>
                         <td><span className={`pill ${RFQ_CLASS[r.status]}`}>{RFQ_LABEL[r.status]}</span></td>
-                        <td><button className="btn-ghost" onClick={e => { e.stopPropagation(); openRfqDrawer(r); }}>Ver</button></td>
+                        <td><button className="btn-ghost" onClick={e => { e.stopPropagation(); openRfqDrawer(r); }}>{t('common.view', 'Ver')}</button></td>
                       </tr>
                     );
                   })}
                   {filteredRfqs.length === 0 && (
-                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}>Sin solicitudes</td></tr>
+                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}>{t('quotes.noRequests', 'Sin solicitudes')}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -808,8 +812,8 @@ export default function Quotes({ pushToast }) {
             </div>
 
             <div className="tabs" style={{ padding: '0 16px', borderBottom: '1px solid var(--border)' }}>
-              <button className={`tab ${drawerTab === 'detail'  ? 'active' : ''}`} onClick={() => setDrawerTab('detail')}>Detalle</button>
-              <button className={`tab ${drawerTab === 'history' ? 'active' : ''}`} onClick={() => setDrawerTab('history')}>Historial</button>
+              <button className={`tab ${drawerTab === 'detail'  ? 'active' : ''}`} onClick={() => setDrawerTab('detail')}>{t('quotes.detail', 'Detalle')}</button>
+              <button className={`tab ${drawerTab === 'history' ? 'active' : ''}`} onClick={() => setDrawerTab('history')}>{t('quotes.history', 'Historial')}</button>
             </div>
 
             <div className="drawer-body">
@@ -819,12 +823,12 @@ export default function Quotes({ pushToast }) {
                   <>
                     <div className="detail-grid" style={{ marginBottom: 16 }}>
                       {[
-                        ['Cliente',      selQuote.client.name],
+                        [t('common.client', 'Cliente'),      selQuote.client.name],
                         ['NIT',          selQuote.client.nit || '—'],
-                        ['Contacto',     selQuote.client.contact || '—'],
-                        ['Correo',       selQuote.client.email || '—'],
-                        ['Válida hasta', fmtDate(selQuote.validUntil)],
-                        ['Creado por',   selQuote.createdBy],
+                        [t('quotes.contact', 'Contacto'),     selQuote.client.contact || '—'],
+                        [t('quotes.email', 'Correo'),       selQuote.client.email || '—'],
+                        [t('quotes.validUntil', 'Válida hasta'), fmtDate(selQuote.validUntil)],
+                        [t('quotes.createdBy', 'Creado por'),   selQuote.createdBy],
                       ].map(([l, v]) => (
                         <div className="detail-row" key={l}>
                           <span className="detail-label">{l}</span>
@@ -833,16 +837,16 @@ export default function Quotes({ pushToast }) {
                       ))}
                     </div>
 
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>PRODUCTOS</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>{t('common.product', 'PRODUCTOS').toUpperCase()}</div>
                     <table className="tbl" style={{ marginBottom: 4 }}>
                       <thead>
                         <tr>
-                          <th>Descripción</th>
-                          <th style={{ textAlign: 'center' }}>Cant.</th>
+                          <th>{t('common.description', 'Descripción')}</th>
+                          <th style={{ textAlign: 'center' }}>{t('quotes.qty', 'Cant.')}</th>
                           <th style={{ textAlign: 'center' }}>UOM</th>
-                          <th style={{ textAlign: 'right' }}>P. Unit.</th>
-                          <th style={{ textAlign: 'center' }}>Desc.</th>
-                          <th style={{ textAlign: 'right' }}>Total</th>
+                          <th style={{ textAlign: 'right' }}>{t('quotes.unitPriceShort', 'P. Unit.')}</th>
+                          <th style={{ textAlign: 'center' }}>{t('common.discount', 'Desc.')}</th>
+                          <th style={{ textAlign: 'right' }}>{t('common.total', 'Total')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -862,19 +866,19 @@ export default function Quotes({ pushToast }) {
                     </table>
 
                     <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: '10px 14px', marginBottom: 14 }}>
-                      {[['Subtotal sin IVA', Q(subtotal)], ['IVA (12%)', Q(iva)]].map(([l, v]) => (
+                      {[[t('quotes.subtotalNoIva', 'Subtotal sin IVA'), Q(subtotal)], [t('common.iva', 'IVA') + ' (12%)', Q(iva)]].map(([l, v]) => (
                         <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 5, color: 'var(--text-2)' }}>
                           <span>{l}</span><span className="mono">{v}</span>
                         </div>
                       ))}
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-                        <span>TOTAL</span><span className="mono">{Q(total)}</span>
+                        <span>{t('common.total', 'TOTAL').toUpperCase()}</span><span className="mono">{Q(total)}</span>
                       </div>
                     </div>
 
                     {selQuote.notes && (
                       <div style={{ fontSize: 12.5, color: 'var(--text-2)', background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 'var(--r-md)', borderLeft: '3px solid var(--border)' }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginBottom: 4, letterSpacing: '0.05em' }}>NOTAS</div>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginBottom: 4, letterSpacing: '0.05em' }}>{t('common.notes', 'NOTAS').toUpperCase()}</div>
                         {selQuote.notes}
                       </div>
                     )}
@@ -901,23 +905,23 @@ export default function Quotes({ pushToast }) {
             </div>
 
             <div className="drawer-foot" style={{ flexWrap: 'wrap', gap: 8 }}>
-              <button className="btn-ghost" onClick={() => setSelected(null)}>Cerrar</button>
+              <button className="btn-ghost" onClick={() => setSelected(null)}>{t('common.close', 'Cerrar')}</button>
               <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                 {selQuote.status === 'borrador' && (
                   <button className="btn-outline"
                     onClick={() => { updateStatus(selQuote.id, 'enviada', 'Enviada al cliente por correo electrónico'); pushToast('Cotización enviada', 'success'); }}>
-                    Enviar al cliente
+                    {t('quotes.sendToClient', 'Enviar al cliente')}
                   </button>
                 )}
                 {selQuote.status === 'enviada' && (
                   <>
                     <button className="btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
                       onClick={() => { updateStatus(selQuote.id, 'rechazada', 'Rechazada'); pushToast('Cotización rechazada', 'danger'); }}>
-                      Rechazar
+                      {t('quotes.reject', 'Rechazar')}
                     </button>
                     <button className="btn-outline"
                       onClick={() => { updateStatus(selQuote.id, 'aprobada', 'Aprobada por el cliente'); pushToast('Cotización aprobada', 'success'); }}>
-                      Marcar aprobada
+                      {t('quotes.markApproved', 'Marcar aprobada')}
                     </button>
                   </>
                 )}
@@ -928,7 +932,7 @@ export default function Quotes({ pushToast }) {
                       updateStatus(selQuote.id, 'convertida', `Convertida a venta — Factura FEL ${fid}`);
                       pushToast(`Factura FEL ${fid} generada`, 'success');
                     }}>
-                    <Icon name="receipt" size={13} /> Convertir a venta
+                    <Icon name="receipt" size={13} /> {t('quotes.convertToSale', 'Convertir a venta')}
                   </button>
                 )}
               </div>
@@ -953,8 +957,8 @@ export default function Quotes({ pushToast }) {
             </div>
 
             <div className="tabs" style={{ padding: '0 16px', borderBottom: '1px solid var(--border)' }}>
-              <button className={`tab ${rfqDrawerTab === 'detail'  ? 'active' : ''}`} onClick={() => setRfqDrawerTab('detail')}>Detalle</button>
-              <button className={`tab ${rfqDrawerTab === 'history' ? 'active' : ''}`} onClick={() => setRfqDrawerTab('history')}>Historial</button>
+              <button className={`tab ${rfqDrawerTab === 'detail'  ? 'active' : ''}`} onClick={() => setRfqDrawerTab('detail')}>{t('quotes.detail', 'Detalle')}</button>
+              <button className={`tab ${rfqDrawerTab === 'history' ? 'active' : ''}`} onClick={() => setRfqDrawerTab('history')}>{t('quotes.history', 'Historial')}</button>
             </div>
 
             <div className="drawer-body">
@@ -965,14 +969,14 @@ export default function Quotes({ pushToast }) {
                   <>
                     <div className="detail-grid" style={{ marginBottom: 16 }}>
                       {[
-                        ['Proveedor',     selRfq.supplier.name],
+                        [t('common.supplier', 'Proveedor'),     selRfq.supplier.name],
                         ['NIT',           selRfq.supplier.nit || '—'],
-                        ['Contacto',      selRfq.supplier.contact || '—'],
-                        ['Correo',        selRfq.supplier.email || '—'],
-                        ['Resp. antes de', selRfq.deadline ? fmtDate(selRfq.deadline) : '—'],
-                        ['Creado por',    selRfq.createdBy],
-                        ['Tiempo entrega', selRfq.leadTime],
-                        ['Plazo de pago', selRfq.paymentTerms],
+                        [t('quotes.contact', 'Contacto'),      selRfq.supplier.contact || '—'],
+                        [t('quotes.email', 'Correo'),        selRfq.supplier.email || '—'],
+                        [t('quotes.respondBeforeFull', 'Resp. antes de'), selRfq.deadline ? fmtDate(selRfq.deadline) : '—'],
+                        [t('quotes.createdBy', 'Creado por'),    selRfq.createdBy],
+                        [t('quotes.leadTimeFull', 'Tiempo entrega'), selRfq.leadTime],
+                        [t('quotes.paymentTermFull', 'Plazo de pago'), selRfq.paymentTerms],
                       ].map(([l, v]) => (
                         <div className="detail-row" key={l}>
                           <span className="detail-label">{l}</span>
@@ -981,25 +985,25 @@ export default function Quotes({ pushToast }) {
                       ))}
                     </div>
 
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>PRODUCTOS SOLICITADOS</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>{t('quotes.requestedProducts', 'PRODUCTOS SOLICITADOS')}</div>
 
                     {!hasPrices && (
                       <div style={{ fontSize: 12.5, color: 'var(--warning)', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: 'var(--r-md)', borderLeft: '3px solid var(--warning)', marginBottom: 10 }}>
-                        Esperando respuesta del proveedor — precios pendientes de confirmar
+                        {t('quotes.waitingSupplierResponse', 'Esperando respuesta del proveedor — precios pendientes de confirmar')}
                       </div>
                     )}
 
                     <table className="tbl" style={{ marginBottom: 4 }}>
                       <thead>
                         <tr>
-                          <th>Descripción</th>
-                          <th style={{ textAlign: 'center' }}>Cant.</th>
+                          <th>{t('common.description', 'Descripción')}</th>
+                          <th style={{ textAlign: 'center' }}>{t('quotes.qty', 'Cant.')}</th>
                           <th style={{ textAlign: 'center' }}>UOM</th>
                           {hasPrices && (
                             <>
-                              <th style={{ textAlign: 'right' }}>P. Unit.</th>
-                              <th style={{ textAlign: 'center' }}>Desc.</th>
-                              <th style={{ textAlign: 'right' }}>Total</th>
+                              <th style={{ textAlign: 'right' }}>{t('quotes.unitPriceShort', 'P. Unit.')}</th>
+                              <th style={{ textAlign: 'center' }}>{t('common.discount', 'Desc.')}</th>
+                              <th style={{ textAlign: 'right' }}>{t('common.total', 'Total')}</th>
                             </>
                           )}
                         </tr>
@@ -1026,20 +1030,20 @@ export default function Quotes({ pushToast }) {
 
                     {hasPrices && (
                       <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: '10px 14px', marginBottom: 14 }}>
-                        {[['Subtotal sin IVA', Q(subtotal)], ['IVA (12%)', Q(iva)]].map(([l, v]) => (
+                        {[[t('quotes.subtotalNoIva', 'Subtotal sin IVA'), Q(subtotal)], [t('common.iva', 'IVA') + ' (12%)', Q(iva)]].map(([l, v]) => (
                           <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 5, color: 'var(--text-2)' }}>
                             <span>{l}</span><span className="mono">{v}</span>
                           </div>
                         ))}
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-                          <span>TOTAL ESTIMADO</span><span className="mono">{Q(total)}</span>
+                          <span>{t('quotes.estimatedTotal', 'TOTAL ESTIMADO')}</span><span className="mono">{Q(total)}</span>
                         </div>
                       </div>
                     )}
 
                     {selRfq.notes && (
                       <div style={{ fontSize: 12.5, color: 'var(--text-2)', background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 'var(--r-md)', borderLeft: '3px solid var(--border)' }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginBottom: 4, letterSpacing: '0.05em' }}>NOTAS</div>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginBottom: 4, letterSpacing: '0.05em' }}>{t('common.notes', 'NOTAS').toUpperCase()}</div>
                         {selRfq.notes}
                       </div>
                     )}
@@ -1066,23 +1070,23 @@ export default function Quotes({ pushToast }) {
             </div>
 
             <div className="drawer-foot" style={{ flexWrap: 'wrap', gap: 8 }}>
-              <button className="btn-ghost" onClick={() => setSelectedRfq(null)}>Cerrar</button>
+              <button className="btn-ghost" onClick={() => setSelectedRfq(null)}>{t('common.close', 'Cerrar')}</button>
               <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                 {selRfq.status === 'solicitada' && (
                   <button className="btn-outline"
                     onClick={() => { updateRfqStatus(selRfq.id, 'recibida', 'Cotización recibida del proveedor'); pushToast('Respuesta registrada', 'success'); }}>
-                    Registrar respuesta
+                    {t('quotes.registerResponse', 'Registrar respuesta')}
                   </button>
                 )}
                 {selRfq.status === 'recibida' && (
                   <>
                     <button className="btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
                       onClick={() => { updateRfqStatus(selRfq.id, 'rechazada', 'Cotización rechazada — condiciones no aceptadas'); pushToast('Cotización rechazada', 'danger'); }}>
-                      Rechazar
+                      {t('quotes.reject', 'Rechazar')}
                     </button>
                     <button className="btn-outline"
                       onClick={() => { updateRfqStatus(selRfq.id, 'aprobada', 'Cotización aprobada — mejor precio y condiciones'); pushToast('Cotización aprobada', 'success'); }}>
-                      Aprobar
+                      {t('quotes.approve', 'Aprobar')}
                     </button>
                   </>
                 )}
@@ -1093,7 +1097,7 @@ export default function Quotes({ pushToast }) {
                       updateRfqStatus(selRfq.id, 'convertida', `Convertida a orden de compra — ${ocNum}`);
                       pushToast(`${ocNum} generada`, 'success');
                     }}>
-                    <Icon name="truck" size={13} /> Convertir a OC
+                    <Icon name="truck" size={13} /> {t('quotes.convertToPO', 'Convertir a OC')}
                   </button>
                 )}
               </div>
