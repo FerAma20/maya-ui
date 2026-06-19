@@ -1,0 +1,1109 @@
+// ERP MAYA — Cotizaciones a clientes + RFQ a proveedores
+import React, { useState, useMemo } from 'react';
+import Icon from '../components/Icon.jsx';
+
+const Q       = v  => `Q ${Number(v).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtDate = d  => new Date(d + 'T00:00').toLocaleDateString('es-GT', { day: '2-digit', month: 'short', year: 'numeric' });
+const today   = '2026-05-24';
+
+// — Cotizaciones a clientes —
+const STATUS_LABEL = { borrador: 'Borrador', enviada: 'Enviada', aprobada: 'Aprobada', rechazada: 'Rechazada', vencida: 'Vencida', convertida: 'Convertida' };
+const STATUS_CLASS  = { borrador: 'neutral', enviada: 'info',    aprobada: 'success',  rechazada: 'danger',    vencida: 'warning',  convertida: 'success'    };
+
+// — RFQ a proveedores —
+const RFQ_LABEL = { solicitada: 'Solicitada', recibida: 'Recibida', aprobada: 'Aprobada', rechazada: 'Rechazada', convertida: 'Conv. a OC' };
+const RFQ_CLASS  = { solicitada: 'info',       recibida: 'warning',  aprobada: 'success',  rechazada: 'danger',    convertida: 'success'    };
+
+function computeTotals(items) {
+  const lines    = items.map(i => ({ ...i, lineTotal: i.qty * (i.unitPrice || 0) * (1 - (i.discount || 0) / 100) }));
+  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+  const iva      = subtotal * 0.12;
+  return { lines, subtotal, iva, total: subtotal + iva };
+}
+
+// ── Mock: cotizaciones a clientes ─────────────────────────────────────────────
+
+let _nextId = 13;
+const newId = () => `COT-2026-${String(_nextId++).padStart(5, '0')}`;
+
+const INIT_QUOTES = [
+  {
+    id: 'COT-2026-00012', date: '2026-05-23', validUntil: '2026-06-06',
+    client: { name: 'Supermercado El Ahorro', nit: '1234567-8', email: 'compras@elahorro.gt', contact: 'Jorge Fuentes' },
+    createdBy: 'Carlos Méndez', status: 'aprobada',
+    notes: 'Cliente solicita entrega en bodega Zona 4. Coordinar con logística.',
+    items: [
+      { id: 1, name: 'Coca-Cola 600ml',   qty: 50, uom: 'CAJ', unitPrice: 180.00, discount: 5 },
+      { id: 2, name: 'Leche Foremost 1L', qty: 20, uom: 'CAJ', unitPrice: 158.00, discount: 0 },
+      { id: 3, name: 'Agua Pura 600ml',   qty: 30, uom: 'CAJ', unitPrice: 78.00,  discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-23 09:14', user: 'Carlos Méndez', action: 'Cotización creada' },
+      { ts: '2026-05-23 10:30', user: 'Carlos Méndez', action: 'Enviada al cliente por correo electrónico' },
+      { ts: '2026-05-23 15:22', user: 'Jorge Fuentes',  action: 'Aprobada por el cliente' },
+    ],
+  },
+  {
+    id: 'COT-2026-00011', date: '2026-05-22', validUntil: '2026-06-05',
+    client: { name: 'Distribuidora Fuentes', nit: '9876543-2', email: 'pedidos@fuentes.gt', contact: 'Marta Fuentes' },
+    createdBy: 'Ana López', status: 'enviada',
+    notes: 'Precio especial por volumen. Descuento por pronto pago 8%.',
+    items: [
+      { id: 1, name: 'Cerveza Gallo 350ml', qty: 40, uom: 'CAJ', unitPrice: 215.00, discount: 8 },
+      { id: 2, name: 'Coca-Cola 600ml',     qty: 20, uom: 'CAJ', unitPrice: 180.00, discount: 5 },
+      { id: 3, name: 'Arroz Blanco 1kg',    qty: 5,  uom: 'PAQ', unitPrice: 285.00, discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-22 11:00', user: 'Ana López', action: 'Cotización creada' },
+      { ts: '2026-05-22 14:45', user: 'Ana López', action: 'Enviada al cliente por WhatsApp Business' },
+    ],
+  },
+  {
+    id: 'COT-2026-00010', date: '2026-05-21', validUntil: '2026-06-04',
+    client: { name: 'Mini Super La Estrella', nit: '5678901-4', email: 'compras@estrella.gt', contact: 'Roberto Paz' },
+    createdBy: 'Carlos Méndez', status: 'borrador',
+    notes: 'Pendiente de confirmar precios con gerencia.',
+    items: [
+      { id: 1, name: 'Detergente Ariel 1kg',       qty: 24, uom: 'UN',  unitPrice: 38.50, discount: 0 },
+      { id: 2, name: 'Cloro Magia Blanca 1L',       qty: 24, uom: 'UN',  unitPrice: 12.50, discount: 0 },
+      { id: 3, name: 'Papel Higiénico Petalo 4pz',  qty: 24, uom: 'PAQ', unitPrice: 18.50, discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-21 16:20', user: 'Carlos Méndez', action: 'Cotización creada (borrador)' },
+    ],
+  },
+  {
+    id: 'COT-2026-00009', date: '2026-05-20', validUntil: '2026-06-03',
+    client: { name: 'Tienda La Esperanza', nit: '3456789-0', email: 'tienda@esperanza.gt', contact: 'Carmen López' },
+    createdBy: 'José Ramírez', status: 'rechazada',
+    notes: 'Cliente indicó que el precio está fuera de su presupuesto.',
+    items: [
+      { id: 1, name: 'Pan de Manteca',        qty: 50,  uom: 'DOC', unitPrice: 26.00, discount: 0 },
+      { id: 2, name: 'Galletas María Gamesa',  qty: 100, uom: 'UN',  unitPrice: 5.00,  discount: 0 },
+      { id: 3, name: 'Chocolate Milky Way',    qty: 50,  uom: 'UN',  unitPrice: 7.50,  discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-20 10:05', user: 'José Ramírez', action: 'Cotización creada' },
+      { ts: '2026-05-20 11:30', user: 'José Ramírez', action: 'Enviada al cliente' },
+      { ts: '2026-05-21 09:00', user: 'Carmen López', action: 'Rechazada — precio fuera de presupuesto' },
+    ],
+  },
+  {
+    id: 'COT-2026-00008', date: '2026-05-18', validUntil: '2026-06-01',
+    client: { name: 'Hotel Las Américas', nit: '2345678-1', email: 'alimentos@lasamericas.gt', contact: 'Patricia Vásquez' },
+    createdBy: 'Ana López', status: 'convertida',
+    notes: 'Pedido mensual recurrente. Convertido a factura FEL.',
+    items: [
+      { id: 1, name: 'Café Soluble Frasco 200g', qty: 24, uom: 'UN',  unitPrice: 42.00,  discount: 10 },
+      { id: 2, name: 'Azúcar Estándar 2kg',       qty: 20, uom: 'PAQ', unitPrice: 175.00, discount: 5  },
+      { id: 3, name: 'Leche Foremost 1L',          qty: 10, uom: 'CAJ', unitPrice: 158.00, discount: 5  },
+      { id: 4, name: 'Pan de Manteca',             qty: 30, uom: 'DOC', unitPrice: 26.00,  discount: 0  },
+    ],
+    history: [
+      { ts: '2026-05-18 08:30', user: 'Ana López',        action: 'Cotización creada' },
+      { ts: '2026-05-18 09:15', user: 'Ana López',        action: 'Enviada al cliente' },
+      { ts: '2026-05-19 10:00', user: 'Patricia Vásquez', action: 'Aprobada' },
+      { ts: '2026-05-19 10:45', user: 'Ana López',        action: 'Convertida a venta — Factura FEL T-2026-04820' },
+    ],
+  },
+  {
+    id: 'COT-2026-00007', date: '2026-05-10', validUntil: '2026-05-24',
+    client: { name: 'Restaurante El Buen Sabor', nit: '8765432-1', email: 'cocina@buensabor.gt', contact: 'Luis Morales' },
+    createdBy: 'Carlos Méndez', status: 'vencida',
+    notes: 'Sin respuesta del cliente. Cotización vencida.',
+    items: [
+      { id: 1, name: 'Aceite Vegetal 900ml', qty: 12, uom: 'CAJ', unitPrice: 220.00, discount: 0 },
+      { id: 2, name: 'Sal Refinada 1kg',     qty: 50, uom: 'UN',  unitPrice: 6.50,   discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-10 14:00', user: 'Carlos Méndez', action: 'Cotización creada' },
+      { ts: '2026-05-10 15:30', user: 'Carlos Méndez', action: 'Enviada al cliente' },
+      { ts: '2026-05-24 00:00', user: 'Sistema',        action: 'Cotización vencida sin respuesta' },
+    ],
+  },
+];
+
+// ── Mock: RFQ a proveedores ───────────────────────────────────────────────────
+
+let _nextRfqId = 7;
+const newRfqId = () => `RFQ-2026-${String(_nextRfqId++).padStart(5, '0')}`;
+
+const INIT_RFQ = [
+  {
+    id: 'RFQ-2026-00006', date: '2026-05-23', deadline: '2026-05-28',
+    supplier: { name: 'Distribuidora El Mayoreo', nit: '7891234-5', email: 'ventas@elmayoreo.gt', contact: 'Fernando Díaz' },
+    createdBy: 'Carlos Méndez', status: 'recibida',
+    leadTime: '3-5 días', paymentTerms: '30 días crédito',
+    notes: 'Comparar con cotización de Proveedor Central antes de aprobar.',
+    items: [
+      { id: 1, name: 'Coca-Cola 600ml',   qty: 100, uom: 'CAJ', unitPrice: 168.00, discount: 0 },
+      { id: 2, name: 'Leche Foremost 1L', qty: 50,  uom: 'CAJ', unitPrice: 145.00, discount: 0 },
+      { id: 3, name: 'Agua Pura 600ml',   qty: 80,  uom: 'CAJ', unitPrice: 68.00,  discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-23 08:30', user: 'Carlos Méndez', action: 'Solicitud de cotización creada' },
+      { ts: '2026-05-23 11:00', user: 'Carlos Méndez', action: 'RFQ enviada a proveedor por correo' },
+      { ts: '2026-05-24 09:15', user: 'Fernando Díaz', action: 'Cotización recibida del proveedor' },
+    ],
+  },
+  {
+    id: 'RFQ-2026-00005', date: '2026-05-22', deadline: '2026-05-27',
+    supplier: { name: 'Proveedor Central S.A.', nit: '3456789-1', email: 'cotizaciones@procentral.gt', contact: 'María Estrada' },
+    createdBy: 'Ana López', status: 'aprobada',
+    leadTime: '2-3 días', paymentTerms: '15 días crédito',
+    notes: 'Mejor precio del mercado. Aprobado para proceder con OC.',
+    items: [
+      { id: 1, name: 'Coca-Cola 600ml',   qty: 100, uom: 'CAJ', unitPrice: 165.00, discount: 2 },
+      { id: 2, name: 'Leche Foremost 1L', qty: 50,  uom: 'CAJ', unitPrice: 142.00, discount: 0 },
+      { id: 3, name: 'Agua Pura 600ml',   qty: 80,  uom: 'CAJ', unitPrice: 65.00,  discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-22 09:00', user: 'Ana López',     action: 'Solicitud de cotización creada' },
+      { ts: '2026-05-22 10:30', user: 'Ana López',     action: 'RFQ enviada a proveedor' },
+      { ts: '2026-05-23 08:00', user: 'María Estrada', action: 'Cotización recibida del proveedor' },
+      { ts: '2026-05-24 10:00', user: 'Ana López',     action: 'Cotización aprobada — precio más competitivo' },
+    ],
+  },
+  {
+    id: 'RFQ-2026-00004', date: '2026-05-20', deadline: '2026-05-25',
+    supplier: { name: 'Importadora del Norte', nit: '5678901-3', email: 'ventas@imnorte.gt', contact: 'José García' },
+    createdBy: 'Carlos Méndez', status: 'convertida',
+    leadTime: '5-7 días', paymentTerms: '30 días crédito',
+    notes: 'OC generada para reponer stock crítico de limpieza.',
+    items: [
+      { id: 1, name: 'Detergente Ariel 1kg',       qty: 48, uom: 'UN',  unitPrice: 32.50, discount: 0 },
+      { id: 2, name: 'Cloro Magia Blanca 1L',       qty: 48, uom: 'UN',  unitPrice: 10.00, discount: 0 },
+      { id: 3, name: 'Papel Higiénico Petalo 4pz',  qty: 48, uom: 'PAQ', unitPrice: 15.50, discount: 5 },
+    ],
+    history: [
+      { ts: '2026-05-20 13:00', user: 'Carlos Méndez', action: 'Solicitud de cotización creada' },
+      { ts: '2026-05-20 14:00', user: 'Carlos Méndez', action: 'RFQ enviada a proveedor' },
+      { ts: '2026-05-21 11:30', user: 'José García',   action: 'Cotización recibida del proveedor' },
+      { ts: '2026-05-22 09:00', user: 'Carlos Méndez', action: 'Cotización aprobada' },
+      { ts: '2026-05-22 09:30', user: 'Carlos Méndez', action: 'Convertida a OC — OC-2026-00089' },
+    ],
+  },
+  {
+    id: 'RFQ-2026-00003', date: '2026-05-18', deadline: '2026-05-23',
+    supplier: { name: 'Agro Distribuciones', nit: '9012345-6', email: 'pedidos@agrodist.gt', contact: 'Laura Pérez' },
+    createdBy: 'Ana López', status: 'rechazada',
+    leadTime: '7-10 días', paymentTerms: '45 días crédito',
+    notes: 'Precio elevado, tiempo de entrega fuera de lo requerido. Buscar proveedor alternativo.',
+    items: [
+      { id: 1, name: 'Arroz Blanco 1kg', qty: 200, uom: 'PAQ', unitPrice: 8.50,  discount: 0 },
+      { id: 2, name: 'Frijol Negro 1kg', qty: 100, uom: 'PAQ', unitPrice: 12.00, discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-18 10:00', user: 'Ana López',   action: 'Solicitud de cotización creada' },
+      { ts: '2026-05-18 11:00', user: 'Ana López',   action: 'RFQ enviada a proveedor' },
+      { ts: '2026-05-20 16:00', user: 'Laura Pérez', action: 'Cotización recibida del proveedor' },
+      { ts: '2026-05-21 09:00', user: 'Ana López',   action: 'Rechazada — precio y plazo no competitivos' },
+    ],
+  },
+  {
+    id: 'RFQ-2026-00002', date: '2026-05-16', deadline: '2026-05-21',
+    supplier: { name: 'Bebidas del Pacífico', nit: '6789012-4', email: 'cuentas@bebidaspacifico.gt', contact: 'Roberto Castillo' },
+    createdBy: 'José Ramírez', status: 'solicitada',
+    leadTime: 'Por confirmar', paymentTerms: 'Por confirmar',
+    notes: 'Seguimiento pendiente. Sin respuesta del proveedor — hacer llamada de seguimiento.',
+    items: [
+      { id: 1, name: 'Cerveza Gallo 350ml', qty: 50,  uom: 'CAJ', unitPrice: 0, discount: 0 },
+      { id: 2, name: 'Agua Pura 600ml',      qty: 100, uom: 'CAJ', unitPrice: 0, discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-16 14:00', user: 'José Ramírez', action: 'Solicitud de cotización creada' },
+      { ts: '2026-05-16 15:00', user: 'José Ramírez', action: 'RFQ enviada a proveedor por correo' },
+    ],
+  },
+  {
+    id: 'RFQ-2026-00001', date: '2026-05-14', deadline: '2026-05-24',
+    supplier: { name: 'Distribuidora Centroamérica', nit: '1234509-7', email: 'ventas@distca.gt', contact: 'Sandra Morales' },
+    createdBy: 'Carlos Méndez', status: 'recibida',
+    leadTime: '4-6 días', paymentTerms: '30 días crédito',
+    notes: 'Cotización para reposición de dulcería.',
+    items: [
+      { id: 1, name: 'Chocolate Milky Way 40g',  qty: 200, uom: 'UN', unitPrice: 6.20,  discount: 0 },
+      { id: 2, name: 'Galletas Oreo 36g',         qty: 200, uom: 'UN', unitPrice: 4.50,  discount: 5 },
+      { id: 3, name: 'Caramelos Halls Menta',     qty: 100, uom: 'UN', unitPrice: 3.00,  discount: 0 },
+    ],
+    history: [
+      { ts: '2026-05-14 10:00', user: 'Carlos Méndez',  action: 'Solicitud de cotización creada' },
+      { ts: '2026-05-14 11:30', user: 'Carlos Méndez',  action: 'RFQ enviada a proveedor' },
+      { ts: '2026-05-16 09:00', user: 'Sandra Morales', action: 'Cotización recibida del proveedor' },
+    ],
+  },
+];
+
+// ── Modal: nueva cotización a cliente ─────────────────────────────────────────
+
+const EMPTY_ITEM = () => ({ id: Date.now(), name: '', qty: 1, uom: 'UN', unitPrice: 0, discount: 0 });
+
+function CreateModal({ onSave, onClose }) {
+  const [client,    setClient]    = useState({ name: '', nit: '', email: '', contact: '' });
+  const [validDays, setValidDays] = useState(15);
+  const [notes,     setNotes]     = useState('');
+  const [items,     setItems]     = useState([EMPTY_ITEM()]);
+  const setC = (k, v) => setClient(c => ({ ...c, [k]: v }));
+
+  const setItem    = (id, k, v) => setItems(prev => prev.map(i => i.id === id ? { ...i, [k]: v } : i));
+  const addItem    = () => setItems(prev => [...prev, EMPTY_ITEM()]);
+  const removeItem = id => setItems(prev => prev.filter(i => i.id !== id));
+
+  const { lines, subtotal, iva, total } = computeTotals(items);
+  const validDate = new Date(today);
+  validDate.setDate(validDate.getDate() + validDays);
+  const validUntil = validDate.toISOString().slice(0, 10);
+
+  const canSave = client.name.trim() && items.every(i => i.name.trim() && i.qty > 0 && i.unitPrice > 0);
+
+  const handleSave = () => {
+    onSave({
+      id: newId(), date: today, validUntil, client, createdBy: 'Carlos Méndez',
+      status: 'borrador', notes,
+      items: items.map((i, idx) => ({ ...i, id: idx + 1 })),
+      history: [{ ts: `${today} ${new Date().toTimeString().slice(0, 5)}`, user: 'Carlos Méndez', action: 'Cotización creada' }],
+    });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" style={{ width: 680, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <span className="modal-title">Nueva Cotización</span>
+          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+        </div>
+
+        <div className="modal-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>CLIENTE</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="field-group">
+                <label className="field-label">Nombre / Empresa *</label>
+                <input className="field-input" value={client.name} onChange={e => setC('name', e.target.value)} placeholder="Empresa o persona" />
+              </div>
+              <div className="field-group">
+                <label className="field-label">NIT</label>
+                <input className="field-input" value={client.nit} onChange={e => setC('nit', e.target.value)} placeholder="0000000-0" />
+              </div>
+              <div className="field-group">
+                <label className="field-label">Correo electrónico</label>
+                <input className="field-input" type="email" value={client.email} onChange={e => setC('email', e.target.value)} placeholder="correo@empresa.gt" />
+              </div>
+              <div className="field-group">
+                <label className="field-label">Contacto</label>
+                <input className="field-input" value={client.contact} onChange={e => setC('contact', e.target.value)} placeholder="Nombre del contacto" />
+              </div>
+            </div>
+          </div>
+
+          <div className="field-group" style={{ maxWidth: 220 }}>
+            <label className="field-label">Validez (días)</label>
+            <input className="field-input" type="number" min="1" max="90" value={validDays}
+              onChange={e => setValidDays(Number(e.target.value))} />
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Vence: {fmtDate(validUntil)}</div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>PRODUCTOS / SERVICIOS</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  {['Descripción', 'Cant.', 'UOM', 'P. unitario', 'Desc %', 'Total', ''].map((h, i) => (
+                    <th key={i} style={{ padding: '4px 6px', textAlign: i >= 3 && i <= 4 ? 'center' : i === 5 ? 'right' : 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 11,
+                      width: [undefined, 60, 60, 100, 60, 100, 28][i] }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map(item => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" style={{ padding: '3px 6px' }} value={item.name}
+                        onChange={e => setItem(item.id, 'name', e.target.value)} placeholder="Producto o servicio" />
+                    </td>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" type="number" min="1" style={{ padding: '3px 6px', textAlign: 'center', width: '100%' }}
+                        value={item.qty} onChange={e => setItem(item.id, 'qty', Number(e.target.value))} />
+                    </td>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" style={{ padding: '3px 6px', textAlign: 'center', width: '100%' }}
+                        value={item.uom} onChange={e => setItem(item.id, 'uom', e.target.value)} />
+                    </td>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" type="number" min="0" step="0.01" style={{ padding: '3px 6px', textAlign: 'right', width: '100%' }}
+                        value={item.unitPrice} onChange={e => setItem(item.id, 'unitPrice', Number(e.target.value))} />
+                    </td>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" type="number" min="0" max="100" style={{ padding: '3px 6px', textAlign: 'center', width: '100%' }}
+                        value={item.discount} onChange={e => setItem(item.id, 'discount', Number(e.target.value))} />
+                    </td>
+                    <td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                      {Q(item.qty * item.unitPrice * (1 - item.discount / 100))}
+                    </td>
+                    <td style={{ padding: '4px 2px' }}>
+                      <button className="icon-btn" onClick={() => removeItem(item.id)} disabled={items.length === 1}>
+                        <Icon name="close" size={11} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button className="btn-ghost" style={{ marginTop: 8 }} onClick={addItem}>
+              <Icon name="plus" size={12} /> Agregar línea
+            </button>
+          </div>
+
+          <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: '12px 16px', alignSelf: 'flex-end', minWidth: 260 }}>
+            {[['Subtotal (sin IVA)', Q(subtotal)], ['IVA (12%)', Q(iva)]].map(([l, v]) => (
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 6, color: 'var(--text-2)' }}>
+                <span>{l}</span><span className="mono">{v}</span>
+              </div>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+              <span>TOTAL</span><span className="mono">{Q(total)}</span>
+            </div>
+          </div>
+
+          <div className="field-group">
+            <label className="field-label">Notas / condiciones</label>
+            <textarea className="field-input" rows={2} style={{ resize: 'none' }} value={notes}
+              onChange={e => setNotes(e.target.value)} placeholder="Condiciones de pago, entrega, observaciones…" />
+          </div>
+        </div>
+
+        <div className="modal-foot">
+          <button className="btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn" disabled={!canSave} onClick={handleSave}>Crear cotización</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal: nueva solicitud de cotización a proveedor (RFQ) ────────────────────
+
+const EMPTY_RITEM = () => ({ id: Date.now(), name: '', qty: 1, uom: 'UN' });
+
+function CreateRFQModal({ onSave, onClose }) {
+  const [supplier, setSupplier] = useState({ name: '', nit: '', email: '', contact: '' });
+  const [deadline, setDeadline] = useState('');
+  const [notes,    setNotes]    = useState('');
+  const [items,    setItems]    = useState([EMPTY_RITEM()]);
+  const setS = (k, v) => setSupplier(s => ({ ...s, [k]: v }));
+
+  const setItem    = (id, k, v) => setItems(prev => prev.map(i => i.id === id ? { ...i, [k]: v } : i));
+  const addItem    = () => setItems(prev => [...prev, EMPTY_RITEM()]);
+  const removeItem = id => setItems(prev => prev.filter(i => i.id !== id));
+
+  const canSave = supplier.name.trim() && items.every(i => i.name.trim() && i.qty > 0);
+
+  const handleSave = () => {
+    onSave({
+      id: newRfqId(), date: today, deadline,
+      supplier, createdBy: 'Carlos Méndez', status: 'solicitada',
+      leadTime: 'Por confirmar', paymentTerms: 'Por confirmar',
+      notes,
+      items: items.map((i, idx) => ({ ...i, id: idx + 1, unitPrice: 0, discount: 0 })),
+      history: [{ ts: `${today} ${new Date().toTimeString().slice(0, 5)}`, user: 'Carlos Méndez', action: 'Solicitud de cotización creada' }],
+    });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" style={{ width: 620, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <span className="modal-title">Nueva Solicitud de Cotización (RFQ)</span>
+          <button className="icon-btn" onClick={onClose}><Icon name="close" /></button>
+        </div>
+
+        <div className="modal-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>PROVEEDOR</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="field-group">
+                <label className="field-label">Nombre / Empresa *</label>
+                <input className="field-input" value={supplier.name} onChange={e => setS('name', e.target.value)} placeholder="Empresa proveedora" />
+              </div>
+              <div className="field-group">
+                <label className="field-label">NIT</label>
+                <input className="field-input" value={supplier.nit} onChange={e => setS('nit', e.target.value)} placeholder="0000000-0" />
+              </div>
+              <div className="field-group">
+                <label className="field-label">Correo electrónico</label>
+                <input className="field-input" type="email" value={supplier.email} onChange={e => setS('email', e.target.value)} placeholder="ventas@proveedor.gt" />
+              </div>
+              <div className="field-group">
+                <label className="field-label">Contacto</label>
+                <input className="field-input" value={supplier.contact} onChange={e => setS('contact', e.target.value)} placeholder="Nombre del contacto" />
+              </div>
+            </div>
+          </div>
+
+          <div className="field-group" style={{ maxWidth: 220 }}>
+            <label className="field-label">Responder antes de</label>
+            <input className="field-input" type="date" value={deadline} min={today}
+              onChange={e => setDeadline(e.target.value)} />
+          </div>
+
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>PRODUCTOS SOLICITADOS</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ padding: '4px 6px', textAlign: 'left', fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>Descripción</th>
+                  <th style={{ padding: '4px 6px', textAlign: 'center', width: 80, fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>Cantidad</th>
+                  <th style={{ padding: '4px 6px', textAlign: 'center', width: 70, fontWeight: 600, color: 'var(--text-2)', fontSize: 11 }}>UOM</th>
+                  <th style={{ width: 28 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map(item => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" style={{ padding: '3px 6px' }} value={item.name}
+                        onChange={e => setItem(item.id, 'name', e.target.value)} placeholder="Producto o insumo" />
+                    </td>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" type="number" min="1" style={{ padding: '3px 6px', textAlign: 'center', width: '100%' }}
+                        value={item.qty} onChange={e => setItem(item.id, 'qty', Number(e.target.value))} />
+                    </td>
+                    <td style={{ padding: '4px 6px' }}>
+                      <input className="field-input" style={{ padding: '3px 6px', textAlign: 'center', width: '100%' }}
+                        value={item.uom} onChange={e => setItem(item.id, 'uom', e.target.value)} />
+                    </td>
+                    <td style={{ padding: '4px 2px' }}>
+                      <button className="icon-btn" onClick={() => removeItem(item.id)} disabled={items.length === 1}>
+                        <Icon name="close" size={11} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button className="btn-ghost" style={{ marginTop: 8 }} onClick={addItem}>
+              <Icon name="plus" size={12} /> Agregar producto
+            </button>
+          </div>
+
+          <div className="field-group">
+            <label className="field-label">Notas / especificaciones</label>
+            <textarea className="field-input" rows={2} style={{ resize: 'none' }} value={notes}
+              onChange={e => setNotes(e.target.value)} placeholder="Especificaciones técnicas, condiciones deseadas, observaciones…" />
+          </div>
+        </div>
+
+        <div className="modal-foot">
+          <button className="btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn" disabled={!canSave} onClick={handleSave}>Crear solicitud</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Componente principal ───────────────────────────────────────────────────────
+
+export default function Quotes({ pushToast }) {
+  const [quoteType, setQuoteType] = useState('cliente');
+
+  // — cotizaciones a clientes —
+  const [quotes,       setQuotes]       = useState(INIT_QUOTES);
+  const [selected,     setSelected]     = useState(null);
+  const [drawerTab,    setDrawerTab]    = useState('detail');
+  const [showCreate,   setShowCreate]   = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [search,       setSearch]       = useState('');
+
+  // — RFQ a proveedores —
+  const [rfqs,          setRfqs]          = useState(INIT_RFQ);
+  const [selectedRfq,   setSelectedRfq]   = useState(null);
+  const [rfqDrawerTab,  setRfqDrawerTab]  = useState('detail');
+  const [showCreateRfq, setShowCreateRfq] = useState(false);
+  const [rfqFilter,     setRfqFilter]     = useState('');
+  const [rfqSearch,     setRfqSearch]     = useState('');
+
+  const switchType = (type) => {
+    setQuoteType(type);
+    setSelected(null);
+    setSelectedRfq(null);
+    setStatusFilter('');
+    setSearch('');
+    setRfqFilter('');
+    setRfqSearch('');
+  };
+
+  // — KPIs clientes —
+  const pipeline    = quotes.filter(q => ['borrador', 'enviada', 'aprobada'].includes(q.status));
+  const pipelineAmt = pipeline.reduce((s, q) => s + computeTotals(q.items).total, 0);
+  const approvedAmt = quotes.filter(q => q.status === 'aprobada').reduce((s, q) => s + computeTotals(q.items).total, 0);
+
+  const filtered = useMemo(() => quotes.filter(q => {
+    if (statusFilter && q.status !== statusFilter) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      return q.id.toLowerCase().includes(s) || q.client.name.toLowerCase().includes(s);
+    }
+    return true;
+  }), [quotes, statusFilter, search]);
+
+  const updateStatus = (id, newStatus, entry) => {
+    setQuotes(prev => prev.map(q => q.id === id
+      ? { ...q, status: newStatus, history: [...q.history, { ts: `${today} ${new Date().toTimeString().slice(0, 5)}`, user: 'Carlos Méndez', action: entry }] }
+      : q));
+    setSelected(prev => prev ? { ...prev, status: newStatus } : null);
+  };
+
+  const createQuote = q => { setQuotes(prev => [q, ...prev]); setShowCreate(false); pushToast(`${q.id} creada como borrador`, 'success'); };
+  const openDrawer  = q => { setSelected(q); setDrawerTab('detail'); };
+  const selQuote    = selected ? quotes.find(q => q.id === selected.id) : null;
+
+  // — KPIs proveedores —
+  const rfqInProcess = rfqs.filter(r => ['solicitada', 'recibida'].includes(r.status));
+  const rfqPending   = rfqs.filter(r => r.status === 'solicitada');
+  const rfqApproved  = rfqs.filter(r => r.status === 'aprobada');
+
+  const filteredRfqs = useMemo(() => rfqs.filter(r => {
+    if (rfqFilter && r.status !== rfqFilter) return false;
+    if (rfqSearch) {
+      const s = rfqSearch.toLowerCase();
+      return r.id.toLowerCase().includes(s) || r.supplier.name.toLowerCase().includes(s);
+    }
+    return true;
+  }), [rfqs, rfqFilter, rfqSearch]);
+
+  const updateRfqStatus = (id, newStatus, entry) => {
+    setRfqs(prev => prev.map(r => r.id === id
+      ? { ...r, status: newStatus, history: [...r.history, { ts: `${today} ${new Date().toTimeString().slice(0, 5)}`, user: 'Carlos Méndez', action: entry }] }
+      : r));
+    setSelectedRfq(prev => prev ? { ...prev, status: newStatus } : null);
+  };
+
+  const createRfq    = r => { setRfqs(prev => [r, ...prev]); setShowCreateRfq(false); pushToast(`${r.id} creada — esperando respuesta del proveedor`, 'success'); };
+  const openRfqDrawer = r => { setSelectedRfq(r); setRfqDrawerTab('detail'); };
+  const selRfq        = selectedRfq ? rfqs.find(r => r.id === selectedRfq.id) : null;
+
+  return (
+    <div className="page">
+      {/* Cabecera con selector de tipo */}
+      <div className="page-head">
+        <div>
+          <div className="page-title">Cotizaciones</div>
+          <div className="page-sub">
+            {quoteType === 'cliente' ? 'Pre-ventas y propuestas comerciales a clientes' : 'Solicitudes de cotización a proveedores (RFQ)'}
+          </div>
+        </div>
+        <div className="page-head-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Selector de tipo */}
+          <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: 3, gap: 2 }}>
+            {[['cliente', 'A clientes'], ['proveedor', 'A proveedores']].map(([val, lbl]) => (
+              <button key={val} onClick={() => switchType(val)}
+                style={{ padding: '5px 14px', border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 500, fontFamily: 'inherit',
+                  borderRadius: 'calc(var(--r-md) - 2px)',
+                  background: quoteType === val ? 'var(--surface)' : 'transparent',
+                  color: quoteType === val ? 'var(--text)' : 'var(--text-2)',
+                  boxShadow: quoteType === val ? '0 1px 3px rgba(0,0,0,.1)' : 'none',
+                  transition: 'background .15s, color .15s',
+                }}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+          {quoteType === 'cliente' ? (
+            <button className="btn" onClick={() => setShowCreate(true)}>
+              <Icon name="plus" size={12} /> Nueva cotización
+            </button>
+          ) : (
+            <button className="btn" onClick={() => setShowCreateRfq(true)}>
+              <Icon name="plus" size={12} /> Nueva solicitud
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Vista: cotizaciones a clientes ─────────────────────────────────── */}
+      {quoteType === 'cliente' && (
+        <>
+          <div className="stat-grid" style={{ marginBottom: 20 }}>
+            <div className="stat-card">
+              <div className="label">En pipeline</div>
+              <div className="value">{pipeline.length}</div>
+              <div className="sub muted">{Q(pipelineAmt)} en proceso</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">Aprobadas</div>
+              <div className="value success">{quotes.filter(q => q.status === 'aprobada').length}</div>
+              <div className="sub success">{Q(approvedAmt)} listas para facturar</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">Convertidas</div>
+              <div className="value">{quotes.filter(q => q.status === 'convertida').length}</div>
+              <div className="sub muted">Este mes</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">Vencidas / Rechazadas</div>
+              <div className="value danger">{quotes.filter(q => ['vencida', 'rechazada'].includes(q.status)).length}</div>
+              <div className="sub muted">Requieren seguimiento</div>
+            </div>
+          </div>
+
+          <div className="filterbar" style={{ marginBottom: 12 }}>
+            <div className="field-wrap search-wrap">
+              <Icon name="search" className="field-icon" size={13} />
+              <input className="field-input" placeholder="Buscar cotización o cliente…" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <select className="field-input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <option value="">Todos los estados</option>
+              {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </div>
+
+          <div className="card">
+            <div className="table-wrap" style={{ border: 'none', margin: 0, borderRadius: 0 }}>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Cotización</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Válida hasta</th>
+                    <th style={{ textAlign: 'center' }}>Ítems</th>
+                    <th style={{ textAlign: 'right' }}>Total (c/IVA)</th>
+                    <th>Estado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(q => {
+                    const { total }  = computeTotals(q.items);
+                    const isExpired  = q.validUntil < today && !['convertida', 'rechazada', 'vencida'].includes(q.status);
+                    return (
+                      <tr key={q.id} onClick={() => openDrawer(q)} style={{ cursor: 'pointer' }}>
+                        <td><span className="mono" style={{ fontWeight: 700, fontSize: 12 }}>{q.id}</span></td>
+                        <td>
+                          <div style={{ fontWeight: 500 }}>{q.client.name}</div>
+                          <div className="muted" style={{ fontSize: 11 }}>{q.client.contact}</div>
+                        </td>
+                        <td className="muted" style={{ fontSize: 12.5 }}>{fmtDate(q.date)}</td>
+                        <td style={{ fontSize: 12.5, color: isExpired ? 'var(--danger)' : 'var(--text-2)' }}>{fmtDate(q.validUntil)}</td>
+                        <td style={{ textAlign: 'center' }}>{q.items.length}</td>
+                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{Q(total)}</td>
+                        <td><span className={`pill ${STATUS_CLASS[q.status]}`}>{STATUS_LABEL[q.status]}</span></td>
+                        <td><button className="btn-ghost" onClick={e => { e.stopPropagation(); openDrawer(q); }}>Ver</button></td>
+                      </tr>
+                    );
+                  })}
+                  {filtered.length === 0 && (
+                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}>Sin cotizaciones</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Vista: RFQ a proveedores ────────────────────────────────────────── */}
+      {quoteType === 'proveedor' && (
+        <>
+          <div className="stat-grid" style={{ marginBottom: 20 }}>
+            <div className="stat-card">
+              <div className="label">En proceso</div>
+              <div className="value">{rfqInProcess.length}</div>
+              <div className="sub muted">Solicitadas + recibidas</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">Pendientes respuesta</div>
+              <div className="value warning">{rfqPending.length}</div>
+              <div className="sub muted">Esperando al proveedor</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">Aprobadas</div>
+              <div className="value success">{rfqApproved.length}</div>
+              <div className="sub muted">Listas para generar OC</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">Convertidas a OC</div>
+              <div className="value">{rfqs.filter(r => r.status === 'convertida').length}</div>
+              <div className="sub muted">Este mes</div>
+            </div>
+          </div>
+
+          <div className="filterbar" style={{ marginBottom: 12 }}>
+            <div className="field-wrap search-wrap">
+              <Icon name="search" className="field-icon" size={13} />
+              <input className="field-input" placeholder="Buscar RFQ o proveedor…" value={rfqSearch} onChange={e => setRfqSearch(e.target.value)} />
+            </div>
+            <select className="field-input" value={rfqFilter} onChange={e => setRfqFilter(e.target.value)}>
+              <option value="">Todos los estados</option>
+              {Object.entries(RFQ_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </div>
+
+          <div className="card">
+            <div className="table-wrap" style={{ border: 'none', margin: 0, borderRadius: 0 }}>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Solicitud</th>
+                    <th>Proveedor</th>
+                    <th>Fecha</th>
+                    <th>Resp. antes</th>
+                    <th>T. entrega</th>
+                    <th>Plazo pago</th>
+                    <th style={{ textAlign: 'right' }}>Total (c/IVA)</th>
+                    <th>Estado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRfqs.map(r => {
+                    const { total }   = computeTotals(r.items);
+                    const hasPrices   = r.items.some(i => i.unitPrice > 0);
+                    const isOverdue   = r.deadline && r.deadline < today && ['solicitada', 'recibida'].includes(r.status);
+                    return (
+                      <tr key={r.id} onClick={() => openRfqDrawer(r)} style={{ cursor: 'pointer' }}>
+                        <td><span className="mono" style={{ fontWeight: 700, fontSize: 12 }}>{r.id}</span></td>
+                        <td>
+                          <div style={{ fontWeight: 500 }}>{r.supplier.name}</div>
+                          <div className="muted" style={{ fontSize: 11 }}>{r.supplier.contact}</div>
+                        </td>
+                        <td className="muted" style={{ fontSize: 12.5 }}>{fmtDate(r.date)}</td>
+                        <td style={{ fontSize: 12.5, color: isOverdue ? 'var(--danger)' : 'var(--text-2)' }}>
+                          {r.deadline ? fmtDate(r.deadline) : '—'}
+                        </td>
+                        <td style={{ fontSize: 12.5 }}>{r.leadTime}</td>
+                        <td style={{ fontSize: 12.5 }}>{r.paymentTerms}</td>
+                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 600, color: hasPrices ? 'var(--text)' : 'var(--muted)' }}>
+                          {hasPrices ? Q(total) : 'Pendiente'}
+                        </td>
+                        <td><span className={`pill ${RFQ_CLASS[r.status]}`}>{RFQ_LABEL[r.status]}</span></td>
+                        <td><button className="btn-ghost" onClick={e => { e.stopPropagation(); openRfqDrawer(r); }}>Ver</button></td>
+                      </tr>
+                    );
+                  })}
+                  {filteredRfqs.length === 0 && (
+                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 32, color: 'var(--muted)' }}>Sin solicitudes</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Drawer: cotización a cliente ────────────────────────────────────── */}
+      {selQuote && (
+        <div className="drawer-backdrop" onClick={() => setSelected(null)}>
+          <div className="drawer" style={{ width: 600 }} onClick={e => e.stopPropagation()}>
+            <div className="drawer-head">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>{selQuote.id}</span>
+                  <span className={`pill ${STATUS_CLASS[selQuote.status]}`}>{STATUS_LABEL[selQuote.status]}</span>
+                </div>
+                <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{selQuote.client.name} · {fmtDate(selQuote.date)}</div>
+              </div>
+              <button className="icon-btn" onClick={() => setSelected(null)}><Icon name="close" /></button>
+            </div>
+
+            <div className="tabs" style={{ padding: '0 16px', borderBottom: '1px solid var(--border)' }}>
+              <button className={`tab ${drawerTab === 'detail'  ? 'active' : ''}`} onClick={() => setDrawerTab('detail')}>Detalle</button>
+              <button className={`tab ${drawerTab === 'history' ? 'active' : ''}`} onClick={() => setDrawerTab('history')}>Historial</button>
+            </div>
+
+            <div className="drawer-body">
+              {drawerTab === 'detail' && (() => {
+                const { lines, subtotal, iva, total } = computeTotals(selQuote.items);
+                return (
+                  <>
+                    <div className="detail-grid" style={{ marginBottom: 16 }}>
+                      {[
+                        ['Cliente',      selQuote.client.name],
+                        ['NIT',          selQuote.client.nit || '—'],
+                        ['Contacto',     selQuote.client.contact || '—'],
+                        ['Correo',       selQuote.client.email || '—'],
+                        ['Válida hasta', fmtDate(selQuote.validUntil)],
+                        ['Creado por',   selQuote.createdBy],
+                      ].map(([l, v]) => (
+                        <div className="detail-row" key={l}>
+                          <span className="detail-label">{l}</span>
+                          <span style={{ fontSize: 12.5, textAlign: 'right' }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>PRODUCTOS</div>
+                    <table className="tbl" style={{ marginBottom: 4 }}>
+                      <thead>
+                        <tr>
+                          <th>Descripción</th>
+                          <th style={{ textAlign: 'center' }}>Cant.</th>
+                          <th style={{ textAlign: 'center' }}>UOM</th>
+                          <th style={{ textAlign: 'right' }}>P. Unit.</th>
+                          <th style={{ textAlign: 'center' }}>Desc.</th>
+                          <th style={{ textAlign: 'right' }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lines.map(l => (
+                          <tr key={l.id}>
+                            <td style={{ fontSize: 12.5 }}>{l.name}</td>
+                            <td style={{ textAlign: 'center' }}>{l.qty}</td>
+                            <td style={{ textAlign: 'center' }}><span className="pill">{l.uom}</span></td>
+                            <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{Q(l.unitPrice)}</td>
+                            <td style={{ textAlign: 'center', color: l.discount > 0 ? 'var(--success)' : 'var(--muted)' }}>
+                              {l.discount > 0 ? `${l.discount}%` : '—'}
+                            </td>
+                            <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600 }}>{Q(l.lineTotal)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: '10px 14px', marginBottom: 14 }}>
+                      {[['Subtotal sin IVA', Q(subtotal)], ['IVA (12%)', Q(iva)]].map(([l, v]) => (
+                        <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 5, color: 'var(--text-2)' }}>
+                          <span>{l}</span><span className="mono">{v}</span>
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                        <span>TOTAL</span><span className="mono">{Q(total)}</span>
+                      </div>
+                    </div>
+
+                    {selQuote.notes && (
+                      <div style={{ fontSize: 12.5, color: 'var(--text-2)', background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 'var(--r-md)', borderLeft: '3px solid var(--border)' }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginBottom: 4, letterSpacing: '0.05em' }}>NOTAS</div>
+                        {selQuote.notes}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+
+              {drawerTab === 'history' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {selQuote.history.map((h, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 12, paddingBottom: 16 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: idx === 0 ? 'var(--accent)' : 'var(--border)', flexShrink: 0, marginTop: 4 }} />
+                        {idx < selQuote.history.length - 1 && <div style={{ width: 1, flex: 1, background: 'var(--border)' }} />}
+                      </div>
+                      <div style={{ flex: 1, paddingBottom: 4 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>{h.action}</div>
+                        <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>{h.user} · {h.ts}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="drawer-foot" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <button className="btn-ghost" onClick={() => setSelected(null)}>Cerrar</button>
+              <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                {selQuote.status === 'borrador' && (
+                  <button className="btn-outline"
+                    onClick={() => { updateStatus(selQuote.id, 'enviada', 'Enviada al cliente por correo electrónico'); pushToast('Cotización enviada', 'success'); }}>
+                    Enviar al cliente
+                  </button>
+                )}
+                {selQuote.status === 'enviada' && (
+                  <>
+                    <button className="btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                      onClick={() => { updateStatus(selQuote.id, 'rechazada', 'Rechazada'); pushToast('Cotización rechazada', 'danger'); }}>
+                      Rechazar
+                    </button>
+                    <button className="btn-outline"
+                      onClick={() => { updateStatus(selQuote.id, 'aprobada', 'Aprobada por el cliente'); pushToast('Cotización aprobada', 'success'); }}>
+                      Marcar aprobada
+                    </button>
+                  </>
+                )}
+                {selQuote.status === 'aprobada' && (
+                  <button className="btn"
+                    onClick={() => {
+                      const fid = `T-2026-0${Math.floor(Math.random() * 9000 + 1000)}`;
+                      updateStatus(selQuote.id, 'convertida', `Convertida a venta — Factura FEL ${fid}`);
+                      pushToast(`Factura FEL ${fid} generada`, 'success');
+                    }}>
+                    <Icon name="receipt" size={13} /> Convertir a venta
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Drawer: RFQ a proveedor ─────────────────────────────────────────── */}
+      {selRfq && (
+        <div className="drawer-backdrop" onClick={() => setSelectedRfq(null)}>
+          <div className="drawer" style={{ width: 600 }} onClick={e => e.stopPropagation()}>
+            <div className="drawer-head">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>{selRfq.id}</span>
+                  <span className={`pill ${RFQ_CLASS[selRfq.status]}`}>{RFQ_LABEL[selRfq.status]}</span>
+                </div>
+                <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{selRfq.supplier.name} · {fmtDate(selRfq.date)}</div>
+              </div>
+              <button className="icon-btn" onClick={() => setSelectedRfq(null)}><Icon name="close" /></button>
+            </div>
+
+            <div className="tabs" style={{ padding: '0 16px', borderBottom: '1px solid var(--border)' }}>
+              <button className={`tab ${rfqDrawerTab === 'detail'  ? 'active' : ''}`} onClick={() => setRfqDrawerTab('detail')}>Detalle</button>
+              <button className={`tab ${rfqDrawerTab === 'history' ? 'active' : ''}`} onClick={() => setRfqDrawerTab('history')}>Historial</button>
+            </div>
+
+            <div className="drawer-body">
+              {rfqDrawerTab === 'detail' && (() => {
+                const hasPrices = selRfq.items.some(i => i.unitPrice > 0);
+                const { lines, subtotal, iva, total } = computeTotals(selRfq.items);
+                return (
+                  <>
+                    <div className="detail-grid" style={{ marginBottom: 16 }}>
+                      {[
+                        ['Proveedor',     selRfq.supplier.name],
+                        ['NIT',           selRfq.supplier.nit || '—'],
+                        ['Contacto',      selRfq.supplier.contact || '—'],
+                        ['Correo',        selRfq.supplier.email || '—'],
+                        ['Resp. antes de', selRfq.deadline ? fmtDate(selRfq.deadline) : '—'],
+                        ['Creado por',    selRfq.createdBy],
+                        ['Tiempo entrega', selRfq.leadTime],
+                        ['Plazo de pago', selRfq.paymentTerms],
+                      ].map(([l, v]) => (
+                        <div className="detail-row" key={l}>
+                          <span className="detail-label">{l}</span>
+                          <span style={{ fontSize: 12.5, textAlign: 'right' }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>PRODUCTOS SOLICITADOS</div>
+
+                    {!hasPrices && (
+                      <div style={{ fontSize: 12.5, color: 'var(--warning)', background: 'var(--surface-2)', padding: '8px 12px', borderRadius: 'var(--r-md)', borderLeft: '3px solid var(--warning)', marginBottom: 10 }}>
+                        Esperando respuesta del proveedor — precios pendientes de confirmar
+                      </div>
+                    )}
+
+                    <table className="tbl" style={{ marginBottom: 4 }}>
+                      <thead>
+                        <tr>
+                          <th>Descripción</th>
+                          <th style={{ textAlign: 'center' }}>Cant.</th>
+                          <th style={{ textAlign: 'center' }}>UOM</th>
+                          {hasPrices && (
+                            <>
+                              <th style={{ textAlign: 'right' }}>P. Unit.</th>
+                              <th style={{ textAlign: 'center' }}>Desc.</th>
+                              <th style={{ textAlign: 'right' }}>Total</th>
+                            </>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lines.map(l => (
+                          <tr key={l.id}>
+                            <td style={{ fontSize: 12.5 }}>{l.name}</td>
+                            <td style={{ textAlign: 'center' }}>{l.qty}</td>
+                            <td style={{ textAlign: 'center' }}><span className="pill">{l.uom}</span></td>
+                            {hasPrices && (
+                              <>
+                                <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{Q(l.unitPrice)}</td>
+                                <td style={{ textAlign: 'center', color: l.discount > 0 ? 'var(--success)' : 'var(--muted)' }}>
+                                  {l.discount > 0 ? `${l.discount}%` : '—'}
+                                </td>
+                                <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600 }}>{Q(l.lineTotal)}</td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {hasPrices && (
+                      <div style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-md)', padding: '10px 14px', marginBottom: 14 }}>
+                        {[['Subtotal sin IVA', Q(subtotal)], ['IVA (12%)', Q(iva)]].map(([l, v]) => (
+                          <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 5, color: 'var(--text-2)' }}>
+                            <span>{l}</span><span className="mono">{v}</span>
+                          </div>
+                        ))}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 14, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                          <span>TOTAL ESTIMADO</span><span className="mono">{Q(total)}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {selRfq.notes && (
+                      <div style={{ fontSize: 12.5, color: 'var(--text-2)', background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 'var(--r-md)', borderLeft: '3px solid var(--border)' }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginBottom: 4, letterSpacing: '0.05em' }}>NOTAS</div>
+                        {selRfq.notes}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+
+              {rfqDrawerTab === 'history' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {selRfq.history.map((h, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 12, paddingBottom: 16 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: idx === 0 ? 'var(--accent)' : 'var(--border)', flexShrink: 0, marginTop: 4 }} />
+                        {idx < selRfq.history.length - 1 && <div style={{ width: 1, flex: 1, background: 'var(--border)' }} />}
+                      </div>
+                      <div style={{ flex: 1, paddingBottom: 4 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>{h.action}</div>
+                        <div className="muted" style={{ fontSize: 11.5, marginTop: 2 }}>{h.user} · {h.ts}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="drawer-foot" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <button className="btn-ghost" onClick={() => setSelectedRfq(null)}>Cerrar</button>
+              <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                {selRfq.status === 'solicitada' && (
+                  <button className="btn-outline"
+                    onClick={() => { updateRfqStatus(selRfq.id, 'recibida', 'Cotización recibida del proveedor'); pushToast('Respuesta registrada', 'success'); }}>
+                    Registrar respuesta
+                  </button>
+                )}
+                {selRfq.status === 'recibida' && (
+                  <>
+                    <button className="btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                      onClick={() => { updateRfqStatus(selRfq.id, 'rechazada', 'Cotización rechazada — condiciones no aceptadas'); pushToast('Cotización rechazada', 'danger'); }}>
+                      Rechazar
+                    </button>
+                    <button className="btn-outline"
+                      onClick={() => { updateRfqStatus(selRfq.id, 'aprobada', 'Cotización aprobada — mejor precio y condiciones'); pushToast('Cotización aprobada', 'success'); }}>
+                      Aprobar
+                    </button>
+                  </>
+                )}
+                {selRfq.status === 'aprobada' && (
+                  <button className="btn"
+                    onClick={() => {
+                      const ocNum = `OC-2026-${String(Math.floor(Math.random() * 900 + 100)).padStart(5, '0')}`;
+                      updateRfqStatus(selRfq.id, 'convertida', `Convertida a orden de compra — ${ocNum}`);
+                      pushToast(`${ocNum} generada`, 'success');
+                    }}>
+                    <Icon name="truck" size={13} /> Convertir a OC
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCreate    && <CreateModal    onSave={createQuote} onClose={() => setShowCreate(false)}    />}
+      {showCreateRfq && <CreateRFQModal onSave={createRfq}   onClose={() => setShowCreateRfq(false)} />}
+    </div>
+  );
+}

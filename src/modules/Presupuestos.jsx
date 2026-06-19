@@ -1,0 +1,634 @@
+// ERP MAYA — Presupuestos
+import React, { useState, useMemo } from 'react';
+import Icon from '../components/Icon.jsx';
+
+const Q   = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const Qs  = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+const sgn = (n) => `${n >= 0 ? '+' : ''}${Qs(n)}`;
+
+const MESES   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MES_ACT = new Date().getMonth();
+const AÑO_ACT = new Date().getFullYear();
+
+const sumTo  = (arr, m) => arr.slice(0, m + 1).reduce((s, v) => s + v, 0);
+const sumAll = (arr)    => arr.reduce((s, v) => s + v, 0);
+const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// ── Datos ──────────────────────────────────────────────────────────────────
+const DPTOS = [
+  {
+    id: 'ingresos', nombre: 'Ingresos', esIngreso: true,
+    lineas: [
+      { cuenta: '4-001', nombre: 'Ventas locales (minorista)',
+        ppto: [180000,180000,195000,195000,200000,200000,210000,210000,205000,205000,220000,250000],
+        real: [175400,182100,191500,197800,203200,0,0,0,0,0,0,0] },
+      { cuenta: '4-002', nombre: 'Ventas mayoristas',
+        ppto: [80000,80000,85000,85000,90000,90000,95000,95000,90000,90000,95000,110000],
+        real: [77500,82400,83800,87200,91400,0,0,0,0,0,0,0] },
+      { cuenta: '4-003', nombre: 'Otros ingresos',
+        ppto: [5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000],
+        real: [4800,6200,4500,5100,5300,0,0,0,0,0,0,0] },
+    ],
+  },
+  {
+    id: 'costo', nombre: 'Costo de Ventas', esIngreso: false,
+    lineas: [
+      { cuenta: '5-001', nombre: 'Costo de mercancía vendida',
+        ppto: [185500,185500,200750,200750,206500,206500,216750,216750,211250,211250,225000,237000],
+        real: [180200,188300,195800,201700,207600,0,0,0,0,0,0,0] },
+    ],
+  },
+  {
+    id: 'admin', nombre: 'Gastos Administrativos', esIngreso: false,
+    lineas: [
+      { cuenta: '6-001', nombre: 'Sueldos y salarios',
+        ppto: [45000,45000,45000,45000,45000,45000,45000,45000,45000,45000,45000,45000],
+        real: [45000,45000,45000,45000,45000,0,0,0,0,0,0,0] },
+      { cuenta: '6-002', nombre: 'Bonificación incentivo (Dcto. 78-89)',
+        ppto: [3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000],
+        real: [3000,3000,3000,3000,3000,0,0,0,0,0,0,0] },
+      { cuenta: '6-003', nombre: 'Alquiler local',
+        ppto: [18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000],
+        real: [18000,18000,18000,18000,18000,0,0,0,0,0,0,0] },
+      { cuenta: '6-004', nombre: 'Servicios (agua, luz, tel.)',
+        ppto: [4500,4500,4500,4500,4500,4500,4500,4500,4500,4500,4500,4500],
+        real: [4320,4680,4290,4810,4560,0,0,0,0,0,0,0] },
+      { cuenta: '6-005', nombre: 'Papelería y útiles',
+        ppto: [1200,1200,1200,1200,1200,1200,1200,1200,1200,1200,1200,1200],
+        real: [980,1340,870,1450,1100,0,0,0,0,0,0,0] },
+    ],
+  },
+  {
+    id: 'operacion', nombre: 'Gastos de Operación', esIngreso: false,
+    lineas: [
+      { cuenta: '6-010', nombre: 'Fletes y transporte',
+        ppto: [8000,8000,8500,8500,9000,9000,9000,9000,8500,8500,9000,10000],
+        real: [7800,8200,8600,8400,9200,0,0,0,0,0,0,0] },
+      { cuenta: '6-011', nombre: 'Combustibles y lubricantes',
+        ppto: [3500,3500,3500,3500,3500,3500,3500,3500,3500,3500,3500,3500],
+        real: [3200,3800,3400,3600,3700,0,0,0,0,0,0,0] },
+      { cuenta: '6-012', nombre: 'Mantenimiento y reparaciones',
+        ppto: [2000,2000,2000,2000,2000,2000,2000,2000,2000,2000,2000,2000],
+        real: [1500,800,2400,1200,3200,0,0,0,0,0,0,0] },
+    ],
+  },
+  {
+    id: 'marketing', nombre: 'Marketing y Ventas', esIngreso: false,
+    lineas: [
+      { cuenta: '6-020', nombre: 'Publicidad y promociones',
+        ppto: [5000,5000,5000,5000,8000,5000,5000,5000,5000,5000,8000,12000],
+        real: [4800,5200,4600,5400,8200,0,0,0,0,0,0,0] },
+      { cuenta: '6-021', nombre: 'Marketing digital',
+        ppto: [2000,2000,2000,2000,2000,2000,2000,2000,2000,2000,2000,2000],
+        real: [2000,2000,2000,2000,2000,0,0,0,0,0,0,0] },
+    ],
+  },
+];
+
+const PERIODOS = [
+  { año: 2026, estado: 'vigente', pptoTotal: 3142000, ejec: 41.2 },
+  { año: 2025, estado: 'cerrado', pptoTotal: 2890000, ejec: 98.7 },
+  { año: 2024, estado: 'cerrado', pptoTotal: 2650000, ejec: 102.3 },
+];
+
+function dptStats(d) {
+  const pptoYTD  = d.lineas.reduce((s, l) => s + sumTo(l.ppto, MES_ACT), 0);
+  const realYTD  = d.lineas.reduce((s, l) => s + sumTo(l.real, MES_ACT), 0);
+  const pptoAnual = d.lineas.reduce((s, l) => s + sumAll(l.ppto), 0);
+  const varMonto  = realYTD - pptoYTD;
+  const pctEjec   = pptoYTD > 0 ? (realYTD / pptoYTD) * 100 : 0;
+  return { pptoYTD, realYTD, pptoAnual, varMonto, pctEjec };
+}
+
+// ── Componente principal ───────────────────────────────────────────────────
+export default function Presupuestos({ pushToast }) {
+  const [tab, setTab]           = useState('resumen');
+  const [deptFiltro, setDeptFiltro] = useState('ingresos');
+  const [vista, setVista]       = useState('ppto');
+  const [showModal, setShowModal] = useState(false);
+  const [drawer, setDrawer]     = useState(null);
+
+  const stats = useMemo(() => Object.fromEntries(DPTOS.map(d => [d.id, dptStats(d)])), []);
+
+  const ingSt         = stats['ingresos'];
+  const gastPptoYTD   = DPTOS.filter(d => !d.esIngreso).reduce((s, d) => s + stats[d.id].pptoYTD, 0);
+  const gastRealYTD   = DPTOS.filter(d => !d.esIngreso).reduce((s, d) => s + stats[d.id].realYTD, 0);
+  const utilPptoYTD   = ingSt.pptoYTD - gastPptoYTD;
+  const utilRealYTD   = ingSt.realYTD - gastRealYTD;
+  const pctEjecGlob   = ingSt.pptoYTD > 0 ? (ingSt.realYTD / ingSt.pptoYTD) * 100 : 0;
+
+  const monthly = useMemo(() => MESES.map((mes, m) => {
+    const ingPpto  = DPTOS.find(d => d.id === 'ingresos').lineas.reduce((s, l) => s + l.ppto[m], 0);
+    const ingReal  = m <= MES_ACT ? DPTOS.find(d => d.id === 'ingresos').lineas.reduce((s, l) => s + l.real[m], 0) : null;
+    const gastPpto = DPTOS.filter(d => !d.esIngreso).reduce((s, d) => s + d.lineas.reduce((ss, l) => ss + l.ppto[m], 0), 0);
+    const gastReal = m <= MES_ACT ? DPTOS.filter(d => !d.esIngreso).reduce((s, d) => s + d.lineas.reduce((ss, l) => ss + l.real[m], 0), 0) : null;
+    return { mes, m, ingPpto, ingReal, gastPpto, gastReal,
+      utilPpto: ingPpto - gastPpto,
+      utilReal: ingReal != null && gastReal != null ? ingReal - gastReal : null };
+  }), []);
+
+  const dptSelec = DPTOS.find(d => d.id === deptFiltro) ?? DPTOS[0];
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <div className="page-title">Presupuestos {AÑO_ACT}</div>
+          <div className="muted" style={{fontSize:12}}>Año fiscal ene–dic · Ejecutado hasta {MESES[MES_ACT]}</div>
+        </div>
+        <div className="row gap-8">
+          <button className="btn" onClick={() => pushToast?.('Exportando a Excel…', '')}>
+            <Icon name="download" size={13}/>Exportar
+          </button>
+          <button className="btn accent" onClick={() => setShowModal(true)}>
+            <Icon name="plus" size={13}/>Nueva línea
+          </button>
+        </div>
+      </div>
+
+      <div className="tabs" style={{marginBottom:20}}>
+        {[
+          { id:'resumen',     label:'Resumen ejecutivo' },
+          { id:'detalle',     label:'Detalle por departamento' },
+          { id:'comparativo', label:'Comparativo mensual' },
+          { id:'periodos',    label:'Períodos' },
+        ].map(t => (
+          <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── RESUMEN ──────────────────────────────────────────────────────── */}
+      {tab === 'resumen' && (
+        <div>
+          <div className="stat-grid" style={{marginBottom:20}}>
+            <div className="stat">
+              <div className="label">Ingresos YTD (ene–{MESES[MES_ACT]})</div>
+              <div className="val mono">{Qs(ingSt.realYTD)}</div>
+              <div className={`delta ${ingSt.realYTD >= ingSt.pptoYTD ? 'up' : 'dn'}`}>
+                {((ingSt.realYTD/ingSt.pptoYTD-1)*100).toFixed(1)}% vs ppto · {Qs(ingSt.pptoYTD)}
+              </div>
+            </div>
+            <div className="stat">
+              <div className="label">Gastos totales YTD</div>
+              <div className="val mono">{Qs(gastRealYTD)}</div>
+              <div className={`delta ${gastRealYTD <= gastPptoYTD ? 'up' : 'dn'}`}>
+                {((gastRealYTD/gastPptoYTD-1)*100).toFixed(1)}% vs ppto · {Qs(gastPptoYTD)}
+              </div>
+            </div>
+            <div className="stat">
+              <div className="label">Utilidad operativa YTD</div>
+              <div className="val mono">{Qs(utilRealYTD)}</div>
+              <div className={`delta ${utilRealYTD >= utilPptoYTD ? 'up' : 'dn'}`}>
+                {sgn(utilRealYTD - utilPptoYTD)} vs ppto
+              </div>
+            </div>
+            <div className="stat">
+              <div className="label">% Ejecución ingresos</div>
+              <div className="val">{pctEjecGlob.toFixed(1)}%</div>
+              <div className={`delta ${pctEjecGlob >= (MES_ACT+1)/12*100 ? 'up' : 'dn'}`}>
+                Objetivo {(((MES_ACT+1)/12)*100).toFixed(0)}% · {MES_ACT+1} de 12 meses
+              </div>
+            </div>
+          </div>
+
+          <div className="card" style={{padding:0, overflow:'hidden'}}>
+            <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+              <span style={{fontWeight:600, fontSize:13}}>Por departamento — YTD ene–{MESES[MES_ACT]}</span>
+              <span className="pill" style={{fontSize:10}}>{AÑO_ACT}</span>
+            </div>
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Departamento</th>
+                  <th className="num">Presupuesto YTD</th>
+                  <th className="num">Real YTD</th>
+                  <th className="num">Variación</th>
+                  <th className="num">% Ejec.</th>
+                  <th style={{width:130}}>Progreso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DPTOS.map(d => {
+                  const st   = stats[d.id];
+                  const good = d.esIngreso ? st.realYTD >= st.pptoYTD : st.realYTD <= st.pptoYTD;
+                  const bar  = clamp((st.realYTD / st.pptoYTD) * 100, 0, 100);
+                  return (
+                    <tr key={d.id} className="clickable" onClick={() => setDrawer(d)}>
+                      <td>
+                        <div style={{fontWeight:500}}>{d.nombre}</div>
+                        <div style={{fontSize:10.5, color:'var(--muted)'}}>{d.lineas.length} líneas</div>
+                      </td>
+                      <td className="num">{Qs(st.pptoYTD)}</td>
+                      <td className="num">{Qs(st.realYTD)}</td>
+                      <td className="num" style={{color: good ? 'var(--success)' : 'var(--danger)'}}>
+                        {st.varMonto >= 0 ? '+' : ''}{Qs(st.varMonto)}
+                      </td>
+                      <td className="num" style={{color: good ? 'var(--success)' : 'var(--danger)', fontWeight:600}}>
+                        {st.pctEjec.toFixed(1)}%
+                      </td>
+                      <td>
+                        <div style={{height:6, background:'var(--border)', borderRadius:3}}>
+                          <div style={{height:'100%', width:`${bar}%`, background: good ? 'var(--success)' : 'var(--danger)', borderRadius:3}}/>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}>
+                  <td>Utilidad operativa</td>
+                  <td className="num">{Qs(utilPptoYTD)}</td>
+                  <td className="num">{Qs(utilRealYTD)}</td>
+                  <td className="num" style={{color: utilRealYTD >= utilPptoYTD ? 'var(--success)' : 'var(--danger)'}}>
+                    {sgn(utilRealYTD - utilPptoYTD)}
+                  </td>
+                  <td className="num" style={{color: utilRealYTD >= utilPptoYTD ? 'var(--success)' : 'var(--danger)'}}>
+                    {utilPptoYTD > 0 ? `${((utilRealYTD/utilPptoYTD)*100).toFixed(1)}%` : '—'}
+                  </td>
+                  <td/>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── DETALLE ──────────────────────────────────────────────────────── */}
+      {tab === 'detalle' && (
+        <div>
+          <div style={{display:'flex', gap:8, marginBottom:16, flexWrap:'wrap', alignItems:'center'}}>
+            <div style={{display:'flex', gap:6, flex:1, flexWrap:'wrap'}}>
+              {DPTOS.map(d => (
+                <button key={d.id} className={`btn ${deptFiltro === d.id ? 'accent' : ''}`} style={{fontSize:12}}
+                  onClick={() => setDeptFiltro(d.id)}>{d.nombre}</button>
+              ))}
+            </div>
+            <div style={{display:'flex', gap:4}}>
+              {[{v:'ppto',l:'Presupuesto'},{v:'real',l:'Real'},{v:'var',l:'Variación'}].map(o => (
+                <button key={o.v} className={`btn ${vista===o.v ? 'accent':''}`} style={{fontSize:11}}
+                  onClick={() => setVista(o.v)}>{o.l}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="card" style={{padding:0, overflowX:'auto'}}>
+            <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', fontWeight:600, fontSize:13}}>
+              {dptSelec.nombre} — {vista==='ppto'?'Presupuesto':vista==='real'?'Real ejecutado':'Variación (real − ppto)'}
+            </div>
+            <table className="tbl" style={{minWidth:900}}>
+              <thead>
+                <tr>
+                  <th style={{minWidth:220}}>Línea presupuestaria</th>
+                  {MESES.map((mes, m) => (
+                    <th key={m} className="num" style={{fontSize:10.5, padding:'8px 6px',
+                      color: m > MES_ACT ? 'var(--muted)' : m === MES_ACT ? 'var(--accent)' : 'inherit'}}>
+                      {mes}{m === MES_ACT ? ' ▲' : ''}
+                    </th>
+                  ))}
+                  <th className="num" style={{fontSize:10.5}}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dptSelec.lineas.map(l => (
+                  <tr key={l.cuenta}>
+                    <td>
+                      <div style={{fontWeight:500, fontSize:12}}>{l.nombre}</div>
+                      <div className="code">{l.cuenta}</div>
+                    </td>
+                    {MESES.map((_, m) => {
+                      const future = m > MES_ACT;
+                      let val, color;
+                      if (vista === 'ppto') {
+                        val = l.ppto[m]; color = 'inherit';
+                      } else if (vista === 'real') {
+                        val = future ? null : l.real[m]; color = 'inherit';
+                      } else {
+                        if (future) { val = null; color = 'inherit'; }
+                        else {
+                          val = l.real[m] - l.ppto[m];
+                          const good = dptSelec.esIngreso ? val >= 0 : val <= 0;
+                          color = val === 0 ? 'var(--muted)' : good ? 'var(--success)' : 'var(--danger)';
+                        }
+                      }
+                      return (
+                        <td key={m} className="num" style={{padding:'7px 6px',
+                          color: future ? 'var(--muted)' : color,
+                          fontStyle: future ? 'italic' : 'normal',
+                          fontSize:11}}>
+                          {val == null ? '—' : Qs(val)}
+                        </td>
+                      );
+                    })}
+                    <td className="num" style={{fontSize:11, fontWeight:600}}>
+                      {vista==='ppto' ? Qs(sumAll(l.ppto))
+                        : vista==='real' ? Qs(sumTo(l.real, MES_ACT))
+                        : (() => {
+                            const v = sumTo(l.real,MES_ACT) - sumTo(l.ppto,MES_ACT);
+                            const good = dptSelec.esIngreso ? v >= 0 : v <= 0;
+                            return <span style={{color: good?'var(--success)':'var(--danger)'}}>{sgn(v)}</span>;
+                          })()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}>
+                  <td>Total {dptSelec.nombre}</td>
+                  {MESES.map((_, m) => {
+                    const future = m > MES_ACT;
+                    let val, color;
+                    const totPpto = dptSelec.lineas.reduce((s,l) => s + l.ppto[m], 0);
+                    const totReal = dptSelec.lineas.reduce((s,l) => s + l.real[m], 0);
+                    if (vista==='ppto') { val = totPpto; color = 'inherit'; }
+                    else if (vista==='real') { val = future ? null : totReal; color = 'inherit'; }
+                    else {
+                      if (future) { val = null; color = 'inherit'; }
+                      else {
+                        val = totReal - totPpto;
+                        const good = dptSelec.esIngreso ? val >= 0 : val <= 0;
+                        color = val===0?'var(--muted)':good?'var(--success)':'var(--danger)';
+                      }
+                    }
+                    return (
+                      <td key={m} className="num" style={{padding:'7px 6px', color: future?'var(--muted)':color, fontStyle:future?'italic':'normal', fontSize:11}}>
+                        {val==null ? '—' : Qs(val)}
+                      </td>
+                    );
+                  })}
+                  <td className="num" style={{fontSize:11}}>
+                    {vista==='ppto' ? Qs(dptSelec.lineas.reduce((s,l)=>s+sumAll(l.ppto),0))
+                      : vista==='real' ? Qs(dptSelec.lineas.reduce((s,l)=>s+sumTo(l.real,MES_ACT),0))
+                      : (() => {
+                          const v = dptSelec.lineas.reduce((s,l)=>s+sumTo(l.real,MES_ACT)-sumTo(l.ppto,MES_ACT),0);
+                          const good = dptSelec.esIngreso ? v>=0 : v<=0;
+                          return <span style={{color:good?'var(--success)':'var(--danger)'}}>{sgn(v)}</span>;
+                        })()}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── COMPARATIVO ──────────────────────────────────────────────────── */}
+      {tab === 'comparativo' && (
+        <div className="card" style={{padding:0, overflowX:'auto'}}>
+          <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', fontWeight:600, fontSize:13}}>
+            Ingresos · Gastos · Utilidad — mes a mes {AÑO_ACT}
+          </div>
+          <table className="tbl" style={{minWidth:960}}>
+            <thead>
+              <tr>
+                <th style={{width:54}}>Mes</th>
+                <th className="num">Ing. Ppto</th>
+                <th className="num">Ing. Real</th>
+                <th className="num">Var. ing.</th>
+                <th className="num">Gasto Ppto</th>
+                <th className="num">Gasto Real</th>
+                <th className="num">Var. gasto</th>
+                <th className="num">Util. Ppto</th>
+                <th className="num">Util. Real</th>
+                <th className="num">Var. util.</th>
+                <th style={{width:90}}>Ejec.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthly.map(({ mes, m, ingPpto, ingReal, gastPpto, gastReal, utilPpto, utilReal }) => {
+                const future  = m > MES_ACT;
+                const varIng  = ingReal  != null ? ingReal  - ingPpto  : null;
+                const varGast = gastReal != null ? gastReal - gastPpto : null;
+                const varUtil = utilReal != null ? utilReal - utilPpto : null;
+                const pctIng  = ingPpto > 0 && ingReal != null ? (ingReal / ingPpto) * 100 : null;
+                return (
+                  <tr key={m} style={{
+                    opacity: future ? 0.45 : 1,
+                    background: m === MES_ACT ? 'var(--accent-soft)' : ''}}>
+                    <td style={{fontWeight:600, fontSize:12}}>{mes}{m===MES_ACT?' ▲':''}</td>
+                    <td className="num">{Qs(ingPpto)}</td>
+                    <td className="num">{ingReal!=null ? Qs(ingReal) : '—'}</td>
+                    <td className="num" style={{color: varIng==null?'var(--muted)':varIng>=0?'var(--success)':'var(--danger)'}}>
+                      {varIng!=null ? sgn(varIng) : '—'}
+                    </td>
+                    <td className="num">{Qs(gastPpto)}</td>
+                    <td className="num">{gastReal!=null ? Qs(gastReal) : '—'}</td>
+                    <td className="num" style={{color: varGast==null?'var(--muted)':varGast<=0?'var(--success)':'var(--danger)'}}>
+                      {varGast!=null ? sgn(varGast) : '—'}
+                    </td>
+                    <td className="num">{Qs(utilPpto)}</td>
+                    <td className="num" style={{fontWeight: utilReal!=null?600:400}}>
+                      {utilReal!=null ? Qs(utilReal) : '—'}
+                    </td>
+                    <td className="num" style={{color: varUtil==null?'var(--muted)':varUtil>=0?'var(--success)':'var(--danger)'}}>
+                      {varUtil!=null ? sgn(varUtil) : '—'}
+                    </td>
+                    <td>
+                      {pctIng != null ? (
+                        <>
+                          <div style={{height:5, background:'var(--border)', borderRadius:3, marginBottom:2}}>
+                            <div style={{height:'100%', width:`${clamp(pctIng,0,100)}%`,
+                              background: pctIng>=100?'var(--success)':'var(--accent)', borderRadius:3}}/>
+                          </div>
+                          <div className="code" style={{fontSize:9}}>{pctIng.toFixed(0)}%</div>
+                        </>
+                      ) : <span className="muted" style={{fontSize:10}}>pdte.</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}>
+                <td>Total</td>
+                <td className="num">{Qs(monthly.reduce((s,r)=>s+r.ingPpto,0))}</td>
+                <td className="num">{Qs(monthly.filter(r=>r.ingReal!=null).reduce((s,r)=>s+r.ingReal,0))}</td>
+                <td/>
+                <td className="num">{Qs(monthly.reduce((s,r)=>s+r.gastPpto,0))}</td>
+                <td className="num">{Qs(monthly.filter(r=>r.gastReal!=null).reduce((s,r)=>s+r.gastReal,0))}</td>
+                <td/>
+                <td className="num">{Qs(monthly.reduce((s,r)=>s+r.utilPpto,0))}</td>
+                <td className="num">{Qs(monthly.filter(r=>r.utilReal!=null).reduce((s,r)=>s+r.utilReal,0))}</td>
+                <td colSpan={2}/>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
+      {/* ── PERÍODOS ─────────────────────────────────────────────────────── */}
+      {tab === 'periodos' && (
+        <div className="card" style={{padding:0, overflow:'hidden'}}>
+          <div style={{padding:'12px 16px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <span style={{fontWeight:600, fontSize:13}}>Períodos presupuestarios</span>
+            <button className="btn accent" style={{fontSize:12}} onClick={() => pushToast?.('Nuevo período creado', 'success')}>
+              <Icon name="plus" size={12}/>Nuevo período
+            </button>
+          </div>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Año fiscal</th>
+                <th>Estado</th>
+                <th className="num">Total presupuestado</th>
+                <th className="num">% Ejecución</th>
+                <th style={{width:120}}>Progreso</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {PERIODOS.map(p => (
+                <tr key={p.año}>
+                  <td style={{fontWeight:600}}>{p.año}</td>
+                  <td>
+                    <span className={`pill ${p.estado==='vigente'?'success':''}`} style={{fontSize:10}}>
+                      {p.estado==='vigente' ? '● Vigente' : '✓ Cerrado'}
+                    </span>
+                  </td>
+                  <td className="num">{Qs(p.pptoTotal)}</td>
+                  <td className="num" style={{fontWeight:600, color: p.ejec>100?'var(--danger)':'var(--success)'}}>
+                    {p.ejec.toFixed(1)}%
+                  </td>
+                  <td>
+                    <div style={{height:6, background:'var(--border)', borderRadius:3}}>
+                      <div style={{height:'100%', width:`${clamp(p.ejec,0,100)}%`,
+                        background: p.ejec>100?'var(--danger)':'var(--success)', borderRadius:3}}/>
+                    </div>
+                  </td>
+                  <td>
+                    <button className="btn sm ghost" onClick={() => pushToast?.(`Período ${p.año}`, '')}>
+                      Ver detalle
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ── DRAWER ───────────────────────────────────────────────────────── */}
+      {drawer && (
+        <div className="drawer-overlay" onClick={() => setDrawer(null)}>
+          <div className="drawer" onClick={e => e.stopPropagation()} style={{width:460}}>
+            <div className="drawer-head">
+              <div>
+                <div style={{fontWeight:700, fontSize:15}}>{drawer.nombre}</div>
+                <div className="muted" style={{fontSize:11}}>{drawer.lineas.length} líneas · ene–{MESES[MES_ACT]}</div>
+              </div>
+              <button className="icon-btn" onClick={() => setDrawer(null)}><Icon name="x"/></button>
+            </div>
+            <div className="drawer-body" style={{padding:20}}>
+              {(() => {
+                const st   = stats[drawer.id];
+                const good = drawer.esIngreso ? st.realYTD >= st.pptoYTD : st.realYTD <= st.pptoYTD;
+                const bar  = clamp(st.pctEjec, 0, 100);
+                return (
+                  <>
+                    <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16}}>
+                      <div className="card" style={{padding:12}}>
+                        <div style={{fontSize:10, color:'var(--muted)', marginBottom:4}}>Presupuesto YTD</div>
+                        <div style={{fontFamily:'var(--font-mono)', fontWeight:700, fontSize:15}}>{Qs(st.pptoYTD)}</div>
+                      </div>
+                      <div className="card" style={{padding:12, background: good?'var(--success-soft)':'var(--surface-2)'}}>
+                        <div style={{fontSize:10, color:'var(--muted)', marginBottom:4}}>Real YTD</div>
+                        <div style={{fontFamily:'var(--font-mono)', fontWeight:700, fontSize:15, color: good?'var(--success)':'var(--danger)'}}>{Qs(st.realYTD)}</div>
+                      </div>
+                    </div>
+                    <div style={{marginBottom:18}}>
+                      <div style={{display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:5}}>
+                        <span>Ejecución <strong>{st.pctEjec.toFixed(1)}%</strong></span>
+                        <span style={{color: good?'var(--success)':'var(--danger)', fontWeight:600}}>
+                          {sgn(st.varMonto)} vs ppto
+                        </span>
+                      </div>
+                      <div style={{height:7, background:'var(--border)', borderRadius:4}}>
+                        <div style={{height:'100%', width:`${bar}%`, background: good?'var(--success)':'var(--danger)', borderRadius:4}}/>
+                      </div>
+                    </div>
+
+                    <div style={{fontSize:11, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:8, fontFamily:'var(--font-mono)'}}>
+                      Líneas
+                    </div>
+                    <table className="tbl">
+                      <thead>
+                        <tr>
+                          <th>Cuenta</th>
+                          <th className="num">Ppto YTD</th>
+                          <th className="num">Real YTD</th>
+                          <th className="num">Var.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {drawer.lineas.map(l => {
+                          const lP = sumTo(l.ppto, MES_ACT);
+                          const lR = sumTo(l.real, MES_ACT);
+                          const lV = lR - lP;
+                          const ok = drawer.esIngreso ? lV >= 0 : lV <= 0;
+                          return (
+                            <tr key={l.cuenta}>
+                              <td>
+                                <div style={{fontSize:12}}>{l.nombre}</div>
+                                <div className="code">{l.cuenta}</div>
+                              </td>
+                              <td className="num">{Qs(lP)}</td>
+                              <td className="num">{Qs(lR)}</td>
+                              <td className="num" style={{color: ok?'var(--success)':'var(--danger)', fontWeight:600}}>
+                                {sgn(lV)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: nueva línea ───────────────────────────────────────────── */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" style={{width:460}} onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>Nueva línea presupuestaria</h3>
+              <button className="icon-btn" onClick={() => setShowModal(false)}><Icon name="x"/></button>
+            </div>
+            <div className="modal-body">
+              <div className="field">
+                <label>Departamento</label>
+                <select>{DPTOS.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}</select>
+              </div>
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
+                <div className="field">
+                  <label>Código de cuenta</label>
+                  <input type="text" placeholder="Ej. 6-030" className="mono"/>
+                </div>
+                <div className="field">
+                  <label>Nombre</label>
+                  <input type="text" placeholder="Descripción"/>
+                </div>
+              </div>
+              <div className="field">
+                <label>Monto mensual (Q) — igual para los 12 meses</label>
+                <input type="number" placeholder="0.00" style={{fontFamily:'var(--font-mono)'}}/>
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button className="btn" onClick={() => setShowModal(false)}>Cancelar</button>
+              <button className="btn accent" onClick={() => { pushToast?.('Línea agregada', 'success'); setShowModal(false); }}>
+                <Icon name="check" size={13}/>Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

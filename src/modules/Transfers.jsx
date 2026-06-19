@@ -1,0 +1,430 @@
+// ERP MAYA — Módulo de Transferencias entre Sucursales
+import React, { useState, useMemo } from 'react';
+import Icon from '../components/Icon.jsx';
+import * as MAYA from '../data/mock.js';
+
+const STATUS_LABEL = { draft: 'Borrador', in_transit: 'En tránsito', completed: 'Completada', cancelled: 'Cancelada' };
+const STATUS_CLASS  = { draft: 'neutral', in_transit: 'warning', completed: 'success', cancelled: 'neutral' };
+const FLOW = ['draft', 'in_transit', 'completed'];
+
+function fmt(n) { return `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
+
+// ── Modal: Nueva transferencia ────────────────────────────────────────────────
+function NewTransferModal({ branches, products, onSave, onClose }) {
+  const [fromBranch, setFrom]   = useState('');
+  const [toBranch, setTo]       = useState('');
+  const [transporter, setTrans] = useState('');
+  const [items, setItems]       = useState([{ sku: '', name: '', qty: 1 }]);
+  const [search, setSearch]     = useState('');
+
+  const addItem = () => setItems(prev => [...prev, { sku: '', name: '', qty: 1 }]);
+  const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
+  const setItem = (idx, k, v) => setItems(prev => prev.map((it, i) => i === idx ? { ...it, [k]: v } : it));
+
+  const matched = search.length > 1
+    ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.includes(search)).slice(0, 8)
+    : [];
+
+  const selectProduct = (idx, p) => {
+    setItems(prev => prev.map((it, i) => i === idx ? { ...it, sku: p.sku, name: p.name } : it));
+    setSearch('');
+  };
+
+  const valid = fromBranch && toBranch && fromBranch !== toBranch && items.some(i => i.sku && parseInt(i.qty) > 0);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!valid) return;
+    onSave({ fromBranch, toBranch, transporter, items: items.filter(i => i.sku) });
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 620 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-title">Nueva transferencia</div>
+          <button className="icon-btn" onClick={onClose}><Icon name="x" /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'end', marginBottom: 16 }}>
+              <div className="field">
+                <label className="field-label">Sucursal origen *</label>
+                <select className="field-input" value={fromBranch} onChange={e => setFrom(e.target.value)} required>
+                  <option value="">Seleccionar...</option>
+                  {branches.filter(b => b.status === 'active').map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                </select>
+              </div>
+              <div style={{ textAlign: 'center', color: 'var(--accent)', paddingBottom: 8 }}>
+                <Icon name="transfer" size={20} />
+              </div>
+              <div className="field">
+                <label className="field-label">Sucursal destino *</label>
+                <select className="field-input" value={toBranch} onChange={e => setTo(e.target.value)} required>
+                  <option value="">Seleccionar...</option>
+                  {branches.filter(b => b.status === 'active' && b.name !== fromBranch).map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="field" style={{ marginBottom: 16 }}>
+              <label className="field-label">Transportista / responsable</label>
+              <input className="field-input" value={transporter} onChange={e => setTrans(e.target.value)} placeholder="Nombre del conductor o mensajero..." />
+            </div>
+
+            <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8 }}>Productos a transferir</div>
+
+            <div style={{ position: 'relative', marginBottom: 12 }}>
+              <div className="search-wrap">
+                <Icon name="search" className="icon" size={13} />
+                <input className="search-input" placeholder="Buscar producto para agregar…" value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              {matched.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: 'var(--shadow-md)', zIndex: 50, maxHeight: 200, overflowY: 'auto' }}>
+                  {matched.map(p => (
+                    <div key={p.sku} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: 13 }}
+                      onClick={() => selectProduct(items.length - 1, p)}>
+                      <span style={{ fontWeight: 500 }}>{p.name}</span>
+                      <span className="mono muted" style={{ fontSize: 11, marginLeft: 8 }}>{p.sku}</span>
+                      <span className="mono" style={{ float: 'right', color: 'var(--muted)', fontSize: 11 }}>Stock: {p.stock}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <table className="data-table" style={{ marginBottom: 8 }}>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th className="right" style={{ width: 100 }}>Cantidad</th>
+                  <th style={{ width: 36 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      {item.name ? (
+                        <div>
+                          <div style={{ fontWeight: 500, fontSize: 13 }}>{item.name}</div>
+                          <div className="mono muted" style={{ fontSize: 11 }}>{item.sku}</div>
+                        </div>
+                      ) : (
+                        <input className="field-input" style={{ fontSize: 12 }} placeholder="SKU o seleccionar arriba..."
+                          value={item.sku} onChange={e => setItem(idx, 'sku', e.target.value)} />
+                      )}
+                    </td>
+                    <td>
+                      <input type="number" min="1" className="field-input mono" style={{ width: 90, textAlign: 'right', padding: '4px 8px' }}
+                        value={item.qty} onChange={e => setItem(idx, 'qty', e.target.value)} />
+                    </td>
+                    <td>
+                      {items.length > 1 && (
+                        <button type="button" className="icon-btn" onClick={() => removeItem(idx)}>
+                          <Icon name="x" size={12} style={{ color: 'var(--danger)' }} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button type="button" className="btn" style={{ fontSize: 12 }} onClick={addItem}>
+              <Icon name="plus" size={11} />Agregar línea
+            </button>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="btn accent" disabled={!valid}>
+              <Icon name="check" size={12} />Crear transferencia
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Panel detalle ─────────────────────────────────────────────────────────────
+function TransferDetail({ transfer, onClose, onDispatch, onReceive, onCancel }) {
+  const canDispatch = transfer.status === 'draft';
+  const canReceive  = transfer.status === 'in_transit';
+  const canCancel   = transfer.status === 'draft' || transfer.status === 'in_transit';
+  const currentStep = FLOW.indexOf(transfer.status);
+
+  return (
+    <div className="drawer">
+      <div className="drawer-head">
+        <div>
+          <div className="drawer-title">{transfer.id}</div>
+          <div className="muted" style={{ fontSize: 12 }}>{transfer.date} · {transfer.fromBranch} → {transfer.toBranch}</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {canDispatch && <button className="btn accent" onClick={() => onDispatch(transfer)}><Icon name="truck" size={12} />Despachar</button>}
+          {canReceive  && <button className="btn accent" onClick={() => onReceive(transfer)}><Icon name="check" size={12} />Recibir</button>}
+          {canCancel   && <button className="btn" style={{ color: 'var(--danger)' }} onClick={() => onCancel(transfer)}>Cancelar</button>}
+          <button className="icon-btn" onClick={onClose}><Icon name="x" /></button>
+        </div>
+      </div>
+
+      <div className="drawer-body" style={{ overflowY: 'auto' }}>
+        {/* Flujo de estados */}
+        {transfer.status !== 'cancelled' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 20 }}>
+            {FLOW.map((s, i) => (
+              <React.Fragment key={s}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: i <= currentStep ? 'var(--accent)' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+                    {i < currentStep ? <Icon name="check" size={12} style={{ color: '#fff' }} /> :
+                     i === currentStep ? <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} /> : null}
+                  </div>
+                  <div style={{ fontSize: 10, color: i <= currentStep ? 'var(--accent)' : 'var(--muted)', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>
+                    {STATUS_LABEL[s]}
+                  </div>
+                </div>
+                {i < FLOW.length - 1 && (
+                  <div style={{ flex: 2, height: 2, background: i < currentStep ? 'var(--accent)' : 'var(--border)', marginBottom: 20 }} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
+        <div className="detail-grid" style={{ marginBottom: 16 }}>
+          <div className="detail-row">
+            <span className="detail-label">Origen</span>
+            <span style={{ fontWeight: 500 }}>{transfer.fromBranch}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Destino</span>
+            <span style={{ fontWeight: 500 }}>{transfer.toBranch}</span>
+          </div>
+          {transfer.transporter && (
+            <div className="detail-row">
+              <span className="detail-label">Transportista</span>
+              <span>{transfer.transporter}</span>
+            </div>
+          )}
+          <div className="detail-row">
+            <span className="detail-label">Estado</span>
+            <span className={`pill ${STATUS_CLASS[transfer.status]}`} style={{ fontSize: 10 }}>{STATUS_LABEL[transfer.status]}</span>
+          </div>
+        </div>
+
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th className="right">Qty</th>
+              {transfer.status === 'completed' && <th className="right">Recibido</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {transfer.items.map((item, idx) => (
+              <tr key={idx}>
+                <td>
+                  <div style={{ fontWeight: 500, fontSize: 13 }}>{item.name}</div>
+                  <div className="mono muted" style={{ fontSize: 11 }}>{item.sku}</div>
+                </td>
+                <td className="right mono">{item.qty}</td>
+                {transfer.status === 'completed' && (
+                  <td className="right">
+                    <span className={`pill ${item.qtyReceived === item.qty ? 'success' : 'warning'}`} style={{ fontSize: 10 }}>
+                      {item.qtyReceived}/{item.qty}
+                    </span>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Módulo principal ──────────────────────────────────────────────────────────
+export default function Transfers({ pushToast }) {
+  const { BRANCHES, PRODUCTS } = MAYA;
+  const [transfers, setTransfers]   = useState(MAYA.TRANSFERS);
+  const [selected, setSelected]     = useState(null);
+  const [showNew, setShowNew]       = useState(false);
+  const [statusFilter, setStatus]   = useState('all');
+  const [branchFilter, setBranch]   = useState('all');
+  const [search, setSearch]         = useState('');
+
+  const filtered = useMemo(() => {
+    let t = transfers;
+    if (statusFilter !== 'all') t = t.filter(x => x.status === statusFilter);
+    if (branchFilter !== 'all') t = t.filter(x => x.fromBranch === branchFilter || x.toBranch === branchFilter);
+    if (search) {
+      const q = search.toLowerCase();
+      t = t.filter(x => x.id.toLowerCase().includes(q) || x.fromBranch.toLowerCase().includes(q) || x.toBranch.toLowerCase().includes(q));
+    }
+    return t;
+  }, [transfers, statusFilter, branchFilter, search]);
+
+  const inTransit  = transfers.filter(t => t.status === 'in_transit');
+  const drafts     = transfers.filter(t => t.status === 'draft');
+
+  const handleNew = ({ fromBranch, toBranch, transporter, items }) => {
+    const id = `TR-${String(Date.now()).slice(-5)}`;
+    const newT = {
+      id, date: new Date().toISOString().slice(0, 10),
+      fromBranch, toBranch, transporter: transporter || null,
+      status: 'draft',
+      items: items.map(i => ({ ...i, qty: parseInt(i.qty), qtyReceived: 0 })),
+    };
+    setTransfers(prev => [newT, ...prev]);
+    setShowNew(false);
+    pushToast?.(`Transferencia ${id} creada`, 'success');
+  };
+
+  const handleDispatch = (transfer) => {
+    setTransfers(prev => prev.map(t => t.id === transfer.id ? { ...t, status: 'in_transit' } : t));
+    setSelected(prev => ({ ...prev, status: 'in_transit' }));
+    pushToast?.(`${transfer.id} despachada`, 'success');
+  };
+
+  const handleReceive = (transfer) => {
+    setTransfers(prev => prev.map(t => t.id === transfer.id
+      ? { ...t, status: 'completed', items: t.items.map(i => ({ ...i, qtyReceived: i.qty })) }
+      : t));
+    setSelected(prev => ({ ...prev, status: 'completed', items: prev.items.map(i => ({ ...i, qtyReceived: i.qty })) }));
+    pushToast?.(`${transfer.id} recibida y stock actualizado`, 'success');
+  };
+
+  const handleCancel = (transfer) => {
+    setTransfers(prev => prev.map(t => t.id === transfer.id ? { ...t, status: 'cancelled' } : t));
+    setSelected(prev => ({ ...prev, status: 'cancelled' }));
+    pushToast?.(`${transfer.id} cancelada`, '');
+  };
+
+  const selectedTransfer = selected ? transfers.find(t => t.id === selected.id) : null;
+
+  return (
+    <div className="page">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Transferencias entre sucursales</h1>
+          <div className="page-subtitle">{transfers.length} transferencias · {inTransit.length} en tránsito</div>
+        </div>
+        <div className="page-head-actions">
+          <button className="btn accent" onClick={() => setShowNew(true)}>
+            <Icon name="plus" size={12} />Nueva transferencia
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="stat-grid">
+        <div className="stat">
+          <div className="label"><Icon name="transfer" size={11} />Total transferencias</div>
+          <div className="val mono">{transfers.length}</div>
+          <div className="delta muted">{transfers.filter(t => t.status === 'completed').length} completadas</div>
+        </div>
+        <div className="stat">
+          <div className="label"><Icon name="truck" size={11} />En tránsito</div>
+          <div className="val mono" style={{ color: inTransit.length > 0 ? 'var(--warning)' : undefined }}>{inTransit.length}</div>
+          <div className="delta muted">Pendiente de confirmación en destino</div>
+        </div>
+        <div className="stat">
+          <div className="label"><Icon name="edit" size={11} />Borradores</div>
+          <div className="val mono">{drafts.length}</div>
+          <div className="delta muted">Sin despachar aún</div>
+        </div>
+        <div className="stat">
+          <div className="label"><Icon name="branch" size={11} />Sucursales activas</div>
+          <div className="val mono">{BRANCHES.filter(b => b.status === 'active').length}</div>
+          <div className="delta muted">de {BRANCHES.length} totales</div>
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <div className="toolbar">
+        <div className="search-wrap" style={{ flex: 1, maxWidth: 300 }}>
+          <Icon name="search" className="icon" size={13} />
+          <input className="search-input" placeholder="Buscar por ID o sucursal…"
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <select className="field-input" style={{ width: 'auto' }} value={statusFilter} onChange={e => setStatus(e.target.value)}>
+          <option value="all">Todos los estados</option>
+          <option value="draft">Borrador</option>
+          <option value="in_transit">En tránsito</option>
+          <option value="completed">Completada</option>
+          <option value="cancelled">Cancelada</option>
+        </select>
+        <select className="field-input" style={{ width: 'auto' }} value={branchFilter} onChange={e => setBranch(e.target.value)}>
+          <option value="all">Todas las sucursales</option>
+          {BRANCHES.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+        </select>
+        <span className="muted" style={{ fontSize: 12 }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Transportista</th>
+              <th className="right">Ítems</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr><td colSpan={8} className="empty">Sin transferencias</td></tr>
+            ) : filtered.map(t => (
+              <tr key={t.id} className="clickable" onClick={() => setSelected(t)}>
+                <td className="mono" style={{ fontWeight: 600 }}>{t.id}</td>
+                <td className="mono muted">{t.date}</td>
+                <td>{t.fromBranch}</td>
+                <td>{t.toBranch}</td>
+                <td className="muted">{t.transporter || '—'}</td>
+                <td className="right mono">{t.items.length}</td>
+                <td><span className={`pill ${STATUS_CLASS[t.status]}`} style={{ fontSize: 10 }}>{STATUS_LABEL[t.status]}</span></td>
+                <td>
+                  {t.status === 'draft' && (
+                    <button className="btn" style={{ fontSize: 11, padding: '3px 10px' }}
+                      onClick={e => { e.stopPropagation(); setSelected(t); handleDispatch(t); }}>
+                      <Icon name="truck" size={11} />Despachar
+                    </button>
+                  )}
+                  {t.status === 'in_transit' && (
+                    <button className="btn accent" style={{ fontSize: 11, padding: '3px 10px' }}
+                      onClick={e => { e.stopPropagation(); setSelected(t); handleReceive(t); }}>
+                      <Icon name="check" size={11} />Recibir
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Panel detalle */}
+      {selectedTransfer && (
+        <div className="drawer-overlay">
+          <TransferDetail
+            transfer={selectedTransfer}
+            onClose={() => setSelected(null)}
+            onDispatch={handleDispatch}
+            onReceive={handleReceive}
+            onCancel={handleCancel}
+          />
+        </div>
+      )}
+
+      {/* Modal nueva transferencia */}
+      {showNew && (
+        <NewTransferModal branches={BRANCHES} products={PRODUCTS} onSave={handleNew} onClose={() => setShowNew(false)} />
+      )}
+    </div>
+  );
+}

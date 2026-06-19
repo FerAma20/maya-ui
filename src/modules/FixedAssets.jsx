@@ -1,0 +1,752 @@
+// ERP MAYA — Fixed Assets / Activos Fijos (Guatemala · Decreto 26-92 ISR)
+import React, { useState, useMemo } from 'react';
+import Icon from '../components/Icon.jsx';
+
+const Q  = (n) => `Q ${Number(n).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const pct = (n) => `${(n * 100).toFixed(2)}%`;
+
+// ── Categorías y tasas SAT (Decreto 26-92, Art. 19) ───────────────────────
+const CATEGORIES = [
+  { id: 'edificios',    name: 'Edificios e instalaciones',  rate: 0.05,    years: 20, icon: '🏢' },
+  { id: 'maquinaria',   name: 'Maquinaria y equipo',        rate: 0.20,    years: 5,  icon: '⚙️' },
+  { id: 'vehiculos',    name: 'Vehículos',                  rate: 0.20,    years: 5,  icon: '🚛' },
+  { id: 'mobiliario',   name: 'Mobiliario y equipo',        rate: 0.20,    years: 5,  icon: '🪑' },
+  { id: 'computo',      name: 'Equipo de cómputo',          rate: 0.3333,  years: 3,  icon: '💻' },
+  { id: 'herramientas', name: 'Herramientas y utensilios',  rate: 0.25,    years: 4,  icon: '🔧' },
+  { id: 'otros',        name: 'Otros activos',              rate: 0.10,    years: 10, icon: '📦' },
+];
+
+const CAT_MAP = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
+
+const now = new Date();
+const CUR_YEAR  = now.getFullYear();
+const CUR_MONTH = now.getMonth() + 1; // 1-based
+
+// ── Mock assets ────────────────────────────────────────────────────────────
+const ASSETS_INIT = [
+  { id:'AF-001', name:'Edificio Sucursal Zona 10',      cat:'edificios',    purchase: 850000, acquired:'2018-03-01', serial:'',           branch:'Zona 10',    status:'active',   notes:'Incluye bodega y área de ventas' },
+  { id:'AF-002', name:'Servidor Dell PowerEdge R750',   cat:'computo',      purchase: 48500,  acquired:'2023-06-15', serial:'SRV-2023-01', branch:'Central',    status:'active',   notes:'Servidor principal ERP' },
+  { id:'AF-003', name:'Camión Isuzu NQR 2022',          cat:'vehiculos',    purchase: 185000, acquired:'2022-01-10', serial:'CVH-012-GT', branch:'Zona 10',    status:'active',   notes:'Reparto y distribución' },
+  { id:'AF-004', name:'Estantería metálica bodega',     cat:'mobiliario',   purchase: 24800,  acquired:'2021-08-20', serial:'',           branch:'Zona 10',    status:'active',   notes:'40 módulos doble cara' },
+  { id:'AF-005', name:'Caja registradora POS ×5',       cat:'computo',      purchase: 18500,  acquired:'2024-02-01', serial:'POS-2024-A', branch:'Zona 10',    status:'active',   notes:'Incluye lectores de código' },
+  { id:'AF-006', name:'Montacargas eléctrico Toyota',   cat:'maquinaria',   purchase: 92000,  acquired:'2020-05-12', serial:'MCG-2020-01', branch:'Zona 10',   status:'active',   notes:'Capacidad 2,000 kg' },
+  { id:'AF-007', name:'Aire acondicionado Carrier ×4',  cat:'maquinaria',   purchase: 32000,  acquired:'2021-11-05', serial:'',           branch:'Zona 10',    status:'active',   notes:'Unidades de 2 toneladas' },
+  { id:'AF-008', name:'Laptops Lenovo ThinkPad ×8',     cat:'computo',      purchase: 56000,  acquired:'2022-09-01', serial:'',           branch:'Central',    status:'active',   notes:'Area administrativa' },
+  { id:'AF-009', name:'Escritorios y sillas ofic. ×12', cat:'mobiliario',   purchase: 14400,  acquired:'2019-04-15', serial:'',           branch:'Central',    status:'active',   notes:'Área de oficinas' },
+  { id:'AF-010', name:'Pick-up Toyota Hilux 2021',      cat:'vehiculos',    purchase: 245000, acquired:'2021-03-22', serial:'CVH-021-GT', branch:'Zona 10',    status:'active',   notes:'Gerencia general' },
+  { id:'AF-011', name:'Escáner industrial Zebra DS9900',cat:'herramientas', purchase: 8400,   acquired:'2023-01-10', serial:'ZBR-001',    branch:'Zona 10',    status:'active',   notes:'Lectores de código de barras' },
+  { id:'AF-012', name:'Generador eléctrico 15kVA',      cat:'maquinaria',   purchase: 38000,  acquired:'2020-08-30', serial:'GEN-2020-01', branch:'Zona 10',   status:'baja',     notes:'Dado de baja por falla mecánica' },
+];
+
+// ── Cálculo de depreciación (línea recta) ──────────────────────────────────
+function calcDepr(asset) {
+  const cat       = CAT_MAP[asset.cat];
+  const rate      = cat?.rate ?? 0.10;
+  const acqDate   = new Date(asset.acquired);
+  const acqYear   = acqDate.getFullYear();
+  const acqMonth  = acqDate.getMonth() + 1;
+
+  // Meses desde adquisición hasta hoy
+  const monthsOwned = (CUR_YEAR - acqYear) * 12 + (CUR_MONTH - acqMonth);
+
+  const deprAnual   = asset.purchase * rate;
+  const deprMensual = deprAnual / 12;
+  const deprAcum    = Math.min(asset.purchase, deprMensual * Math.max(0, monthsOwned));
+  const valorLibros = Math.max(0, asset.purchase - deprAcum);
+  const pctDepAcum  = asset.purchase > 0 ? deprAcum / asset.purchase : 0;
+  const yearsLeft   = valorLibros > 0 ? valorLibros / deprAnual : 0;
+  const fullyDepr   = valorLibros <= 0;
+
+  return { rate, deprAnual, deprMensual, deprAcum, valorLibros, pctDepAcum, yearsLeft, fullyDepr, monthsOwned };
+}
+
+const STATUS_LABELS = { active:'Activo', baja:'Dado de baja', mantenimiento:'En mantenimiento' };
+const STATUS_PILL   = { active:'success', baja:'danger', mantenimiento:'warning' };
+
+// ══════════════════════════════════════════════════════════════════════════════
+export default function FixedAssets({ pushToast }) {
+  const [tab,         setTab]         = useState('activos');
+  const [selAsset,    setSelAsset]    = useState(null);
+  const [showNew,     setShowNew]     = useState(false);
+  const [showBaja,    setShowBaja]    = useState(null);
+  const [search,      setSearch]      = useState('');
+  const [catFilter,   setCatFilter]   = useState('todos');
+  const [statusFilter,setStatusFilter]= useState('active');
+  const [newForm,     setNewForm]     = useState({
+    name:'', cat:'computo', purchase:'', acquired:'', serial:'', branch:'Zona 10', notes:''
+  });
+
+  const assets = useMemo(() => ASSETS_INIT.map(a => ({ ...a, depr: calcDepr(a) })), []);
+
+  const filtered = assets.filter(a => {
+    if (search && !a.name.toLowerCase().includes(search.toLowerCase()) &&
+        !a.id.toLowerCase().includes(search.toLowerCase())) return false;
+    if (catFilter    !== 'todos'  && a.cat    !== catFilter)    return false;
+    if (statusFilter !== 'todos'  && a.status !== statusFilter) return false;
+    return true;
+  });
+
+  const activeAssets = assets.filter(a => a.status === 'active');
+
+  const summary = useMemo(() => ({
+    totalCosto:   activeAssets.reduce((s, a) => s + a.purchase,        0),
+    totalLibros:  activeAssets.reduce((s, a) => s + a.depr.valorLibros, 0),
+    totalAcum:    activeAssets.reduce((s, a) => s + a.depr.deprAcum,   0),
+    totalMensual: activeAssets.reduce((s, a) => s + a.depr.deprMensual, 0),
+    totalAnual:   activeAssets.reduce((s, a) => s + a.depr.deprAnual,  0),
+    count:        activeAssets.length,
+    bycat: CATEGORIES.map(c => ({
+      ...c,
+      count: activeAssets.filter(a => a.cat === c.id).length,
+      costo: activeAssets.filter(a => a.cat === c.id).reduce((s,a) => s + a.purchase, 0),
+      libros:activeAssets.filter(a => a.cat === c.id).reduce((s,a) => s + a.depr.valorLibros, 0),
+    })).filter(c => c.count > 0),
+  }), [assets]);
+
+  const setNew = (k, v) => setNewForm(f => ({ ...f, [k]: v }));
+
+  const handleSaveNew = () => {
+    if (!newForm.name || !newForm.purchase || !newForm.acquired) {
+      pushToast && pushToast('Completa nombre, valor y fecha de adquisición', 'danger');
+      return;
+    }
+    pushToast && pushToast(`Activo "${newForm.name}" registrado`, 'success');
+    setShowNew(false);
+    setNewForm({ name:'', cat:'computo', purchase:'', acquired:'', serial:'', branch:'Zona 10', notes:'' });
+  };
+
+  const handleBaja = () => {
+    pushToast && pushToast(`Activo dado de baja y registrado en contabilidad`, 'success');
+    setShowBaja(null);
+    setSelAsset(null);
+  };
+
+  return (
+    <div className="page">
+      {/* Header */}
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Activos Fijos</h1>
+          <div className="page-subtitle">
+            Depreciación línea recta · Decreto 26-92 ISR Guatemala · {CUR_YEAR}
+          </div>
+        </div>
+        <div className="page-head-actions">
+          <button className="btn"><Icon name="download" size={12}/>Exportar</button>
+          <button className="btn accent" onClick={() => setShowNew(true)}>
+            <Icon name="plus" size={12}/>Nuevo activo
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs">
+        {[
+          { id:'activos',      label:`Activos (${activeAssets.length})` },
+          { id:'depreciacion', label:'Depreciación del período' },
+          { id:'categorias',   label:'Categorías SAT' },
+          { id:'bajas',        label:'Bajas' },
+        ].map(t => (
+          <button key={t.id} className={`tab ${tab === t.id ? 'active':''}`}
+            onClick={() => setTab(t.id)}>{t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── TAB: ACTIVOS ── */}
+      {tab === 'activos' && (
+        <>
+          {/* KPIs */}
+          <div className="stat-grid" style={{gridTemplateColumns:'repeat(4,1fr)', marginBottom:16}}>
+            <div className="stat">
+              <div className="label"><Icon name="box" size={11}/>Costo histórico total</div>
+              <div className="val mono" style={{fontSize:20}}>{Q(summary.totalCosto)}</div>
+              <div className="delta" style={{color:'var(--muted)'}}>{summary.count} activos activos</div>
+            </div>
+            <div className="stat">
+              <div className="label"><Icon name="chart" size={11}/>Valor en libros</div>
+              <div className="val mono" style={{fontSize:20}}>{Q(summary.totalLibros)}</div>
+              <div className="delta" style={{color:'var(--muted)'}}>
+                {pct(summary.totalLibros / summary.totalCosto)} del costo
+              </div>
+            </div>
+            <div className="stat">
+              <div className="label"><Icon name="arrowDown" size={11}/>Depreciación acumulada</div>
+              <div className="val mono" style={{fontSize:20, color:'var(--danger)'}}>{Q(summary.totalAcum)}</div>
+              <div className="delta" style={{color:'var(--muted)'}}>
+                {pct(summary.totalAcum / summary.totalCosto)} depreciado
+              </div>
+            </div>
+            <div className="stat">
+              <div className="label"><Icon name="calendar" size={11}/>Depreciación mensual</div>
+              <div className="val mono" style={{fontSize:20, color:'var(--accent)'}}>{Q(summary.totalMensual)}</div>
+              <div className="delta" style={{color:'var(--muted)'}}>{Q(summary.totalAnual)} anual</div>
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div className="toolbar">
+            <div className="search-wrap" style={{flex:1, maxWidth:320}}>
+              <Icon name="search" size={13} className="icon"/>
+              <input className="search-input" placeholder="Buscar activo…"
+                value={search} onChange={e => setSearch(e.target.value)}/>
+            </div>
+            <select className="field-input" value={catFilter}
+              onChange={e => setCatFilter(e.target.value)} style={{width:'auto'}}>
+              <option value="todos">Todas las categorías</option>
+              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <select className="field-input" value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)} style={{width:'auto'}}>
+              <option value="todos">Todos los estados</option>
+              <option value="active">Activos</option>
+              <option value="baja">Dados de baja</option>
+            </select>
+            <span className="muted" style={{fontSize:11, marginLeft:'auto'}}>{filtered.length} registros</span>
+          </div>
+
+          {/* Tabla */}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Activo</th>
+                  <th>Categoría</th>
+                  <th>Sucursal</th>
+                  <th className="num">Costo histórico</th>
+                  <th className="num">Dep. acumulada</th>
+                  <th className="num">Valor en libros</th>
+                  <th>% Dep.</th>
+                  <th>Estado</th>
+                  <th/>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(a => {
+                  const cat = CAT_MAP[a.cat];
+                  const barW = Math.round(a.depr.pctDepAcum * 100);
+                  return (
+                    <tr key={a.id} className="clickable" onClick={() => setSelAsset(a)}>
+                      <td className="mono">{a.id}</td>
+                      <td>
+                        <div style={{fontWeight:500}}>{a.name}</div>
+                        {a.serial && <div className="mono muted" style={{fontSize:10}}>S/N {a.serial}</div>}
+                      </td>
+                      <td>
+                        <span style={{marginRight:5}}>{cat?.icon}</span>
+                        <span style={{fontSize:12}}>{cat?.name}</span>
+                      </td>
+                      <td className="muted">{a.branch}</td>
+                      <td className="num">{Q(a.purchase)}</td>
+                      <td className="num" style={{color:'var(--danger)'}}>
+                        {a.status === 'active' ? Q(a.depr.deprAcum) : '—'}
+                      </td>
+                      <td className="num" style={{fontWeight:600,
+                        color: a.depr.fullyDepr ? 'var(--muted)' : 'var(--text)'}}>
+                        {a.status === 'active' ? Q(a.depr.valorLibros) : '—'}
+                      </td>
+                      <td style={{minWidth:120}}>
+                        {a.status === 'active' && (
+                          <div>
+                            <div className="bar" style={{width:90, display:'inline-block', verticalAlign:'middle', marginRight:6}}>
+                              <div style={{width:`${barW}%`,
+                                background: barW >= 90 ? 'var(--danger)' : barW >= 60 ? 'var(--warning)' : 'var(--accent)'}}/>
+                            </div>
+                            <span className="mono" style={{fontSize:10}}>{barW}%</span>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`pill ${STATUS_PILL[a.status] || ''}`}>
+                          <span className="dot"/>{STATUS_LABELS[a.status]}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="btn sm ghost" onClick={ev => { ev.stopPropagation(); setSelAsset(a); }}>
+                          <Icon name="eye" size={11}/>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={10} className="empty">Sin activos</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {/* ── TAB: DEPRECIACIÓN DEL PERÍODO ── */}
+      {tab === 'depreciacion' && (
+        <>
+          <div className="card" style={{marginBottom:16}}>
+            <div className="card-head">
+              <div>
+                <h3>Partida de depreciación — {`${String(CUR_MONTH).padStart(2,'0')}/${CUR_YEAR}`}</h3>
+                <div className="meta">Línea recta · Método aceptado SAT Decreto 26-92</div>
+              </div>
+              <div className="row gap-6">
+                <button className="btn sm"><Icon name="receipt" size={12}/>Registrar partida</button>
+                <button className="btn sm"><Icon name="download" size={12}/>Excel</button>
+              </div>
+            </div>
+            <div className="tbl-wrap">
+              <table className="tbl" style={{fontSize:11.5}}>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Activo</th>
+                    <th>Categoría</th>
+                    <th className="num">Costo histórico</th>
+                    <th className="num">Tasa anual</th>
+                    <th className="num">Dep. anual</th>
+                    <th className="num">Dep. mensual</th>
+                    <th className="num">Dep. acumulada</th>
+                    <th className="num">Valor en libros</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeAssets.map(a => {
+                    const cat = CAT_MAP[a.cat];
+                    return (
+                      <tr key={a.id}>
+                        <td className="mono">{a.id}</td>
+                        <td style={{fontWeight:500}}>{a.name}</td>
+                        <td><span style={{marginRight:4}}>{cat?.icon}</span>{cat?.name}</td>
+                        <td className="num">{Q(a.purchase)}</td>
+                        <td className="num mono">{pct(a.depr.rate)}</td>
+                        <td className="num">{Q(a.depr.deprAnual)}</td>
+                        <td className="num" style={{color:'var(--accent)', fontWeight:600}}>
+                          {Q(a.depr.deprMensual)}
+                        </td>
+                        <td className="num" style={{color:'var(--danger)'}}>{Q(a.depr.deprAcum)}</td>
+                        <td className="num" style={{fontWeight:600,
+                          color: a.depr.fullyDepr ? 'var(--muted)' : 'var(--text)'}}>
+                          {Q(a.depr.valorLibros)}
+                          {a.depr.fullyDepr && <span className="pill warning" style={{marginLeft:6, fontSize:9}}>Agotado</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{background:'var(--surface-2)', fontWeight:700}}>
+                    <td colSpan={3} style={{padding:'8px 12px'}}>TOTALES</td>
+                    <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalCosto)}</td>
+                    <td/>
+                    <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalAnual)}</td>
+                    <td className="num" style={{padding:'8px 12px', color:'var(--accent)'}}>{Q(summary.totalMensual)}</td>
+                    <td className="num" style={{padding:'8px 12px', color:'var(--danger)'}}>{Q(summary.totalAcum)}</td>
+                    <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalLibros)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* Asiento contable sugerido */}
+          <div className="card">
+            <div className="card-head">
+              <h3>Asiento contable sugerido</h3>
+              <span className="meta">{`${String(CUR_MONTH).padStart(2,'0')}/${CUR_YEAR}`}</span>
+            </div>
+            <div className="card-body">
+              <table className="tbl">
+                <thead>
+                  <tr><th>Cuenta</th><th>Descripción</th><th className="num">Débito</th><th className="num">Crédito</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="mono">6-1-03-001</td>
+                    <td>Gasto depreciación — Edificios</td>
+                    <td className="num">{Q(activeAssets.filter(a=>a.cat==='edificios').reduce((s,a)=>s+a.depr.deprMensual,0))}</td>
+                    <td className="num">—</td>
+                  </tr>
+                  <tr>
+                    <td className="mono">6-1-03-002</td>
+                    <td>Gasto depreciación — Maquinaria y equipo</td>
+                    <td className="num">{Q(activeAssets.filter(a=>['maquinaria','herramientas'].includes(a.cat)).reduce((s,a)=>s+a.depr.deprMensual,0))}</td>
+                    <td className="num">—</td>
+                  </tr>
+                  <tr>
+                    <td className="mono">6-1-03-003</td>
+                    <td>Gasto depreciación — Vehículos</td>
+                    <td className="num">{Q(activeAssets.filter(a=>a.cat==='vehiculos').reduce((s,a)=>s+a.depr.deprMensual,0))}</td>
+                    <td className="num">—</td>
+                  </tr>
+                  <tr>
+                    <td className="mono">6-1-03-004</td>
+                    <td>Gasto depreciación — Equipo de cómputo</td>
+                    <td className="num">{Q(activeAssets.filter(a=>a.cat==='computo').reduce((s,a)=>s+a.depr.deprMensual,0))}</td>
+                    <td className="num">—</td>
+                  </tr>
+                  <tr>
+                    <td className="mono">6-1-03-005</td>
+                    <td>Gasto depreciación — Mobiliario</td>
+                    <td className="num">{Q(activeAssets.filter(a=>a.cat==='mobiliario').reduce((s,a)=>s+a.depr.deprMensual,0))}</td>
+                    <td className="num">—</td>
+                  </tr>
+                  <tr style={{background:'var(--surface-2)'}}>
+                    <td className="mono">1-2-01-099</td>
+                    <td>Depreciación acumulada (acumulado del período)</td>
+                    <td className="num">—</td>
+                    <td className="num" style={{fontWeight:700, color:'var(--accent)'}}>{Q(summary.totalMensual)}</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr style={{fontWeight:700}}>
+                    <td colSpan={2} style={{padding:'8px 12px'}}>TOTALES</td>
+                    <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalMensual)}</td>
+                    <td className="num" style={{padding:'8px 12px'}}>{Q(summary.totalMensual)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── TAB: CATEGORÍAS SAT ── */}
+      {tab === 'categorias' && (
+        <div className="grid-2" style={{gridTemplateColumns:'1fr 1fr', gap:16}}>
+          {CATEGORIES.map(cat => {
+            const info = summary.bycat.find(c => c.id === cat.id);
+            return (
+              <div className="card" key={cat.id}>
+                <div className="card-head">
+                  <h3>
+                    <span style={{marginRight:8}}>{cat.icon}</span>{cat.name}
+                  </h3>
+                  <span className="pill accent mono">{pct(cat.rate)}/año</span>
+                </div>
+                <div className="card-body">
+                  <div className="detail-grid">
+                    <div className="detail-row">
+                      <span className="detail-label">Vida útil</span>
+                      <span className="mono">{cat.years} años</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Tasa anual SAT</span>
+                      <span className="mono">{pct(cat.rate)}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Activos registrados</span>
+                      <span className="mono">{info?.count ?? 0}</span>
+                    </div>
+                    {info && (
+                      <>
+                        <div className="detail-row">
+                          <span className="detail-label">Costo total</span>
+                          <span className="mono">{Q(info.costo)}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">Valor en libros</span>
+                          <span className="mono" style={{color:'var(--accent)'}}>{Q(info.libros)}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">Dep. mensual total</span>
+                          <span className="mono">{Q(info.costo * cat.rate / 12)}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {info && (
+                    <div className="bar" style={{marginTop:10}}>
+                      <div style={{width:`${Math.round((1 - info.libros/info.costo)*100)}%`}}/>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {/* Referencia legal */}
+          <div className="card" style={{gridColumn:'1 / -1'}}>
+            <div className="card-head"><h3>Referencia legal · Decreto 26-92 Art. 19</h3></div>
+            <div className="card-body">
+              <div className="alert">
+                <Icon name="alert" size={13}/>
+                Tasas máximas permitidas por la SAT para el régimen general. El método de línea recta
+                es el más utilizado. La depreciación inicia desde el mes de adquisición.
+                El valor residual para efectos fiscales es Q0.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB: BAJAS ── */}
+      {tab === 'bajas' && (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Código</th><th>Activo</th><th>Categoría</th>
+                <th className="num">Costo histórico</th>
+                <th className="num">Dep. acumulada al dar de baja</th>
+                <th className="num">Valor en libros</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assets.filter(a => a.status === 'baja').map(a => {
+                const cat = CAT_MAP[a.cat];
+                return (
+                  <tr key={a.id}>
+                    <td className="mono">{a.id}</td>
+                    <td style={{fontWeight:500}}>{a.name}</td>
+                    <td>{cat?.icon} {cat?.name}</td>
+                    <td className="num">{Q(a.purchase)}</td>
+                    <td className="num" style={{color:'var(--danger)'}}>{Q(a.depr.deprAcum)}</td>
+                    <td className="num">{Q(a.depr.valorLibros)}</td>
+                    <td className="muted" style={{maxWidth:220, whiteSpace:'normal'}}>{a.notes}</td>
+                  </tr>
+                );
+              })}
+              {assets.filter(a => a.status === 'baja').length === 0 && (
+                <tr><td colSpan={7} className="empty">Sin activos dados de baja</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ── DRAWER: Detalle de activo ── */}
+      {selAsset && (
+        <>
+          <div className="drawer-overlay" onClick={() => setSelAsset(null)}/>
+          <div className="drawer" style={{width:540}}>
+            <div className="drawer-head">
+              <div>
+                <div className="drawer-title">{selAsset.name}</div>
+                <div className="muted" style={{fontSize:11, marginTop:2}}>
+                  {selAsset.id} · {CAT_MAP[selAsset.cat]?.icon} {CAT_MAP[selAsset.cat]?.name}
+                </div>
+              </div>
+              <button className="icon-btn" onClick={() => setSelAsset(null)}><Icon name="x"/></button>
+            </div>
+            <div className="drawer-body">
+              <div className="row" style={{marginBottom:16, gap:8}}>
+                <span className={`pill ${STATUS_PILL[selAsset.status]}`}>
+                  <span className="dot"/>{STATUS_LABELS[selAsset.status]}
+                </span>
+                <span className="pill">{selAsset.branch}</span>
+              </div>
+
+              {/* Datos */}
+              <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Datos del activo</div>
+              <div className="detail-grid" style={{marginBottom:20}}>
+                {[
+                  ['Fecha de adquisición', selAsset.acquired],
+                  ['No. serie / placa',    selAsset.serial || '—'],
+                  ['Sucursal',             selAsset.branch],
+                  ['Costo histórico',      Q(selAsset.purchase)],
+                  ['Notas',                selAsset.notes || '—'],
+                ].map(([l,v]) => (
+                  <div className="detail-row" key={l}>
+                    <span className="detail-label">{l}</span>
+                    <span style={{fontSize:12, textAlign:'right', maxWidth:260, wordBreak:'break-word'}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Depreciación */}
+              {selAsset.status === 'active' && (() => {
+                const d = selAsset.depr;
+                const barW = Math.round(d.pctDepAcum * 100);
+                return (
+                  <>
+                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8}}>Depreciación acumulada</div>
+                    <div style={{marginBottom:10}}>
+                      <div className="row" style={{justifyContent:'space-between', marginBottom:4, fontSize:11}}>
+                        <span className="mono muted">0%</span>
+                        <span className="mono" style={{fontWeight:600}}>{barW}% depreciado</span>
+                        <span className="mono muted">100%</span>
+                      </div>
+                      <div className="bar" style={{height:10}}>
+                        <div style={{width:`${barW}%`,
+                          background: barW >= 90 ? 'var(--danger)' : barW >= 60 ? 'var(--warning)' : 'var(--accent)'}}/>
+                      </div>
+                    </div>
+                    <div className="card" style={{marginBottom:16}}>
+                      <div className="card-body" style={{padding:0}}>
+                        <table className="tbl" style={{fontSize:12}}>
+                          <tbody>
+                            <tr><td>Tasa de depreciación</td><td className="num">{pct(d.rate)}/año</td></tr>
+                            <tr><td>Depreciación anual</td><td className="num">{Q(d.deprAnual)}</td></tr>
+                            <tr><td>Depreciación mensual</td><td className="num" style={{color:'var(--accent)'}}>{Q(d.deprMensual)}</td></tr>
+                            <tr><td>Meses en uso</td><td className="num">{d.monthsOwned} meses</td></tr>
+                            <tr><td>Dep. acumulada a la fecha</td><td className="num" style={{color:'var(--danger)'}}>{Q(d.deprAcum)}</td></tr>
+                            <tr style={{background:'var(--surface-2)', fontWeight:700}}>
+                              <td style={{padding:'9px 12px'}}>Valor en libros</td>
+                              <td className="num" style={{padding:'9px 12px', fontSize:15,
+                                color: d.fullyDepr ? 'var(--muted)' : 'var(--text)'}}>
+                                {Q(d.valorLibros)}
+                                {d.fullyDepr && <span className="pill warning" style={{marginLeft:8, fontSize:9}}>Totalmente depreciado</span>}
+                              </td>
+                            </tr>
+                            {!d.fullyDepr && (
+                              <tr>
+                                <td>Años restantes (estimado)</td>
+                                <td className="num">{d.yearsLeft.toFixed(1)} años</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            <div className="drawer-foot">
+              <button className="btn ghost" onClick={() => setSelAsset(null)}>Cerrar</button>
+              {selAsset.status === 'active' && (
+                <button className="btn danger" onClick={() => { setShowBaja(selAsset); setSelAsset(null); }}>
+                  <Icon name="trash" size={12}/>Dar de baja
+                </button>
+              )}
+              <button className="btn accent"><Icon name="edit" size={12}/>Editar</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── MODAL: Nuevo activo ── */}
+      {showNew && (
+        <div className="modal-overlay" onClick={() => setShowNew(false)}>
+          <div className="modal" style={{width:560}} onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>Registrar nuevo activo fijo</h3>
+              <button className="icon-btn" onClick={() => setShowNew(false)}><Icon name="x"/></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="field span-2">
+                  <label className="field-label">Nombre / descripción</label>
+                  <input className="field-input" placeholder="Ej. Camión Isuzu 2026"
+                    value={newForm.name} onChange={e => setNew('name', e.target.value)}/>
+                </div>
+                <div className="field">
+                  <label className="field-label">Categoría SAT</label>
+                  <select className="field-input" value={newForm.cat} onChange={e => setNew('cat', e.target.value)}>
+                    {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <label className="field-label">Sucursal</label>
+                  <select className="field-input" value={newForm.branch} onChange={e => setNew('branch', e.target.value)}>
+                    {['Zona 10','Central','Zona 1','Zona 15','Mixco'].map(b =>
+                      <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <label className="field-label">Costo de adquisición (Q)</label>
+                  <input className="field-input mono" type="number" placeholder="0.00"
+                    value={newForm.purchase} onChange={e => setNew('purchase', e.target.value)}/>
+                </div>
+                <div className="field">
+                  <label className="field-label">Fecha de adquisición</label>
+                  <input className="field-input" type="date"
+                    value={newForm.acquired} onChange={e => setNew('acquired', e.target.value)}/>
+                </div>
+                <div className="field span-2">
+                  <label className="field-label">No. de serie / placa (opcional)</label>
+                  <input className="field-input mono" placeholder="Ej. ABC-1234"
+                    value={newForm.serial} onChange={e => setNew('serial', e.target.value)}/>
+                </div>
+                <div className="field span-2">
+                  <label className="field-label">Notas</label>
+                  <input className="field-input" placeholder="Descripción adicional…"
+                    value={newForm.notes} onChange={e => setNew('notes', e.target.value)}/>
+                </div>
+              </div>
+
+              {/* Preview tasa seleccionada */}
+              {newForm.cat && newForm.purchase && (
+                <div style={{marginTop:16, padding:'12px 14px', background:'var(--accent-soft)', borderRadius:'var(--r-md)'}}>
+                  <div style={{fontFamily:'var(--font-mono)', fontSize:10, color:'var(--accent-ink)', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:6}}>
+                    Vista previa depreciación
+                  </div>
+                  {(() => {
+                    const cat = CAT_MAP[newForm.cat];
+                    const val = parseFloat(newForm.purchase) || 0;
+                    return (
+                      <div className="row" style={{gap:20, flexWrap:'wrap'}}>
+                        <span style={{fontSize:12, color:'var(--accent-ink)'}}>
+                          Tasa: <strong>{pct(cat.rate)}/año</strong>
+                        </span>
+                        <span style={{fontSize:12, color:'var(--accent-ink)'}}>
+                          Dep. anual: <strong>{Q(val * cat.rate)}</strong>
+                        </span>
+                        <span style={{fontSize:12, color:'var(--accent-ink)'}}>
+                          Dep. mensual: <strong>{Q(val * cat.rate / 12)}</strong>
+                        </span>
+                        <span style={{fontSize:12, color:'var(--accent-ink)'}}>
+                          Vida útil: <strong>{cat.years} años</strong>
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+            <div className="modal-foot">
+              <button className="btn ghost" onClick={() => setShowNew(false)}>Cancelar</button>
+              <button className="btn accent" onClick={handleSaveNew}>
+                <Icon name="check" size={12}/>Registrar activo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: Baja de activo ── */}
+      {showBaja && (
+        <div className="modal-overlay" onClick={() => setShowBaja(null)}>
+          <div className="modal" style={{width:460}} onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <h3>Dar de baja activo</h3>
+              <button className="icon-btn" onClick={() => setShowBaja(null)}><Icon name="x"/></button>
+            </div>
+            <div className="modal-body">
+              <div className="alert" style={{marginBottom:16}}>
+                <Icon name="alert" size={13}/>
+                Esta acción registrará la baja en contabilidad y lo moverá al historial.
+              </div>
+              <div className="detail-grid">
+                <div className="detail-row"><span className="detail-label">Activo</span>
+                  <span style={{fontWeight:600}}>{showBaja.name}</span></div>
+                <div className="detail-row"><span className="detail-label">Costo histórico</span>
+                  <span className="mono">{Q(showBaja.purchase)}</span></div>
+                <div className="detail-row"><span className="detail-label">Dep. acumulada</span>
+                  <span className="mono" style={{color:'var(--danger)'}}>{Q(showBaja.depr.deprAcum)}</span></div>
+                <div className="detail-row"><span className="detail-label">Valor en libros</span>
+                  <span className="mono" style={{fontWeight:700}}>{Q(showBaja.depr.valorLibros)}</span></div>
+              </div>
+              <div className="field" style={{marginTop:16}}>
+                <label className="field-label">Motivo de la baja</label>
+                <select className="field-input">
+                  <option>Obsolescencia</option>
+                  <option>Falla irreparable</option>
+                  <option>Venta del activo</option>
+                  <option>Robo o pérdida</option>
+                  <option>Donación</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button className="btn ghost" onClick={() => setShowBaja(null)}>Cancelar</button>
+              <button className="btn danger" onClick={handleBaja}>
+                <Icon name="trash" size={12}/>Confirmar baja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

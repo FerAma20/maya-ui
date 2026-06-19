@@ -1,0 +1,137 @@
+// ERP MAYA — Panel lateral de notificaciones
+import React, { useState, useEffect, useRef } from 'react';
+import Icon from './Icon.jsx';
+import { NOTIFICATIONS as INIT_NOTIFS } from '../data/mock.js';
+
+const TYPE_ICON  = { stock_low: 'alert', expiry: 'clock', po_pending: 'truck', transfer: 'transfer', cash: 'cash', cxc: 'card' };
+const TYPE_CLASS = { stock_low: 'danger', expiry: 'warning', po_pending: 'warning', transfer: 'info', cash: 'danger', cxc: 'warning' };
+const TYPE_LABEL = { stock_low: 'Stock', expiry: 'Vencimiento', po_pending: 'Compras', transfer: 'Traslado', cash: 'Caja', cxc: 'CxC' };
+
+export function useNotifications() {
+  const [notifications, setNotifications] = useState(INIT_NOTIFS);
+  const unreadCount = notifications.filter(n => !n.readAt).length;
+
+  const markRead = (id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, readAt: new Date().toISOString() } : n));
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
+
+  return { notifications, unreadCount, markRead, markAllRead };
+}
+
+export function NotificationsPanel({ notifications, unreadCount, onMarkRead, onMarkAllRead, onNavigate }) {
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = filter === 'unread'
+    ? notifications.filter(n => !n.readAt)
+    : notifications;
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        className="icon-btn"
+        title="Notificaciones"
+        onClick={() => setOpen(o => !o)}
+        style={{ position: 'relative' }}
+      >
+        <Icon name="bell" />
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute', top: 5, right: 5,
+            minWidth: 16, height: 16, borderRadius: 8,
+            background: 'var(--danger)', color: '#fff',
+            fontSize: 9, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 3px', lineHeight: 1,
+          }}>
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+          width: 380, maxHeight: 520,
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 10, boxShadow: 'var(--shadow-lg)', zIndex: 200,
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {/* Cabecera */}
+          <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>
+              Notificaciones {unreadCount > 0 && <span className="pill danger" style={{ fontSize: 10, marginLeft: 6 }}>{unreadCount}</span>}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {unreadCount > 0 && (
+                <button className="btn" style={{ fontSize: 11, padding: '3px 8px' }} onClick={onMarkAllRead}>
+                  Marcar todas leídas
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 8, flexShrink: 0 }}>
+            {['all', 'unread'].map(f => (
+              <button key={f} className={`chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
+                {f === 'all' ? 'Todas' : `No leídas (${unreadCount})`}
+              </button>
+            ))}
+          </div>
+
+          {/* Lista */}
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {filtered.length === 0 ? (
+              <div className="empty" style={{ padding: '32px 16px' }}>
+                <Icon name="check" size={20} style={{ opacity: 0.3, marginBottom: 8 }} />
+                <div>Sin notificaciones {filter === 'unread' ? 'pendientes' : ''}</div>
+              </div>
+            ) : filtered.map(n => (
+              <div
+                key={n.id}
+                onClick={() => { onMarkRead(n.id); onNavigate(n.route); setOpen(false); }}
+                style={{
+                  padding: '12px 16px',
+                  borderBottom: '1px solid var(--border)',
+                  cursor: 'pointer',
+                  background: n.readAt ? 'transparent' : 'rgba(var(--accent-rgb,20,184,166),.04)',
+                  display: 'flex', gap: 12, alignItems: 'flex-start',
+                  transition: 'background .15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
+                onMouseLeave={e => e.currentTarget.style.background = n.readAt ? 'transparent' : 'rgba(var(--accent-rgb,20,184,166),.04)'}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                  background: `rgba(var(--${TYPE_CLASS[n.type]}-rgb,239,68,68),.12)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginTop: 2,
+                }}>
+                  <Icon name={TYPE_ICON[n.type] || 'bell'} size={14} style={{ color: `var(--${TYPE_CLASS[n.type]})` }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ fontWeight: n.readAt ? 400 : 600, fontSize: 13, lineHeight: 1.3 }}>{n.title}</div>
+                    {!n.readAt && <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: 4 }} />}
+                  </div>
+                  <div className="muted" style={{ fontSize: 12, marginTop: 2, lineHeight: 1.3 }}>{n.body}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                    <span className={`pill ${TYPE_CLASS[n.type]}`} style={{ fontSize: 9 }}>{TYPE_LABEL[n.type]}</span>
+                    <span className="muted" style={{ fontSize: 10 }}>{n.createdAt.split(' ')[1] || n.createdAt}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

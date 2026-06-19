@@ -1,0 +1,32 @@
+{
+  "name": "erp-maya",
+  "private": true,
+  "version": "3.2.0",
+  "type": "module",
+  "description": "ERP MAYA — Sistema retail (Inventario · POS · Facturación · Reportería)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173",
+    "lint": "eslint . --ext .js,.jsx --report-unused-disable-directives --max-warnings 0",
+    "server": "node server/index.js",
+    "server:seed": "node server/seed.js",
+    "start": "concurrently -k -n web,api -c blue,green \"npm run dev\" \"npm run server\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.10",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
