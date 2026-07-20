@@ -70,7 +70,7 @@ function computeResults(query, navItems, t) {
   return groups;
 }
 
-export default function GlobalSearch({ navItems, onClose, onNavigate }) {
+export function GlobalSearch({ navItems, onClose, onNavigate }) {
   const { t } = useTranslation();
   const [query, setQuery]       = useState('');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -206,3 +206,5 @@ export default function GlobalSearch({ navItems, onClose, onNavigate }) {
     </div>
   );
 }
+
+export default GlobalSearch;

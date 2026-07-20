@@ -1,0 +1,473 @@
+<!-- @dsCard group="Documentación" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ERP MAYA — Modelo de Datos (ERD)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#fff; --surface-2:#fafaf8; --surface-3:#f1f1ee;
+    --border:#e5e5e2; --border-strong:#d4d4d0; --text:#18181a; --text-2:#4a4a48; --muted:#87877f;
+    --accent:#0f766e; --accent-soft:#ccfbf1; --accent-ink:#134e4a; --accent-2:#c2410c;
+    --success:#15803d; --success-soft:#dcfce7; --warning:#b45309; --warning-soft:#fef3c7;
+    --danger:#b91c1c; --danger-soft:#fee2e2; --info:#1d4ed8; --info-soft:#dbeafe;
+    --r-sm:4px; --r-md:6px; --r-lg:10px; --r-xl:14px;
+    --font-sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --font-mono:"IBM Plex Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
+    --shadow-sm:0 1px 0 rgba(20,20,20,.04),0 1px 2px rgba(20,20,20,.04);
+    --shadow-md:0 2px 4px rgba(20,20,20,.04),0 8px 24px rgba(20,20,20,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+  header.hero{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:28px}
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  h1{font-size:26px;font-weight:700;margin:6px 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--text-2);max-width:820px}
+  .note{margin-top:14px;background:var(--warning-soft);border:1px solid #f0d488;color:#7a4d08;padding:10px 14px;border-radius:var(--r-md);font-size:13px}
+  h2.mod{font-size:13px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h2.mod::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--dot,var(--accent))}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+  .lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:999px}
+  .lg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+  .tbl{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;border-top:3px solid var(--dot,var(--accent))}
+  .tbl-h{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px;border-bottom:1px solid var(--border)}
+  .tbl-name{font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--text)}
+  .tbl-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--surface-3);padding:3px 7px;border-radius:999px}
+  table.cols{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px}
+  table.cols td{padding:5px 8px;border-bottom:1px solid var(--surface-3);vertical-align:top}
+  table.cols tr:last-child td{border-bottom:none}
+  .c-key{width:22px;text-align:center;color:var(--muted)}
+  .c-name{color:var(--text);white-space:nowrap}
+  .c-type{color:var(--muted);text-align:right;font-size:11.5px}
+  tr.pk{background:var(--accent-soft)} tr.pk .c-name{color:var(--accent-ink);font-weight:600}
+  tr.fk .c-name{color:var(--info)} tr.fk .c-type{color:var(--info)}
+  .why,.rel{padding:10px 14px;font-family:var(--font-sans);font-size:12.5px;color:var(--text-2)}
+  .why{background:var(--surface-2);border-top:1px solid var(--border)}
+  .why b,.rel b{color:var(--text);font-weight:600}
+  .rel{border-top:1px dashed var(--border)}
+  .rel ul{margin:4px 0 0;padding-left:16px} .rel li{margin:2px 0}
+  code{font-family:var(--font-mono);background:var(--surface-3);padding:1px 5px;border-radius:4px;font-size:11.5px;color:var(--accent-ink)}
+  .relmap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;margin:8px 0 4px;box-shadow:var(--shadow-sm)}
+  .relmap h3{margin:0 0 12px;font-size:14px}
+  .relmap pre{margin:0;font-family:var(--font-mono);font-size:12.5px;line-height:1.7;color:var(--text-2);white-space:pre-wrap}
+  .relmap .ar{color:var(--accent);font-weight:600}
+  .foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker">ERP MAYA · Sistema Retail</div>
+    <h1>Modelo Entidad–Relación de la base de datos</h1>
+    <p class="sub">Esquema relacional normalizado y <b>multi-empresa (SaaS)</b> derivado del sistema (Inventario · POS · Facturación · Compras · Contabilidad · FEL). 24 tablas en 9 módulos. Cada ficha explica <b>por qué está diseñada así</b> y <b>por qué se relaciona</b> con las demás.</p>
+    <div class="note"><b>Nota de diseño:</b> hoy los datos viven como mocks en <code>src/data/mock.js</code> (aún no hay DB física). Este ERD es el <b>esquema objetivo</b>: normaliza los arreglos anidados (ítems de venta/compra/traslado y líneas de póliza) en tablas de detalle, y convierte los campos denormalizados (nombre de cajero/sucursal) en llaves foráneas.</p>
+    <div class="note" style="background:var(--info-soft);border-color:#9dc0f5;color:#0b3d91"><b>Aislamiento multi-empresa (multi-tenant):</b> MAYA lo usan varias empresas y <b>sus datos no se mezclan</b>. La tabla raíz es <code>companies</code> (los inquilinos). <b>Toda tabla operativa lleva la columna discriminadora <code>company_id</code></b> (FK → companies); las consultas siempre filtran por ella (idealmente con Row-Level Security). Ojo con la homonimia: <code>companies</code> = empresas que usan el ERP; <code>clients</code> = clientes a quienes cada empresa vende.</div>
+    <div class="legend">
+      <span class="lg"><i style="background:#1e293b"></i>Núcleo multi-empresa</span>
+      <span class="lg"><i style="background:#0f766e"></i>Catálogos maestros</span>
+      <span class="lg"><i style="background:#c2410c"></i>Inventario</span>
+      <span class="lg"><i style="background:#1d4ed8"></i>Ventas / POS</span>
+      <span class="lg"><i style="background:#15803d"></i>Compras</span>
+      <span class="lg"><i style="background:#b45309"></i>Traslados</span>
+      <span class="lg"><i style="background:#7c3aed"></i>CxC</span>
+      <span class="lg"><i style="background:#0891b2"></i>Contabilidad</span>
+      <span class="lg"><i style="background:#be185d"></i>Marketing</span>
+    </div>
+  </header>
+
+  <div class="relmap">
+    <h3>Mapa de relaciones (cardinalidad 1 → ∞)</h3>
+    <pre>companies <span class="ar">──&lt;</span> branches / users / <b>TODAS las tablas</b> (vía company_id)   ← aislamiento por inquilino (tenant)
+companies <span class="ar">──&lt;</span> establishments (establecimientos SAT · código FEL) <span class="ar">──&lt;</span> branches <span class="ar">──&lt;</span> sales (emite DTE)
+────────────────────────────────────────────────────────────────────────────
+categories <span class="ar">──&lt;</span> products <span class="ar">──&lt;</span> product_stock <span class="ar">&gt;──</span> branches
+products <span class="ar">──&lt;</span> sale_items <span class="ar">&gt;──</span> sales <span class="ar">&gt;──</span> clients / branches / users(cajero) / cash_registers
+products <span class="ar">──&lt;</span> purchase_order_items <span class="ar">&gt;──</span> purchase_orders <span class="ar">&gt;──</span> suppliers / branches
+products <span class="ar">──&lt;</span> transfer_items <span class="ar">&gt;──</span> transfers <span class="ar">&gt;──</span> branches (origen) + branches (destino)
+products <span class="ar">──&lt;</span> stock_movements <span class="ar">&gt;──</span> branches / users        (kardex: la bitácora que une todo el movimiento físico)
+roles <span class="ar">──&lt;</span> users <span class="ar">──&lt;</span> cash_registers <span class="ar">──&lt;</span> sales
+clients <span class="ar">──&lt;</span> payments <span class="ar">&gt;──</span> sales                       (CxC: abonos aplicados a facturas)
+accounts <span class="ar">──&lt;</span> accounts (jerarquía padre/hijo)  ·  accounts <span class="ar">──&lt;</span> journal_entry_lines <span class="ar">&gt;──</span> journal_entries <span class="ar">&gt;──</span> accounting_periods
+promotions  (independiente — objetivo polimórfico por texto)</pre>
+  </div>
+
+  <!-- ══════════ NÚCLEO MULTI-EMPRESA ══════════ -->
+  <h2 class="mod" style="--dot:#1e293b">Núcleo multi-empresa (SaaS)</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#1e293b">
+      <div class="tbl-h"><span class="tbl-name">companies</span><span class="tbl-tag">Inquilino / Tenant</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">UUID PK</td></tr>
+        <tr><td></td><td class="c-name">name / nit</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">plan</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">created_at</td><td class="c-type">TS</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Es la <b>tabla raíz del modelo multi-empresa</b>: cada fila es una empresa (inquilino) que usa MAYA. Todo dato del sistema cuelga de aquí a través de <code>company_id</code>, garantizando que la información de una empresa <b>nunca se mezcle</b> con la de otra. <code>plan</code>/<code>status</code> controlan la suscripción y si el acceso está activo o suspendido.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 empresa → ∞ <code>establishments</code> (establecimientos SAT), ∞ <code>branches</code>, ∞ <code>users</code>, y ∞ de <b>todas las demás tablas</b> (cada una lleva <code>company_id</code>).</li><li>Es el ancla de aislamiento: las consultas filtran por <code>company_id</code> (ideal con Row-Level Security en Postgres).</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#1e293b">
+      <div class="tbl-h"><span class="tbl-name">establishments</span><span class="tbl-tag">Establecimiento SAT</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">UUID PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr><td></td><td class="c-name">sat_code</td><td class="c-type">INT (cód. estab.)</td></tr>
+        <tr><td></td><td class="c-name">commercial_name</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">address</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Es el <b>establecimiento registrado ante la SAT</b> (unidad fiscal), distinto de la sucursal operativa. Guarda el <code>sat_code</code> (código de establecimiento) y el nombre comercial y dirección que <b>la SAT exige en cada factura electrónica (FEL/DTE)</b>. Una empresa registra uno o varios; se modela aparte porque una sucursal puede facturar bajo un establecimiento, y no siempre es 1:1 con las tiendas.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ establecimientos → 1 <code>companies</code>.</li><li>1 establecimiento → ∞ <code>branches</code> (las que facturan bajo él). Las <code>sales</code> heredan el código de establecimiento vía su sucursal para timbrar el DTE.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ CATÁLOGOS MAESTROS ══════════ -->
+  <h2 class="mod" style="--dot:#0f766e">Catálogos maestros <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-family:var(--font-sans)">— todas llevan <code style="font-size:11px">company_id → companies</code></span></h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">categories</span><span class="tbl-tag">Catálogo</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr><td></td><td class="c-name">name</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">icon</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Tabla pequeña y estable que agrupa productos para filtrar, reportar por rubro y aplicar promos por categoría. Se separa del producto para no repetir el nombre del rubro en miles de filas.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 categoría → ∞ <code>products</code>. Sin ella el catálogo no se puede navegar ni segmentar por rubro.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">products</span><span class="tbl-tag">Maestro</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">sku</td><td class="c-type">TEXT PK</td></tr>
+        <tr><td></td><td class="c-name">name</td><td class="c-type">TEXT</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">category_id</td><td class="c-type">FK → categories</td></tr>
+        <tr><td></td><td class="c-name">price / cost / avg_cost</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">unit</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">min_stock</td><td class="c-type">INT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Es el maestro central del ERP. Usa el <b>SKU/código de barras como PK natural</b> porque es único, se escanea en POS y ya identifica al artículo. Guarda precio, costo y costo promedio (para valuar inventario y calcular margen). El stock NO vive aquí: se saca a <code>product_stock</code> porque las existencias son <b>por sucursal</b>.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ productos → 1 <code>categories</code>.</li><li>Referenciado por casi todo lo transaccional: <code>sale_items</code>, <code>purchase_order_items</code>, <code>transfer_items</code>, <code>stock_movements</code>, <code>product_stock</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">branches</span><span class="tbl-tag">Maestro</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">establishment_id</td><td class="c-type">FK → establishments</td></tr>
+        <tr><td></td><td class="c-name">name</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">address</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Son las <b>sucursales operativas de cada empresa</b>: pertenecen a un <code>company_id</code>, así que dos empresas distintas tienen sus propias tiendas sin verse entre sí. Cada sucursal factura bajo un <b>establecimiento SAT</b> (<code>establishment_id</code>), lo que le da el código de establecimiento para el FEL. Casi todo dato operativo (stock, ventas, caja, compras, traslados) se ancla además a la sucursal para reportar por punto de venta.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ sucursales → 1 <code>companies</code> (el inquilino dueño) y 1 <code>establishments</code> (bajo el que timbra).</li><li>1 sucursal → ∞ <code>product_stock</code>, <code>sales</code>, <code>purchase_orders</code>, <code>cash_registers</code>, <code>stock_movements</code>.</li><li>Aparece <b>dos veces</b> en <code>transfers</code> (origen y destino).</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">suppliers</span><span class="tbl-tag">Maestro</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr><td></td><td class="c-name">name / nit</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">contact / phone</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">payment_terms</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">balance</td><td class="c-type">NUMERIC</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Maestro de proveedores para Compras y Cuentas por Pagar. Guarda NIT (obligatorio fiscal en GT), condiciones de crédito y saldo pendiente.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 proveedor → ∞ <code>purchase_orders</code>. El saldo se deriva de las compras a crédito no pagadas.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">clients</span><span class="tbl-tag">Maestro</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr><td></td><td class="c-name">name / nit</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">client_type</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">credit_limit</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">payment_terms</td><td class="c-type">INT</td></tr>
+        <tr><td></td><td class="c-name">balance / status</td><td class="c-type">NUMERIC/TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Maestro de clientes para facturación y CxC. <code>client_type</code> (CF, minorista, mayorista, exento) rige impuestos y precios; <code>credit_limit</code> + <code>balance</code> permiten bloquear ventas a crédito que excedan el cupo.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 cliente → ∞ <code>sales</code> y ∞ <code>payments</code>. El “Consumidor Final” es un cliente genérico para ventas de mostrador.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">roles</span><span class="tbl-tag">Seguridad</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr><td></td><td class="c-name">name / description</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">permissions</td><td class="c-type">JSON/TEXT[]</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Separa la <b>autorización</b> del usuario: los permisos se definen una vez por rol (Admin, Cajero, Inventario…) y se reutilizan, en vez de asignarlos usuario por usuario.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 rol → ∞ <code>users</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">users</span><span class="tbl-tag">Seguridad</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr><td></td><td class="c-name">name / status</td><td class="c-type">TEXT</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">role_id</td><td class="c-type">FK → roles</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">branch_id</td><td class="c-type">FK → branches</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Empleados/operadores del sistema. <b>Cada usuario pertenece a una empresa</b> (<code>company_id</code>): al iniciar sesión solo ve los datos de su inquilino. Se asignan también a un rol (permisos) y a una sucursal base. Es la entidad que da <b>trazabilidad</b>: quién vendió, quién abrió caja, quién movió stock. <span style="color:var(--muted)">(Si un usuario debiera operar varias empresas, se resolvería con una tabla puente <code>company_users</code>.)</span></div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ usuarios → 1 <code>companies</code>, 1 <code>roles</code>, 1 <code>branches</code>.</li><li>1 usuario → ∞ <code>sales</code> (cajero), <code>cash_registers</code>, <code>stock_movements</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ INVENTARIO ══════════ -->
+  <h2 class="mod" style="--dot:#c2410c">Inventario</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#c2410c">
+      <div class="tbl-h"><span class="tbl-name">product_stock</span><span class="tbl-tag">Existencias</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">product_sku</td><td class="c-type">FK → products</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">branch_id</td><td class="c-type">FK → branches</td></tr>
+        <tr><td></td><td class="c-name">quantity</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">batch / expiry</td><td class="c-type">TEXT/DATE</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> El stock es <b>por sucursal (y por lote)</b>, no un número global: por eso se saca del maestro <code>products</code> a esta tabla puente. Permite existencias distintas por tienda y controlar vencimientos por lote (crítico en abarrotes/lácteos). Único por <code>(product_sku, branch_id, batch)</code>.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ existencias → 1 <code>products</code> + 1 <code>branches</code> (tabla de intersección producto×sucursal).</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#c2410c">
+      <div class="tbl-h"><span class="tbl-name">stock_movements</span><span class="tbl-tag">Kardex</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">product_sku</td><td class="c-type">FK → products</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">branch_id</td><td class="c-type">FK → branches</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">user_id</td><td class="c-type">FK → users</td></tr>
+        <tr><td></td><td class="c-name">type</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">quantity (±)</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">ref_type / ref_id</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Es la <b>bitácora inmutable</b> (kardex) de todo movimiento físico: venta, recepción, traslado, ajuste. En vez de solo actualizar el saldo, cada cambio deja un registro con signo (+/−), lo que permite auditar y reconstruir el stock. <code>ref_type/ref_id</code> es un <b>enlace polimórfico</b> al documento origen (ticket, OC, traslado).</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ movimientos → 1 <code>products</code>, 1 <code>branches</code>, 1 <code>users</code>.</li><li>Apunta (blando) a <code>sales</code>/<code>purchase_orders</code>/<code>transfers</code> vía <code>ref_id</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ VENTAS / POS ══════════ -->
+  <h2 class="mod" style="--dot:#1d4ed8">Ventas / POS</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#1d4ed8">
+      <div class="tbl-h"><span class="tbl-name">sales</span><span class="tbl-tag">Documento</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">client_id</td><td class="c-type">FK → clients</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">branch_id</td><td class="c-type">FK → branches</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">user_id</td><td class="c-type">FK → users</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">cash_register_id</td><td class="c-type">FK → cash_registers</td></tr>
+        <tr><td></td><td class="c-name">date / payment_method</td><td class="c-type">TS/TEXT</td></tr>
+        <tr><td></td><td class="c-name">subtotal / tax / total</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Es el <b>encabezado</b> de la factura/ticket: totales, impuestos y estado (pagada, anulada, devuelta). Se separa del detalle porque una venta tiene muchos renglones. Guarda cajero, caja y sucursal para conciliación y arqueo; el ID legible (<code>T-2026-…</code>) sirve de referencia fiscal.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ ventas → 1 <code>clients</code>, 1 <code>branches</code>, 1 <code>users</code>, 1 <code>cash_registers</code>.</li><li>1 venta → ∞ <code>sale_items</code> y ∞ <code>payments</code> (si es a crédito).</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#1d4ed8">
+      <div class="tbl-h"><span class="tbl-name">sale_items</span><span class="tbl-tag">Detalle</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">sale_id</td><td class="c-type">FK → sales</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">product_sku</td><td class="c-type">FK → products</td></tr>
+        <tr><td></td><td class="c-name">qty / unit_price</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">discount / line_total</td><td class="c-type">NUMERIC</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Normaliza el arreglo de renglones que hoy está anidado en el ticket. Un renglón por producto vendido permite reportes de “top productos”, aplicar descuentos por línea y descontar stock artículo por artículo. Guarda <code>unit_price</code> <b>histórico</b> (el precio al momento de la venta), no el precio actual del maestro.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ renglones → 1 <code>sales</code> (borrado en cascada) + 1 <code>products</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#1d4ed8">
+      <div class="tbl-h"><span class="tbl-name">cash_registers</span><span class="tbl-tag">Caja / Turno</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">branch_id</td><td class="c-type">FK → branches</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">user_id</td><td class="c-type">FK → users</td></tr>
+        <tr><td></td><td class="c-name">opened_at / closed_at</td><td class="c-type">TS</td></tr>
+        <tr><td></td><td class="c-name">opening / closing_amount</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Modela el <b>turno/arqueo de caja</b>: apertura con fondo, cierre con conteo y diferencia. Agrupa las ventas de una sesión para cuadrar efectivo vs. tarjeta y detectar faltantes/sobrantes por cajero.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ cajas → 1 <code>branches</code>, 1 <code>users</code>.</li><li>1 caja → ∞ <code>sales</code> (las de ese turno).</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ COMPRAS ══════════ -->
+  <h2 class="mod" style="--dot:#15803d">Compras</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#15803d">
+      <div class="tbl-h"><span class="tbl-name">purchase_orders</span><span class="tbl-tag">Documento</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">supplier_id</td><td class="c-type">FK → suppliers</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">branch_id</td><td class="c-type">FK → branches</td></tr>
+        <tr><td></td><td class="c-name">date / total</td><td class="c-type">DATE/NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">status / notes</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Encabezado de la orden de compra. <code>status</code> (pendiente, parcial, recibida, anulada) permite <b>recepciones parciales</b>. La OC recibida alimenta el kardex (entrada de stock) y genera CxP con el proveedor.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ OC → 1 <code>suppliers</code>, 1 <code>branches</code> (sucursal que recibe).</li><li>1 OC → ∞ <code>purchase_order_items</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#15803d">
+      <div class="tbl-h"><span class="tbl-name">purchase_order_items</span><span class="tbl-tag">Detalle</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">po_id</td><td class="c-type">FK → purchase_orders</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">product_sku</td><td class="c-type">FK → products</td></tr>
+        <tr><td></td><td class="c-name">qty_ordered</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">qty_received</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">unit_cost</td><td class="c-type">NUMERIC</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Un renglón por producto pedido. Separar <code>qty_ordered</code> de <code>qty_received</code> es lo que habilita la recepción parcial y actualizar el costo (<code>unit_cost</code>) para recalcular el costo promedio del producto.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ renglones → 1 <code>purchase_orders</code> + 1 <code>products</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ TRASLADOS ══════════ -->
+  <h2 class="mod" style="--dot:#b45309">Traslados entre sucursales</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#b45309">
+      <div class="tbl-h"><span class="tbl-name">transfers</span><span class="tbl-tag">Documento</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">from_branch_id</td><td class="c-type">FK → branches</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">to_branch_id</td><td class="c-type">FK → branches</td></tr>
+        <tr><td></td><td class="c-name">transporter / date</td><td class="c-type">TEXT/DATE</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Mueve stock entre tiendas. Tiene <b>dos FK a la misma tabla</b> <code>branches</code> (origen y destino) — relación auto-referenciada obligada por el negocio. <code>status</code> (borrador, en tránsito, completado, anulado) evita descontar/sumar stock antes de tiempo.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ traslados → 2× <code>branches</code> (origen ≠ destino).</li><li>1 traslado → ∞ <code>transfer_items</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#b45309">
+      <div class="tbl-h"><span class="tbl-name">transfer_items</span><span class="tbl-tag">Detalle</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">transfer_id</td><td class="c-type">FK → transfers</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">product_sku</td><td class="c-type">FK → products</td></tr>
+        <tr><td></td><td class="c-name">qty / qty_received</td><td class="c-type">NUMERIC</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Renglones del traslado. <code>qty</code> vs <code>qty_received</code> permite detectar mermas o faltantes en tránsito antes de confirmar la entrada en la sucursal destino.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ renglones → 1 <code>transfers</code> + 1 <code>products</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ CxC ══════════ -->
+  <h2 class="mod" style="--dot:#7c3aed">Cuentas por cobrar</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#7c3aed">
+      <div class="tbl-h"><span class="tbl-name">payments</span><span class="tbl-tag">Abonos</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">client_id</td><td class="c-type">FK → clients</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">sale_id</td><td class="c-type">FK → sales (NULL)</td></tr>
+        <tr><td></td><td class="c-name">amount / date</td><td class="c-type">NUMERIC/DATE</td></tr>
+        <tr><td></td><td class="c-name">method / reference</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Registra abonos de clientes contra su saldo. <code>sale_id</code> es <b>opcional</b>: un pago puede aplicarse a una factura específica o ser un abono general a la cuenta. Con estos registros se recalcula el <code>balance</code> del cliente y se generan pólizas de cobro.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ pagos → 1 <code>clients</code>; opcional → 1 <code>sales</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ CONTABILIDAD ══════════ -->
+  <h2 class="mod" style="--dot:#0891b2">Contabilidad</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#0891b2">
+      <div class="tbl-h"><span class="tbl-name">accounts</span><span class="tbl-tag">Plan de cuentas</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">code</td><td class="c-type">TEXT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">parent_code</td><td class="c-type">FK → accounts (self)</td></tr>
+        <tr><td></td><td class="c-name">name / level</td><td class="c-type">TEXT/INT</td></tr>
+        <tr><td></td><td class="c-name">normal_balance</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">allows_entries</td><td class="c-type">BOOL</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Plan de cuentas <b>jerárquico auto-referenciado</b>: cada cuenta apunta a su padre (<code>parent_code</code>) formando el árbol Activo → Corriente → Caja → Caja General. Solo las hojas (<code>allows_entries=true</code>) reciben movimientos; los rubros agrupan para el balance. <code>normal_balance</code> (débito/crédito) valida la naturaleza de cada partida.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>Auto-relación: 1 cuenta padre → ∞ cuentas hijas.</li><li>1 cuenta → ∞ <code>journal_entry_lines</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0891b2">
+      <div class="tbl-h"><span class="tbl-name">accounting_periods</span><span class="tbl-tag">Períodos</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr><td></td><td class="c-name">name</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">start_date / end_date</td><td class="c-type">DATE</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Define los meses/ejercicios contables. Un período <code>closed</code> <b>bloquea</b> nuevas pólizas en esa fecha — control clave para no alterar cifras ya reportadas al fisco.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 período → ∞ <code>journal_entries</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0891b2">
+      <div class="tbl-h"><span class="tbl-name">journal_entries</span><span class="tbl-tag">Pólizas</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">period_id</td><td class="c-type">FK → accounting_periods</td></tr>
+        <tr><td></td><td class="c-name">date / type</td><td class="c-type">DATE/TEXT</td></tr>
+        <tr><td></td><td class="c-name">source_type / reference</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">total_debit / total_credit</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Encabezado de la partida contable. <code>type</code> (auto/manual) y <code>source_type</code> (venta, compra, pago…) permiten que el ERP <b>genere pólizas automáticamente</b> desde las operaciones y las enlace a su documento origen (<code>reference</code>). Los totales deben cuadrar (debe = haber).</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ pólizas → 1 <code>accounting_periods</code>.</li><li>1 póliza → ∞ <code>journal_entry_lines</code> (mínimo 2).</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0891b2">
+      <div class="tbl-h"><span class="tbl-name">journal_entry_lines</span><span class="tbl-tag">Partidas</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">INT PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">entry_id</td><td class="c-type">FK → journal_entries</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">account_code</td><td class="c-type">FK → accounts</td></tr>
+        <tr><td></td><td class="c-name">debit / credit</td><td class="c-type">NUMERIC</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Cada renglón afecta <b>una cuenta</b> con un monto al debe o al haber. Es el corazón de la <b>partida doble</b>: la suma de debe e igual a la de haber por póliza. Normalizar las líneas (en vez de un JSON) permite sumar saldos por cuenta para el balance y el estado de resultados.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ líneas → 1 <code>journal_entries</code> + 1 <code>accounts</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ MARKETING ══════════ -->
+  <h2 class="mod" style="--dot:#be185d">Marketing</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#be185d">
+      <div class="tbl-h"><span class="tbl-name">promotions</span><span class="tbl-tag">Promos</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">TEXT PK</td></tr>
+        <tr><td></td><td class="c-name">name / type</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">target</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">valid / status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Reglas de descuento (2x1, 3x2, combo, % off). Se mantiene <b>independiente</b> porque su <code>target</code> es polimórfico (un producto, una categoría o un tipo de cliente); en una segunda fase se resolvería con tablas puente <code>promo_products</code> / <code>promo_categories</code> en lugar de texto.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>Hoy sin FK dura (se evalúa contra <code>products</code>/<code>categories</code>/<code>clients</code> por su <code>target</code>).</li></ul></div>
+    </div>
+
+  </div>
+
+  <div class="foot">ERP MAYA · Modelo de datos objetivo · 24 tablas · multi-empresa (aislamiento por <code>company_id</code>) · establecimientos SAT / FEL · Generado desde el análisis de <code>src/data/mock.js</code> y los módulos del sistema.</div>
+</div>
+</body>
+</html>

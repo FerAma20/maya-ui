@@ -1,8 +1,9 @@
 // ERP MAYA — Módulo de Compras / Órdenes de Compra
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '../components/Icon.jsx';
 import * as MAYA from '../data/mock.js';
+import { usePurchaseOrders } from '../hooks/useOperations.js';
 
 const STATUS_LABEL = { pending: 'Pendiente', partial: 'Parcial', received: 'Recibida', cancelled: 'Cancelada', draft: 'Borrador' };
 const STATUS_CLASS  = { pending: 'warning', partial: 'info', received: 'success', cancelled: 'neutral', draft: 'neutral' };
@@ -326,7 +327,9 @@ function PODetail({ po, onClose, onReceive, onCancel }) {
 // ── Módulo principal ─────────────────────────────────────────────────────────
 export default function Purchases({ pushToast }) {
   const { t } = useTranslation();
-  const { PURCHASE_ORDERS, SUPPLIERS, BRANCHES, PRODUCTS } = MAYA;
+  const { SUPPLIERS, BRANCHES, PRODUCTS } = MAYA;
+  // Órdenes de compra desde el backend (con fallback automático al mock).
+  const { items: apiOrders } = usePurchaseOrders();
   const [tab, setTab]             = useState('lista');
   const [search, setSearch]       = useState('');
   const [statusFilter, setStatus] = useState('all');
@@ -334,7 +337,9 @@ export default function Purchases({ pushToast }) {
   const [selected, setSelected]   = useState(null);
   const [showNew, setShowNew]     = useState(false);
   const [showReceive, setReceive] = useState(false);
-  const [orders, setOrders]       = useState(PURCHASE_ORDERS);
+  const [orders, setOrders]       = useState(apiOrders);
+  // Sincroniza la lista local cuando llegan las órdenes del backend.
+  useEffect(() => { setOrders(apiOrders); }, [apiOrders]);
 
   const filtered = useMemo(() => {
     let o = orders;

@@ -1,0 +1,22 @@
+{
+  "projectId": "7a47def5-5898-445f-ac1d-dd63373c6763",
+  "shape": "package",
+  "pkg": "erp-maya",
+  "globalName": "ErpMaya",
+  "srcDir": "src/components",
+  "cssEntry": "src/styles/global.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "runtimeFontPrefixes": ["IBM Plex", "JetBrains Mono"],
+  "componentSrcMap": {
+    "TweakButton": null,
+    "TweakColor": null,
+    "TweakNumber": null,
+    "TweakRadio": null,
+    "TweakRow": null,
+    "TweakSection": null,
+    "TweakSelect": null,
+    "TweakSlider": null,
+    "TweakText": null,
+    "TweakToggle": null
+  }
+}

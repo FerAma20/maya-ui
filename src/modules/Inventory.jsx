@@ -4,9 +4,12 @@ import * as MAYA from '../data/mock.js';
 // ERP MAYA — Inventory module
 import React, { useState as useStateInv, useMemo as useMemoInv } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useProducts } from '../hooks/useCatalog.js';
 function InventoryModule({ pushToast }) {
   const { t } = useTranslation();
-  const { Q, Qs, PRODUCTS, CATEGORIES, STOCK_MOVEMENTS, LOW_STOCK, EXPIRING_SOON, SUPPLIERS } = MAYA;
+  const { Q, Qs, CATEGORIES, STOCK_MOVEMENTS, LOW_STOCK, EXPIRING_SOON, SUPPLIERS } = MAYA;
+  // Productos desde el backend (con fallback automático al mock si no responde).
+  const { items: PRODUCTS } = useProducts();
   const [tab, setTab] = useStateInv('productos');
   const [cat, setCat] = useStateInv('todos');
   const [search, setSearch] = useStateInv('');

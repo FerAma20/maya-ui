@@ -59,4 +59,5 @@ const Icon = ({ name, size = 14, className = "", style }) => {
   return <svg {...props}>{paths[name]}</svg>;
 };
 
+export { Icon };
 export default Icon;

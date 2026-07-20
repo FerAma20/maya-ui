@@ -1,8 +1,9 @@
 // ERP MAYA — Módulo de Clientes (CRM básico)
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Icon from '../components/Icon.jsx';
 import * as MAYA from '../data/mock.js';
 import { useTranslation } from 'react-i18next';
+import { useClients } from '../hooks/useMasters.js';
 
 const TYPE_LABEL = { CF: 'CF', minorista: 'Minorista', mayorista: 'Mayorista', exento: 'Exento' };
 const STATUS_LABEL = { active: 'Activo', inactive: 'Inactivo', blocked: 'Bloqueado' };
@@ -292,7 +293,9 @@ function ClientDetail({ client, payments, onClose, onEdit, onPayment }) {
 // ── Módulo principal ─────────────────────────────────────────────────────────
 export default function Clients({ pushToast }) {
   const { t } = useTranslation();
-  const { CLIENTS, CLIENT_PAYMENTS } = MAYA;
+  const { CLIENT_PAYMENTS } = MAYA;
+  // Clientes desde el backend (con fallback automático al mock si no responde).
+  const { items: apiClients } = useClients();
   const [tab, setTab] = useState('lista');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -301,7 +304,9 @@ export default function Clients({ pushToast }) {
   const [editing, setEditing] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
-  const [clients, setClients] = useState(CLIENTS);
+  const [clients, setClients] = useState(apiClients);
+  // Sincroniza la lista local cuando llegan los clientes del backend.
+  useEffect(() => { setClients(apiClients); }, [apiClients]);
 
   const filtered = useMemo(() => {
     let c = clients;

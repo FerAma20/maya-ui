@@ -1,0 +1,329 @@
+<!-- @dsCard group="Documentación" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ERP MAYA — Plano de Control (Billing & Licencias)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#fff; --surface-2:#fafaf8; --surface-3:#f1f1ee;
+    --border:#e5e5e2; --border-strong:#d4d4d0; --text:#18181a; --text-2:#4a4a48; --muted:#87877f;
+    --accent:#0f766e; --accent-soft:#ccfbf1; --accent-ink:#134e4a;
+    --info:#1d4ed8; --info-soft:#dbeafe;
+    --r-sm:4px; --r-md:6px; --r-lg:10px;
+    --font-sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --font-mono:"IBM Plex Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
+    --shadow-sm:0 1px 0 rgba(20,20,20,.04),0 1px 2px rgba(20,20,20,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+  header.hero{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:28px}
+  .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  h1{font-size:26px;font-weight:700;margin:6px 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--text-2);max-width:860px}
+  .note{margin-top:14px;background:var(--info-soft);border:1px solid #9dc0f5;color:#0b3d91;padding:10px 14px;border-radius:var(--r-md);font-size:13px}
+  h2.mod{font-size:13px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h2.mod::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--dot,var(--accent))}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+  .lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:999px}
+  .lg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+  .tbl{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;border-top:3px solid var(--dot,var(--accent))}
+  .tbl.ext{border-style:dashed;opacity:.92}
+  .tbl-h{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px;border-bottom:1px solid var(--border)}
+  .tbl-name{font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--text)}
+  .tbl-tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--surface-3);padding:3px 7px;border-radius:999px}
+  table.cols{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px}
+  table.cols td{padding:5px 8px;border-bottom:1px solid var(--surface-3);vertical-align:top}
+  table.cols tr:last-child td{border-bottom:none}
+  .c-key{width:22px;text-align:center;color:var(--muted)}
+  .c-name{color:var(--text);white-space:nowrap}
+  .c-type{color:var(--muted);text-align:right;font-size:11.5px}
+  tr.pk{background:var(--accent-soft)} tr.pk .c-name{color:var(--accent-ink);font-weight:600}
+  tr.fk .c-name{color:var(--info)} tr.fk .c-type{color:var(--info)}
+  .why,.rel{padding:10px 14px;font-family:var(--font-sans);font-size:12.5px;color:var(--text-2)}
+  .why{background:var(--surface-2);border-top:1px solid var(--border)}
+  .why b,.rel b{color:var(--text);font-weight:600}
+  .rel{border-top:1px dashed var(--border)}
+  .rel ul{margin:4px 0 0;padding-left:16px} .rel li{margin:2px 0}
+  code{font-family:var(--font-mono);background:var(--surface-3);padding:1px 5px;border-radius:4px;font-size:11.5px;color:var(--accent-ink)}
+  .relmap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;margin:8px 0 4px;box-shadow:var(--shadow-sm)}
+  .relmap h3{margin:0 0 12px;font-size:14px}
+  .relmap pre{margin:0;font-family:var(--font-mono);font-size:12.5px;line-height:1.7;color:var(--text-2);white-space:pre-wrap}
+  .relmap .ar{color:var(--accent);font-weight:600}
+  .foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker">ERP MAYA · Plataforma SaaS</div>
+    <h1>Plano de Control — Billing, Licencias y Folios</h1>
+    <p class="sub">La capa de negocio de la plataforma (planes, suscripciones, uso de folios FEL, licencias y cobros), <b>separada del ERP del inquilino</b>. 12 tablas propias + el enlace a 3 tablas del ERP que ya existen. Cada ficha explica el <b>por qué</b> y sus <b>relaciones</b>.</p>
+    <div class="note"><b>Es un sistema aparte y tuyo (del dueño de la plataforma).</b> Vive idealmente en su propia base de datos / esquema. Gobierna a las empresas inquilinas: qué plan tienen (el <b>techo de permisos</b>), cuántos folios consumen (<b>pool central</b>), si su instancia está activa (<b>licencia + kill-switch</b>) y qué te deben. <b>Depende de tener auth real</b> para leer el plan/saldo de un inquilino autenticado.</div>
+    <div class="legend">
+      <span class="lg"><i style="background:#0f766e"></i>Catálogo (config del dueño)</span>
+      <span class="lg"><i style="background:#1d4ed8"></i>Suscripción &amp; licencias</span>
+      <span class="lg"><i style="background:#c2410c"></i>Folios FEL (pool central)</span>
+      <span class="lg"><i style="background:#15803d"></i>Facturación al cliente</span>
+      <span class="lg"><i style="background:#64748b"></i>Tablas del ERP (existentes)</span>
+    </div>
+  </header>
+
+  <div class="relmap">
+    <h3>Mapa de relaciones (cardinalidad 1 → ∞)</h3>
+    <pre>plans <span class="ar">──&lt;</span> plan_modules <span class="ar">&gt;──</span> modules            (techo de módulos por plan)
+plans <span class="ar">──&lt;</span> subscriptions <span class="ar">&gt;──</span> <b>companies</b> (inquilino)   ← una empresa, su plan y ciclo de vida
+subscriptions <span class="ar">──&lt;</span> subscription_addons        (sucursal/usuario/módulo extra o precio negociado)
+subscriptions <span class="ar">──&lt;</span> licenses                   (activación + kill-switch por instancia; dedicado)
+<b>companies</b> <span class="ar">──</span> folio_wallets <span class="ar">──&lt;</span> folio_transactions   ← pool central; consume ← <b>fel_documents</b>
+folio_supply   (compra mayoreo del dueño = su costo, nivel plataforma)
+<b>companies</b> <span class="ar">──&lt;</span> billing_invoices <span class="ar">──&lt;</span> billing_invoice_lines
+<b>companies</b> <span class="ar">──&lt;</span> billing_payments <span class="ar">&gt;──</span> billing_invoices     (historial de pagos)
+plan_modules <span class="ar">▷</span> <b>roles</b>.permissions   (los permisos del cliente ⊆ techo del plan)</pre>
+  </div>
+
+  <!-- ══════════ CATÁLOGO ══════════ -->
+  <h2 class="mod" style="--dot:#0f766e">Catálogo — configurable por el dueño</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">plans</span><span class="tbl-tag">Catálogo</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr><td></td><td class="c-name">code / name</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">type</td><td class="c-type">shared|dedicated</td></tr>
+        <tr><td></td><td class="c-name">billing_cycle</td><td class="c-type">monthly|annual</td></tr>
+        <tr><td></td><td class="c-name">base_price</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">price_per_branch</td><td class="c-type">NUMERIC (Q100)</td></tr>
+        <tr><td></td><td class="c-name">included_folios</td><td class="c-type">INT</td></tr>
+        <tr><td></td><td class="c-name">folio_overage_price</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">infra_fee</td><td class="c-type">NUMERIC (dedicado)</td></tr>
+        <tr><td></td><td class="c-name">trial_days / grace_days</td><td class="c-type">INT (7 / 5)</td></tr>
+        <tr><td></td><td class="c-name">is_active</td><td class="c-type">BOOL</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Catálogo de planes que <b>tú configuras</b>: precios, folios incluidos, cuota por sucursal e infra. <code>type</code> distingue compartido (multi-tenant) de dedicado. <code>trial_days</code>/<code>grace_days</code> con default pero editables.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 plan → ∞ <code>subscriptions</code> y ∞ <code>plan_modules</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">modules</span><span class="tbl-tag">Catálogo</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr><td></td><td class="c-name">code</td><td class="c-type">TEXT (pos, accounting…)</td></tr>
+        <tr><td></td><td class="c-name">name</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">tier</td><td class="c-type">basic|intermediate|enterprise</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Lista maestra de los módulos/permisos del sistema. <code>tier</code> los agrupa (básico → intermedio → empresarial) para armar planes rápido. Es la fuente del "techo de permisos".</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 módulo → ∞ <code>plan_modules</code>.</li><li>Cada <code>code</code> mapea a un permiso de <code>roles</code> en el ERP.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#0f766e">
+      <div class="tbl-h"><span class="tbl-name">plan_modules</span><span class="tbl-tag">Techo</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">plan_id</td><td class="c-type">FK → plans</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">module_id</td><td class="c-type">FK → modules</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Define <b>qué módulos incluye cada plan</b> = el <b>techo de permisos</b> de la empresa. El admin del cliente reparte permisos a sus usuarios (vía <code>roles</code>) <b>solo dentro de este techo</b>, nunca por encima.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>plans</code> + 1 <code>modules</code> (intersección).</li><li>Es el puente al RBAC del ERP: <code>roles.permissions ⊆ plan_modules</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ SUSCRIPCIÓN ══════════ -->
+  <h2 class="mod" style="--dot:#1d4ed8">Suscripción &amp; licencias</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#1d4ed8">
+      <div class="tbl-h"><span class="tbl-name">subscriptions</span><span class="tbl-tag">Núcleo</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">plan_id</td><td class="c-type">FK → plans</td></tr>
+        <tr><td></td><td class="c-name">deployment_type</td><td class="c-type">shared|dedicated</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">trial|active|past_due|suspended</td></tr>
+        <tr><td></td><td class="c-name">trial_ends_at</td><td class="c-type">DATE</td></tr>
+        <tr><td></td><td class="c-name">current_period_start/end</td><td class="c-type">DATE</td></tr>
+        <tr><td></td><td class="c-name">custom_price</td><td class="c-type">NUMERIC (negociado)</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> El corazón del plano de control: liga una <b>empresa a un plan</b> con su ciclo de vida. <code>custom_price</code> permite <b>precio negociado</b> para cadenas grandes. <code>status</code> gobierna el acceso (prueba → activa → gracia → suspendida).</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>companies</code> + 1 <code>plans</code>.</li><li>1 → ∞ <code>subscription_addons</code> y ∞ <code>licenses</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#1d4ed8">
+      <div class="tbl-h"><span class="tbl-name">subscription_addons</span><span class="tbl-tag">Extras</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">subscription_id</td><td class="c-type">FK → subscriptions</td></tr>
+        <tr><td></td><td class="c-name">addon_type</td><td class="c-type">branch|user|module</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">module_id</td><td class="c-type">FK → modules (NULL)</td></tr>
+        <tr><td></td><td class="c-name">quantity / unit_price</td><td class="c-type">NUMERIC</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Extras sobre el plan: sucursal o usuario adicional, o un <b>módulo suelto</b> comprado fuera del plan. Un add-on de módulo <b>amplía el techo</b> (plan_modules + addons de módulo).</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>subscriptions</code>; opcional → 1 <code>modules</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#1d4ed8">
+      <div class="tbl-h"><span class="tbl-name">licenses</span><span class="tbl-tag">Activación</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">subscription_id</td><td class="c-type">FK → subscriptions</td></tr>
+        <tr><td></td><td class="c-name">license_key</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">instance_type</td><td class="c-type">shared|dedicated</td></tr>
+        <tr><td></td><td class="c-name">host</td><td class="c-type">TEXT (servidor dedicado)</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">active|suspended|revoked</td></tr>
+        <tr><td></td><td class="c-name">last_seen_at</td><td class="c-type">TS (heartbeat)</td></tr>
+        <tr><td></td><td class="c-name">kill_switch</td><td class="c-type">BOOL</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Activa cada instancia para que <b>no opere sin pagar</b>. Para el dedicado guarda el <code>host</code> y el <code>last_seen_at</code> (phone-home); <code>kill_switch</code> te deja <b>detenerla remotamente</b> — conservas acceso total al servidor.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>subscriptions</code> (una licencia por instancia/servidor).</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ FOLIOS ══════════ -->
+  <h2 class="mod" style="--dot:#c2410c">Folios FEL — pool central</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#c2410c">
+      <div class="tbl-h"><span class="tbl-name">folio_wallets</span><span class="tbl-tag">Saldo</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr><td></td><td class="c-name">plan_folios_remaining</td><td class="c-type">INT (cupo del plan)</td></tr>
+        <tr><td></td><td class="c-name">recharge_balance</td><td class="c-type">INT (recargado)</td></tr>
+        <tr><td></td><td class="c-name">updated_at</td><td class="c-type">TS</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> El <b>saldo central de folios</b> de cada empresa. Separa el <b>cupo del plan</b> (se renueva/vence cada período) del <b>saldo recargado</b> (se acumula). Se consulta en tiempo real <b>antes de emitir cada FEL</b> — por eso una instancia dedicada necesita conexión a tu central.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 <code>companies</code> → 1 wallet; 1 wallet → ∞ <code>folio_transactions</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#c2410c">
+      <div class="tbl-h"><span class="tbl-name">folio_transactions</span><span class="tbl-tag">Ledger</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">wallet_id</td><td class="c-type">FK → folio_wallets</td></tr>
+        <tr><td></td><td class="c-name">type</td><td class="c-type">allocation|recharge|consume|expire</td></tr>
+        <tr><td></td><td class="c-name">quantity (±)</td><td class="c-type">INT</td></tr>
+        <tr><td></td><td class="c-name">balance_after</td><td class="c-type">INT</td></tr>
+        <tr><td></td><td class="c-name">ref_type / ref_id</td><td class="c-type">TEXT (DTE / recarga)</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> <b>Kardex de folios</b> (mismo espíritu que <code>stock_movements</code> del ERP): cada asignación del plan, recarga, consumo o vencimiento deja registro con signo. Da <b>trazabilidad total</b> del pool y auditoría de tu margen.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>folio_wallets</code>.</li><li>Un <code>consume</code> se genera por cada <code>fel_documents</code> emitido en el ERP.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#c2410c">
+      <div class="tbl-h"><span class="tbl-name">folio_supply</span><span class="tbl-tag">Costo (mayoreo)</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr><td></td><td class="c-name">provider</td><td class="c-type">TEXT (certificador)</td></tr>
+        <tr><td></td><td class="c-name">purchased_qty</td><td class="c-type">INT</td></tr>
+        <tr><td></td><td class="c-name">cost_per_folio</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">remaining</td><td class="c-type">INT</td></tr>
+        <tr><td></td><td class="c-name">purchased_at</td><td class="c-type">DATE</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Tu <b>inventario mayorista</b> de folios comprado al certificador (tu <b>costo real</b>). Permite calcular margen: precio de venta − <code>cost_per_folio</code>. Es a nivel plataforma, no por empresa.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>Independiente (nivel plataforma). Alimenta el pool que reparten los <code>folio_wallets</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ FACTURACIÓN ══════════ -->
+  <h2 class="mod" style="--dot:#15803d">Facturación al cliente</h2>
+  <div class="grid">
+
+    <div class="tbl" style="--dot:#15803d">
+      <div class="tbl-h"><span class="tbl-name">billing_invoices</span><span class="tbl-tag">Cobros</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">subscription_id</td><td class="c-type">FK → subscriptions</td></tr>
+        <tr><td></td><td class="c-name">invoice_number</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">period_start/end</td><td class="c-type">DATE</td></tr>
+        <tr><td></td><td class="c-name">subtotal / tax / total</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">status</td><td class="c-type">issued|paid|overdue|void</td></tr>
+        <tr><td></td><td class="c-name">due_date</td><td class="c-type">DATE</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Las facturas que <b>TÚ le cobras</b> a cada empresa por la suscripción — <b>distinto</b> de las <code>sales</code>/<code>purchase_invoices</code> del ERP del inquilino. <code>due_date</code> + <code>status</code> manejan la gracia y el impago (nada de mora).</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>companies</code> / <code>subscriptions</code>.</li><li>1 → ∞ <code>billing_invoice_lines</code> y ∞ <code>billing_payments</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#15803d">
+      <div class="tbl-h"><span class="tbl-name">billing_invoice_lines</span><span class="tbl-tag">Detalle</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">invoice_id</td><td class="c-type">FK → billing_invoices</td></tr>
+        <tr><td></td><td class="c-name">concept</td><td class="c-type">plan|branch|folios|addon</td></tr>
+        <tr><td></td><td class="c-name">description</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">quantity / unit_price</td><td class="c-type">NUMERIC</td></tr>
+        <tr><td></td><td class="c-name">line_total</td><td class="c-type">NUMERIC</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> Desglosa el cobro: cuota del plan, sucursales, paquete/recarga de folios y add-ons. Transparencia para el cliente y base para su propia contabilidad.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>billing_invoices</code> (borrado en cascada).</li></ul></div>
+    </div>
+
+    <div class="tbl" style="--dot:#15803d">
+      <div class="tbl-h"><span class="tbl-name">billing_payments</span><span class="tbl-tag">Historial</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr class="fk"><td class="c-key">🔗</td><td class="c-name">invoice_id</td><td class="c-type">FK → billing_invoices (NULL)</td></tr>
+        <tr><td></td><td class="c-name">amount / paid_at</td><td class="c-type">NUMERIC / TS</td></tr>
+        <tr><td></td><td class="c-name">method</td><td class="c-type">transfer|card|cash</td></tr>
+        <tr><td></td><td class="c-name">reference / notes</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>¿Por qué así?</b> El <b>historial de pagos</b> del cliente que pediste. <code>method</code> refleja la realidad GT (transferencia común). Al saldar la factura pasa su <code>status</code> a <code>paid</code>; si vence sin pago, dispara la gracia → suspensión.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>∞ → 1 <code>companies</code>; opcional → 1 <code>billing_invoices</code>.</li></ul></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ ERP EXISTENTE ══════════ -->
+  <h2 class="mod" style="--dot:#64748b">Enlace al ERP (tablas que ya existen)</h2>
+  <div class="grid">
+
+    <div class="tbl ext" style="--dot:#64748b">
+      <div class="tbl-h"><span class="tbl-name">companies</span><span class="tbl-tag">ERP · ancla</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr><td></td><td class="c-name">name / nit</td><td class="c-type">TEXT</td></tr>
+        <tr><td></td><td class="c-name">plan / status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>El puente.</b> Es el inquilino del ERP; el plano de control lo gobierna. Ya trae <code>plan</code>/<code>status</code> (el gancho que dejamos). Aquí se le cuelga suscripción, wallet de folios y cobros.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>1 empresa → 1 <code>subscriptions</code> activa, 1 <code>folio_wallets</code>, ∞ <code>billing_invoices</code>.</li></ul></div>
+    </div>
+
+    <div class="tbl ext" style="--dot:#64748b">
+      <div class="tbl-h"><span class="tbl-name">roles</span><span class="tbl-tag">ERP · RBAC</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr><td></td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr><td></td><td class="c-name">permissions</td><td class="c-type">JSONB</td></tr>
+      </table>
+      <div class="why"><b>El reparto de permisos.</b> El admin del cliente asigna permisos a sus usuarios vía <code>roles.permissions</code>, pero <b>acotado al techo</b> definido por <code>plan_modules</code>. Nunca puede otorgar más de lo que el plan incluye.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li><code>permissions ⊆</code> módulos de <code>plan_modules</code> del plan de su empresa.</li></ul></div>
+    </div>
+
+    <div class="tbl ext" style="--dot:#64748b">
+      <div class="tbl-h"><span class="tbl-name">fel_documents</span><span class="tbl-tag">ERP · FEL</span></div>
+      <table class="cols">
+        <tr class="pk"><td class="c-key">🔑</td><td class="c-name">id</td><td class="c-type">PK</td></tr>
+        <tr><td></td><td class="c-name">company_id</td><td class="c-type">FK → companies</td></tr>
+        <tr><td></td><td class="c-name">uuid / status</td><td class="c-type">TEXT</td></tr>
+      </table>
+      <div class="why"><b>El consumo.</b> Cada DTE emitido en el ERP <b>descuenta un folio</b> del pool: genera un <code>folio_transactions</code> tipo <code>consume</code>. Antes de emitir, el sistema valida saldo en <code>folio_wallets</code>.</div>
+      <div class="rel"><b>Relaciones:</b><ul><li>Cada emisión → 1 <code>folio_transactions</code> (consume).</li></ul></div>
+    </div>
+
+  </div>
+
+  <div class="foot">ERP MAYA · Plano de control (billing/licencias/folios) · 12 tablas propias + 3 del ERP · Sistema separado del inquilino, propiedad del dueño de la plataforma. Depende de auth real.</div>
+</div>
+</body>
+</html>

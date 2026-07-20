@@ -1,0 +1,10 @@
+// Endpoints de cuentas por cobrar: pagos/abonos de clientes.
+import { api } from './client.js';
+
+export function listPayments({ clientId, page = 0, size = 50 } = {}) {
+  const q = new URLSearchParams({ page: String(page), size: String(size) });
+  if (clientId) q.set('clientId', String(clientId));
+  return api.get(`/api/payments?${q.toString()}`);
+}
+export const getPayment = (id) => api.get(`/api/payments/${id}`);
+export const createPayment = (data) => api.post('/api/payments', data);
